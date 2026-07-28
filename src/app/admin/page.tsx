@@ -18,7 +18,8 @@ import {
   DatabaseZap,
   LogOut,
   Activity,
-  ArrowRight
+  ArrowRight,
+  KeyRound
 } from 'lucide-react';
 import { 
   getInvitedUserRecords, 
@@ -135,6 +136,14 @@ export default function AdminDashboardPage() {
             <ShieldCheck className="h-4 w-4 text-emerald-400" />
             <span className="font-mono text-emerald-300">{currentUser}</span>
           </div>
+
+          <button
+            onClick={() => router.push('/change-password')}
+            className="p-2 rounded-xl glass-card hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition"
+            title="Change Password"
+          >
+            <KeyRound className="h-4 w-4" />
+          </button>
 
           <button
             onClick={() => router.push('/')}

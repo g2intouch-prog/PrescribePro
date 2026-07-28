@@ -11,7 +11,8 @@ import {
   DatabaseZap, 
   ArrowRight, 
   ShieldCheck,
-  Server
+  Server,
+  KeyRound
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -74,6 +75,13 @@ export default function WelcomePage() {
             <User className="h-3.5 w-3.5 text-emerald-400" />
             <span className="font-mono text-emerald-300">{email}</span>
           </div>
+          <button
+            onClick={() => router.push('/change-password')}
+            className="p-2 rounded-xl glass-card hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition"
+            title="Change Password"
+          >
+            <KeyRound className="h-4 w-4" />
+          </button>
           <button
             onClick={handleSignOut}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl glass-card hover:bg-gray-800/80 text-xs font-semibold text-gray-400 hover:text-red-400 transition"
