@@ -349,6 +349,62 @@ export function calculatePediatricDose(weightKg: number): CalculatedPediatricDos
 // UNRESTRICTED USFDA & INDIAN PHARMACOPOEIA (IP) CLINICAL PHARMACOPEIA CATALOG
 export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   // ==========================================
+  // 0. CORE ESSENTIAL ANTI-INFECTIVES & GENERAL MEDICINE
+  // ==========================================
+  { id: 'gen_cefix200', genericName: 'Cefixime 200mg Tablet (Taxim-O 200 / Zifi 200)', category: 'adult', dosage: '1 tablet twice daily after meals', duration: '5 days', keywords: 'cefixime zifi taxim-o antibiotic fever urti uti typhoid respiratory', minAge: 12 },
+  { id: 'gen_cefix100', genericName: 'Cefixime 100mg Dispersible Tablet (Zifi 100 DT)', category: 'all', dosage: '1 tablet dissolved in 15ml water twice daily', duration: '5 days', keywords: 'cefixime zifi dt pediatric antibiotic fever urti' },
+  { id: 'gen_cefix_syp', genericName: 'Cefixime 50mg/5ml Dry Syrup (Zifi 50ml Suspension)', category: 'pediatric', dosage: '5ml twice daily (1-0-1)', duration: '5 days', keywords: 'cefixime zifi syrup pediatric antibiotic fever', maxAge: 12 },
+  { id: 'gen_azee500', genericName: 'Azithromycin 500mg Tablet (Azee 500 / Azithral 500)', category: 'adult', dosage: '1 tablet once daily 1 hour before or 2 hours after meals', duration: '3 days', keywords: 'azithromycin azee azithral antibiotic throat chest infection urti pharyngitis tonsillitis', minAge: 12 },
+  { id: 'gen_azee250', genericName: 'Azithromycin 250mg Tablet (Azee 250)', category: 'all', dosage: '1 tablet once daily', duration: '5 days', keywords: 'azithromycin azee azithral antibiotic urti' },
+  { id: 'gen_azee_syp', genericName: 'Azithromycin 100mg/5ml Oral Suspension (Azee Liquid)', category: 'pediatric', dosage: '5ml once daily for 3 days', duration: '3 days', keywords: 'azithromycin azee liquid syrup pediatric antibiotic', maxAge: 12 },
+  { id: 'gen_amox500', genericName: 'Amoxicillin 500mg Capsule (Mox 500 / Novamox 500)', category: 'adult', dosage: '1 capsule 3 times daily', duration: '5 days', keywords: 'amoxicillin mox novamox antibiotic throat ear sinus RTI', minAge: 12 },
+  { id: 'gen_cipro500', genericName: 'Ciprofloxacin 500mg Tablet (Ciplox 500)', category: 'adult', dosage: '1 tablet twice daily after meals', duration: '5 days', keywords: 'ciprofloxacin ciplox antibiotic uti diarrhea gastroenteritis dysentery', minAge: 18 },
+  { id: 'gen_levo500', genericName: 'Levofloxacin 500mg Tablet (Levoquin 500 / Tavanic)', category: 'adult', dosage: '1 tablet once daily', duration: '5 days', keywords: 'levofloxacin levoquin tavanic antibiotic pneumonia sinusitis uti', minAge: 18 },
+  { id: 'gen_oflox200', genericName: 'Ofloxacin 200mg Tablet (Oflox 200 / Zanocin)', category: 'adult', dosage: '1 tablet twice daily', duration: '5 days', keywords: 'ofloxacin oflox zanocin antibiotic uti diarrhea gastro', minAge: 18 },
+  { id: 'gen_doxy100', genericName: 'Doxycycline 100mg Capsule (Microdox-LB 100 / Doxypal)', category: 'adult', dosage: '1 capsule twice daily with food and glass of water', duration: '7 days', keywords: 'doxycycline microdox acne malaria fever rickettsia chlamydia', minAge: 12 },
+  { id: 'gen_ceftum500', genericName: 'Cefuroxime Axetil 500mg Tablet (Ceftum 500 / Forcef)', category: 'adult', dosage: '1 tablet twice daily after food', duration: '5 days', keywords: 'cefuroxime ceftum forcef antibiotic skin soft tissue respiratory RTI', minAge: 12 },
+  { id: 'gen_gudcef200', genericName: 'Cefpodoxime Proxetil 200mg Tablet (Gudcef 200 / Cepodem)', category: 'adult', dosage: '1 tablet twice daily', duration: '5 days', keywords: 'cefpodoxime gudcef cepodem antibiotic otitis bronchitis RTI', minAge: 12 },
+  { id: 'gen_metro400', genericName: 'Metronidazole 400mg Tablet (Flagyl 400 / Metrogyl 400)', category: 'adult', dosage: '1 tablet 3 times daily after meals', duration: '5 days', keywords: 'metronidazole flagyl metrogyl diarrhea amoebiasis dental anaerobic dysentery', minAge: 12 },
+  { id: 'gen_niftran100', genericName: 'Nitrofurantoin 100mg SR Capsule (Niftran 100)', category: 'adult', dosage: '1 capsule twice daily with meals', duration: '7 days', keywords: 'nitrofurantoin niftran uti cystitis urinary tract infection', minAge: 12 },
+  { id: 'gen_bactrim', genericName: 'Trimethoprim 160mg + Sulfamethoxazole 800mg (Bactrim DS / Septra DS)', category: 'adult', dosage: '1 tablet twice daily after meals', duration: '5 days', keywords: 'bactrim septra cotrimoxazole uti skin infection pneumonia', minAge: 12 },
+  { id: 'gen_forcan150', genericName: 'Fluconazole 150mg Tablet (Forcan 150 / Zocon 150)', category: 'adult', dosage: '1 tablet single dose (repeat after 1 week if needed)', duration: 'Single dose', keywords: 'fluconazole forcan zocon fungal candidiasis ringworm yeast infection' },
+  { id: 'gen_iver12', genericName: 'Ivermectin 12mg Tablet (Ivermectol 12 / Ivercor)', category: 'adult', dosage: '1 tablet single dose on empty stomach at bedtime', duration: 'Single dose', keywords: 'ivermectin ivermectol scabies worms antiparasitic lice', minAge: 12 },
+  { id: 'gen_zentel400', genericName: 'Albendazole 400mg Chewable Tablet (Zentel 400 / Bandy)', category: 'all', dosage: '1 tablet chewed thoroughly at bedtime', duration: 'Single dose', keywords: 'albendazole zentel bandy deworming roundworm hookworm pinworm' },
+
+  // ==========================================
+  // 0.1 CORE ESSENTIAL ANALGESICS & ANTIPYRETICS
+  // ==========================================
+  { id: 'gen_dolo650', genericName: 'Paracetamol 650mg Tablet (Dolo 650 / Calpol 650 / Crocin 650)', category: 'adult', dosage: '1 tablet 3 to 4 times daily after meals (S.O.S max 4g/day)', duration: '3 days', keywords: 'paracetamol acetaminophen dolo calpol crocin fever pain headache bodyache temperature', minAge: 12, minWeight: 40 },
+  { id: 'gen_pcm500', genericName: 'Paracetamol 500mg Tablet (Crocin 500 / Calpol 500)', category: 'all', dosage: '1 tablet 3 to 4 times daily S.O.S', duration: '3 days', keywords: 'paracetamol acetaminophen crocin calpol fever pain' },
+  { id: 'gen_calpol_syp', genericName: 'Paracetamol 250mg/5ml Suspension (Calpol 250 / Dolo 250)', category: 'pediatric', dosage: '5ml to 7.5ml 3-4 times daily as per weight S.O.S', duration: '3 days', keywords: 'paracetamol calpol dolo syrup pediatric fever pain suspension', maxAge: 12 },
+  { id: 'gen_zero100', genericName: 'Aceclofenac 100mg Tablet (Zerodol 100)', category: 'adult', dosage: '1 tablet twice daily after meals', duration: '5 days', keywords: 'aceclofenac zerodol pain arthritis joint pain backache swelling', minAge: 12, minWeight: 40 },
+  { id: 'gen_vov50', genericName: 'Diclofenac Sodium 50mg Tablet (Voveran 50)', category: 'adult', dosage: '1 tablet 2 to 3 times daily after meals', duration: '3 days', keywords: 'diclofenac voveran pain swelling joint fracture trauma', minAge: 12, minWeight: 40 },
+  { id: 'gen_brufen400', genericName: 'Ibuprofen 400mg Tablet (Brufen 400)', category: 'adult', dosage: '1 tablet 3 times daily after meals', duration: '3 days', keywords: 'ibuprofen brufen pain fever swelling joint pain toothache', minAge: 12, minWeight: 40 },
+  { id: 'gen_meftal500', genericName: 'Mefenamic Acid 500mg Tablet (Meftal 500)', category: 'adult', dosage: '1 tablet 3 times daily after meals', duration: '3 days', keywords: 'mefenamic meftal period pain fever dysmenorrhea toothache', minAge: 12, minWeight: 40 },
+
+  // ==========================================
+  // 0.2 CORE ESSENTIAL GASTROINTESTINAL & ANTACIDS
+  // ==========================================
+  { id: 'gen_pan40', genericName: 'Pantoprazole 40mg Tablet (Pan 40 / Pantocid 40)', category: 'adult', dosage: '1 tablet once daily 30 minutes before breakfast', duration: '14 days', keywords: 'pantoprazole pan pantocid acidity gas ppi gerd stomach ulcer heartburn', minAge: 12 },
+  { id: 'gen_omez20', genericName: 'Omeprazole 20mg Capsule (Omez 20)', category: 'adult', dosage: '1 capsule once daily before breakfast', duration: '14 days', keywords: 'omeprazole omez acidity gas ppi gerd stomach ulcer' },
+  { id: 'gen_rabeloc20', genericName: 'Rabeprazole 20mg Tablet (Rabeloc 20 / Pariet)', category: 'adult', dosage: '1 tablet once daily before breakfast', duration: '14 days', keywords: 'rabeprazole rabeloc acidity gas ppi gerd stomach ulcer' },
+  { id: 'gen_sucrafil', genericName: 'Sucralfate 1g/5ml Suspension (Sucrafil 200ml)', category: 'all', dosage: '10ml 4 times daily 1 hour before meals and bedtime', duration: '14 days', keywords: 'sucralfate sucrafil ulcer coating gastritis stomach pain burn heartburn' },
+  { id: 'gen_aciloc150', genericName: 'Ranitidine 150mg Tablet (Aciloc 150 / Rantac)', category: 'all', dosage: '1 tablet twice daily before meals', duration: '7 days', keywords: 'ranitidine aciloc rantac acidity h2 blocker gas' },
+  { id: 'gen_emeset4', genericName: 'Ondansetron 4mg Mouth Dissolving Tablet (Emeset MD 4 / Vomitron)', category: 'all', dosage: '1 tablet dissolved on tongue 15 mins before meals S.O.S', duration: '3 days', keywords: 'ondansetron emeset vomitron vomiting nausea md tablet' },
+  { id: 'gen_enterogerm', genericName: 'Bacillus Clausii Spores Oral Suspension (Enterogermina 5ml Mini Bottle)', category: 'all', dosage: '1 mini bottle orally 2 to 3 times daily', duration: '5 days', keywords: 'bacillus clausii enterogermina probiotic diarrhea loose motion gut health' },
+  { id: 'gen_econorm', genericName: 'Saccharomyces Boulardii 250mg Sachet (Econorm Sachet)', category: 'all', dosage: '1 sachet dissolved in water twice daily', duration: '5 days', keywords: 'saccharomyces econorm probiotic diarrhea gut health antibiotic diarrhea' },
+  { id: 'gen_electral_ors', genericName: 'ORS (Oral Rehydration Salts IP Sachet 21.8g / Electral)', category: 'all', dosage: 'Dissolve 1 sachet in 1 liter clean drinking water, sip throughout day', duration: '3 days', keywords: 'ors electral dehydration loose motion diarrhea fluids WHO formula' },
+  { id: 'gen_imodium2', genericName: 'Loperamide 2mg Capsule (Imodium 2)', category: 'adult', dosage: '2 capsules initially, then 1 capsule after each loose stool (max 16mg/day)', duration: '2 days', keywords: 'loperamide imodium acute watery diarrhea loose motion stop diarrhea', minAge: 12 },
+
+  // ==========================================
+  // 0.3 CORE ESSENTIAL ALLERGY & RESPIRATORY
+  // ==========================================
+  { id: 'gen_cetzine10', genericName: 'Cetirizine 10mg Tablet (Cetzine 10 / Okacet)', category: 'all', dosage: '1 tablet once daily at bedtime', duration: '7 days', keywords: 'cetirizine cetzine okacet allergy itching cold runny nose sneezing hives' },
+  { id: 'gen_levocet5', genericName: 'Levocetirizine 5mg Tablet (Levocet 5 / Xyzal)', category: 'all', dosage: '1 tablet once daily at bedtime', duration: '7 days', keywords: 'levocetirizine levocet xyzal allergy cold itching rhinitis sneezing' },
+  { id: 'gen_allegra120', genericName: 'Fexofenadine 120mg Tablet (Allegra 120)', category: 'adult', dosage: '1 tablet once daily', duration: '10 days', keywords: 'fexofenadine allegra allergy itching hives urticaria allergic rhinitis', minAge: 12 },
+  { id: 'gen_montek10', genericName: 'Montelukast 10mg Tablet (Montek 10 / Singulair)', category: 'adult', dosage: '1 tablet once daily at bedtime', duration: '14 days', keywords: 'montelukast montek singulair asthma allergy bronchospasm rhinitis', minAge: 15 },
+  { id: 'gen_wysolone20', genericName: 'Prednisolone 20mg Tablet (Wysolone 20)', category: 'adult', dosage: '1 tablet once daily after breakfast (taper as advised)', duration: '5 days', keywords: 'prednisolone wysolone steroid asthma severe allergy inflammation autoimmune', minAge: 12 },
+  // ==========================================
   // 1. OPHTHALMOLOGY (EYE DROPS & OPHTHALMIC PREPARATIONS)
   // ==========================================
   { id: 'oph1', genericName: 'Moxifloxacin 0.5% Eye Drops (Vigamox)', category: 'all', dosage: '1 drop in affected eye 3 times daily', duration: '7 days', keywords: 'eye drops eyedrop opthalmic ophthalmic eye infection conjunctivitis moxifloxacin' },
