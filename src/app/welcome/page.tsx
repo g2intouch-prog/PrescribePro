@@ -1741,14 +1741,14 @@ export default function UserWorkspacePage() {
                       {doctorProfile.qualification && <p className="font-semibold text-gray-700">{doctorProfile.qualification}</p>}
                       {doctorProfile.designation && <p className="italic text-gray-600">{doctorProfile.designation}</p>}
                       {doctorProfile.regNo && <p className="font-mono text-gray-500 text-[7.5px]">Regd No: {doctorProfile.regNo}</p>}
+                      <p className="text-[7.5px] font-mono text-gray-500 pt-0.5 border-t border-gray-200 mt-0.5">
+                        Date & Time: {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-end justify-between text-[8px] text-gray-700">
-                    <div className="text-left text-[7.5px] text-gray-500 font-medium">
-                      <p className="font-bold text-gray-800">PrescribePro Digital Pad</p>
-                      <p>Date: {new Date().toLocaleDateString('en-GB')}</p>
-                    </div>
+                    <div className="flex-1" />
 
                     <div className="text-right space-y-0.5">
                       <p className="font-extrabold text-[9.5px] text-gray-900 border-t border-gray-400 pt-0.5 inline-block">
@@ -1763,6 +1763,9 @@ export default function UserWorkspacePage() {
                       {doctorProfile.regNo && (
                         <p className="text-[7.5px] font-mono text-gray-500">Regd No: {doctorProfile.regNo}</p>
                       )}
+                      <p className="text-[7.5px] font-mono text-gray-500 pt-0.5 border-t border-gray-200 mt-0.5">
+                        Date & Time: {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
                     </div>
                   </div>
                 )
@@ -1787,6 +1790,9 @@ export default function UserWorkspacePage() {
                     {doctorProfile.regNo && (
                       <p className="text-[7.5px] font-mono text-gray-500">Regd No: {doctorProfile.regNo}</p>
                     )}
+                    <p className="text-[7.5px] font-mono text-gray-500 pt-0.5 border-t border-gray-200 mt-0.5">
+                      Date & Time: {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
                   </div>
                 </div>
               )}
@@ -2823,14 +2829,14 @@ export default function UserWorkspacePage() {
                   {doctorProfile.qualification && <p className="font-semibold text-slate-700">{doctorProfile.qualification}</p>}
                   {doctorProfile.designation && <p className="italic text-slate-600">{doctorProfile.designation}</p>}
                   {doctorProfile.regNo && <p className="font-mono text-slate-500 text-[9px]">Regd. No: {doctorProfile.regNo}</p>}
+                  <p className="text-[9px] font-mono text-slate-500 pt-0.5 border-t border-slate-200 mt-0.5">
+                    Date & Time: {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 </div>
               </div>
             ) : (
               <div className="pt-4 border-t border-slate-300 flex items-end justify-between text-[10px] text-slate-600">
-                <div>
-                  <p className="font-bold text-slate-900">PRESCRIBEPRO CLINIC & HEALTH CENTER</p>
-                  <p>Primary Care, Telemedicine & Clinical Diagnostics</p>
-                </div>
+                <div className="flex-1" />
                 <div className="text-right text-slate-900 space-y-0.5">
                   <p className="font-extrabold text-xs text-slate-900 border-t border-slate-400 pt-0.5 inline-block">
                     {doctorProfile.name || 'Dr. Attending Physician'}
@@ -2844,6 +2850,9 @@ export default function UserWorkspacePage() {
                   {doctorProfile.regNo && (
                     <p className="font-mono text-[9px] text-slate-500">Regd. No: {doctorProfile.regNo}</p>
                   )}
+                  <p className="text-[9px] font-mono text-slate-500 pt-0.5 border-t border-slate-200 mt-0.5">
+                    Date & Time: {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 </div>
               </div>
             )
@@ -2863,6 +2872,9 @@ export default function UserWorkspacePage() {
                 {doctorProfile.regNo && (
                   <p className="font-mono text-[9px] text-slate-500">Regd. No: {doctorProfile.regNo}</p>
                 )}
+                <p className="text-[9px] font-mono text-slate-500 pt-0.5 border-t border-slate-200 mt-0.5">
+                  Date & Time: {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
               </div>
             </div>
           )}
