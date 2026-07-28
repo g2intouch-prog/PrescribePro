@@ -2,6 +2,8 @@ export interface AdminPresets {
   padType: 'digital' | 'preprinted';
   headerImage: string;
   footerImage: string;
+  headerMarginMm?: number;
+  footerMarginMm?: number;
   diagnosticTests: string[];
   additionalAdviceList: string[];
 }
@@ -114,6 +116,8 @@ const DEFAULT_PRESETS: AdminPresets = {
   padType: 'digital',
   headerImage: '',
   footerImage: '',
+  headerMarginMm: 35,
+  footerMarginMm: 20,
   diagnosticTests: COMPREHENSIVE_LAB_TESTS,
   additionalAdviceList: [
     'Cold Sponging for High Fever',

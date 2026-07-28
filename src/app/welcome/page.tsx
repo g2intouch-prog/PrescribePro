@@ -43,7 +43,7 @@ import {
   Calculator
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { getAdminPresets, AdminPresets } from '@/lib/db/admin-presets';
+import { getAdminPresets, saveAdminPresets, AdminPresets } from '@/lib/db/admin-presets';
 import { 
   getSpecialties, 
   saveSpecialties, 
@@ -177,10 +177,12 @@ export default function UserWorkspacePage() {
   ]);
   const [customProcedureText, setCustomProcedureText] = useState('Rest & light diet. Avoid heavy exertion.');
 
-  // Pad Config
+  // Pad Config & Millimeter Spacing Calibration
   const [padMode, setPadMode] = useState<'digital' | 'preprinted'>('digital');
   const [headerImg, setHeaderImg] = useState<string>('');
   const [footerImg, setFooterImg] = useState<string>('');
+  const [headerMarginMm, setHeaderMarginMm] = useState<number>(35);
+  const [footerMarginMm, setFooterMarginMm] = useState<number>(20);
 
   // Active Left Sub-Tab
   const [activeLeftTab, setActiveLeftTab] = useState<'patient' | 'vitals' | 'clinical' | 'procedures' | 'tests' | 'advice'>('patient');
@@ -203,6 +205,8 @@ export default function UserWorkspacePage() {
       setPadMode(loadedPresets.padType || 'digital');
       setHeaderImg(loadedPresets.headerImage || '');
       setFooterImg(loadedPresets.footerImage || '');
+      setHeaderMarginMm(loadedPresets.headerMarginMm ?? 35);
+      setFooterMarginMm(loadedPresets.footerMarginMm ?? 20);
 
       const specs = getSpecialties();
       setSpecialties(specs);
@@ -1113,39 +1117,97 @@ export default function UserWorkspacePage() {
             </button>
           </div>
 
-          {/* TOP ROW WITHIN 5PX: PAD MODE TOGGLE */}
-          <div className={`flex items-center justify-between p-2 rounded-xl text-xs shrink-0 mb-2 border ${
+          {/* MILLIMETER SPACING CALIBRATION CONTROL STRIP */}
+          <div className={`p-2 rounded-xl text-xs shrink-0 mb-2 border flex flex-wrap items-center justify-between gap-2 ${
             theme === 'day' ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-950 border-gray-800'
           }`}>
-            <span className={`font-semibold text-[11px] ${theme === 'day' ? 'text-slate-700' : 'text-gray-300'}`}>Clinic Pad Mode:</span>
-            <div className={`flex items-center gap-1 p-0.5 rounded-lg border text-[10px] ${
-              theme === 'day' ? 'bg-white border-slate-200' : 'bg-gray-900 border-gray-800'
-            }`}>
-              <button
-                onClick={() => setPadMode('digital')}
-                className={`px-2.5 py-1 rounded-md font-medium transition ${
-                  padMode === 'digital' 
-                    ? (theme === 'day' ? 'bg-blue-600 text-white font-bold shadow' : 'bg-emerald-500 text-gray-950 font-bold') 
-                    : 'text-gray-500'
-                }`}
-              >
-                Digital Pad
-              </button>
-              <button
-                onClick={() => setPadMode('preprinted')}
-                className={`px-2.5 py-1 rounded-md font-medium transition ${
-                  padMode === 'preprinted' 
-                    ? (theme === 'day' ? 'bg-blue-600 text-white font-bold shadow' : 'bg-emerald-500 text-gray-950 font-bold') 
-                    : 'text-gray-500'
-                }`}
-              >
-                Pre-printed Pad
-              </button>
+            <div className="flex items-center gap-2">
+              <span className={`font-semibold text-[11px] ${theme === 'day' ? 'text-slate-700' : 'text-gray-300'}`}>Pad Mode:</span>
+              <div className={`flex items-center gap-1 p-0.5 rounded-lg border text-[10px] ${
+                theme === 'day' ? 'bg-white border-slate-200' : 'bg-gray-900 border-gray-800'
+              }`}>
+                <button
+                  onClick={() => setPadMode('digital')}
+                  className={`px-2 py-0.5 rounded-md font-medium transition ${
+                    padMode === 'digital' 
+                      ? (theme === 'day' ? 'bg-blue-600 text-white font-bold shadow' : 'bg-emerald-500 text-gray-950 font-bold') 
+                      : 'text-gray-500'
+                  }`}
+                >
+                  Digital
+                </button>
+                <button
+                  onClick={() => setPadMode('preprinted')}
+                  className={`px-2 py-0.5 rounded-md font-medium transition ${
+                    padMode === 'preprinted' 
+                      ? (theme === 'day' ? 'bg-blue-600 text-white font-bold shadow' : 'bg-emerald-500 text-gray-950 font-bold') 
+                      : 'text-gray-500'
+                  }`}
+                >
+                  Pre-printed Pad
+                </button>
+              </div>
+            </div>
+
+            {/* MILLIMETER CALIBRATION READOUTS */}
+            <div className="flex items-center gap-3 text-[10px]">
+              <div className="flex items-center gap-1">
+                <span className="text-slate-500 font-medium">Top Margin:</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={120}
+                  value={headerMarginMm}
+                  onChange={(e) => {
+                    const val = Math.max(0, parseInt(e.target.value) || 0);
+                    setHeaderMarginMm(val);
+                    const p = getAdminPresets();
+                    saveAdminPresets({ ...p, headerMarginMm: val });
+                  }}
+                  className={`w-12 px-1 py-0.5 rounded border text-center font-mono font-bold text-blue-600 ${
+                    theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-emerald-400'
+                  }`}
+                />
+                <span className="text-slate-500 font-mono">mm</span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <span className="text-slate-500 font-medium">Btm Margin:</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={120}
+                  value={footerMarginMm}
+                  onChange={(e) => {
+                    const val = Math.max(0, parseInt(e.target.value) || 0);
+                    setFooterMarginMm(val);
+                    const p = getAdminPresets();
+                    saveAdminPresets({ ...p, footerMarginMm: val });
+                  }}
+                  className={`w-12 px-1 py-0.5 rounded border text-center font-mono font-bold text-pink-600 ${
+                    theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-pink-400'
+                  }`}
+                />
+                <span className="text-slate-500 font-mono">mm</span>
+              </div>
             </div>
           </div>
 
+          {/* DYNAMIC PRINT CSS FOR CALIBRATED MILLIMETER MARGINS */}
+          <style jsx global>{`
+            @media print {
+              #printable-prescription-pad {
+                padding-top: ${headerMarginMm}mm !important;
+                padding-bottom: ${footerMarginMm}mm !important;
+              }
+            }
+          `}</style>
+
           {/* CENTERED LIVE PRESCRIPTION PAD PREVIEW CARD (A4 PORTRAIT MODE) */}
-          <div id="printable-prescription-pad" className="flex-1 bg-white text-gray-900 rounded-xl p-4 shadow-2xl space-y-3 text-[11px] font-sans border border-gray-200 overflow-y-auto flex flex-col justify-between aspect-[210/297] max-w-[440px] w-full mx-auto">
+          <div
+            id="printable-prescription-pad"
+            className="flex-1 bg-white text-gray-900 rounded-xl p-4 shadow-2xl space-y-3 text-[11px] font-sans border border-gray-200 overflow-y-auto flex flex-col justify-between aspect-[210/297] max-w-[440px] w-full mx-auto"
+          >
             
             {/* PAD HEADER */}
             <div>
@@ -1161,8 +1223,11 @@ export default function UserWorkspacePage() {
                   </div>
                 )
               ) : (
-                <div className="h-12 border-b border-dashed border-gray-300 flex items-center justify-center text-[9px] text-gray-400 font-mono">
-                  [Pre-printed Letterhead Pad Space]
+                <div
+                  style={{ height: `${Math.max(20, headerMarginMm * 1.2)}px` }}
+                  className="border-b border-dashed border-gray-300 flex items-center justify-center text-[9px] text-gray-400 font-mono bg-gray-50/50 rounded"
+                >
+                  [Pre-printed Letterhead Header Space: {headerMarginMm}mm]
                 </div>
               )}
 
@@ -1436,8 +1501,11 @@ export default function UserWorkspacePage() {
                   </div>
                 )
               ) : (
-                <div className="h-8 border-t border-dashed border-gray-300 flex items-center justify-center text-[9px] text-gray-400 font-mono">
-                  [Pre-printed Footer Space]
+                <div
+                  style={{ height: `${Math.max(16, footerMarginMm * 1.2)}px` }}
+                  className="border-t border-dashed border-gray-300 flex items-center justify-center text-[9px] text-gray-400 font-mono bg-gray-50/50 rounded"
+                >
+                  [Pre-printed Footer Space: {footerMarginMm}mm]
                 </div>
               )}
             </div>
