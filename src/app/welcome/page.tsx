@@ -749,7 +749,7 @@ export default function UserWorkspacePage() {
           </div>
 
           {/* CENTERED LIVE PRESCRIPTION PAD PREVIEW CARD */}
-          <div className="flex-1 bg-white text-gray-900 rounded-xl p-4 shadow-2xl space-y-3 text-[11px] font-sans border border-gray-200 overflow-y-auto flex flex-col justify-between">
+          <div id="printable-prescription-pad" className="flex-1 bg-white text-gray-900 rounded-xl p-4 shadow-2xl space-y-3 text-[11px] font-sans border border-gray-200 overflow-y-auto flex flex-col justify-between">
             
             {/* PAD HEADER */}
             <div>

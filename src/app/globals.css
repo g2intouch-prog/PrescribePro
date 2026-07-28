@@ -30,3 +30,33 @@ body {
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+/* PRINT-ONLY CSS RULES: HIDE EVERYTHING EXCEPT THE PRESCRIPTION PAD */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #printable-prescription-pad,
+  #printable-prescription-pad * {
+    visibility: visible !important;
+  }
+
+  #printable-prescription-pad {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 24px !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+}
