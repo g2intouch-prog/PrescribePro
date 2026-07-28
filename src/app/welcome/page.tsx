@@ -386,7 +386,8 @@ export default function UserWorkspacePage() {
     if (!newDrugName.trim()) return;
     const newDrug: DrugItem = {
       id: `d-${Date.now()}`,
-      name: newDrugName.trim(),
+      genericName: newDrugName.trim(),
+      category: 'adult',
       dosage: newDrugDosage.trim() || '1-0-1',
       duration: newDrugDuration.trim() || '5 days',
     };
@@ -1150,44 +1151,90 @@ export default function UserWorkspacePage() {
             <div className="flex-1 overflow-hidden flex flex-col space-y-1.5 pt-1 border-t border-slate-200">
               <div className="flex items-center justify-between shrink-0">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
-                  <Pill className="h-3.5 w-3.5 text-emerald-600" /> Append Drugs to Rx (Tick)
+                  <Pill className="h-3.5 w-3.5 text-emerald-600" /> Generic Medications (Tick to Rx)
                 </span>
-                <span className="text-[9px] text-slate-500 font-mono font-bold">{drugCatalog.length} Drugs</span>
+                <span className="text-[9px] text-slate-500 font-mono font-bold">{drugCatalog.length} Generics</span>
               </div>
 
-              {/* SEARCH DRUGS */}
-              <div className="relative shrink-0">
-                <Search className="h-3 w-3 text-slate-400 absolute left-2 top-1.5" />
-                <input
-                  type="text"
-                  value={drugSearchQuery}
-                  onChange={(e) => setDrugSearchQuery(e.target.value)}
-                  placeholder="Filter medications..."
-                  className={`w-full rounded-lg pl-7 pr-2 py-0.5 text-[10px] ${inputBg}`}
-                />
+              {/* SEARCH & AGE/WEIGHT SMART SUGGESTION STRIP */}
+              <div className="space-y-1 shrink-0">
+                <div className="relative">
+                  <Search className="h-3 w-3 text-slate-400 absolute left-2 top-1.5" />
+                  <input
+                    type="text"
+                    value={drugSearchQuery}
+                    onChange={(e) => setDrugSearchQuery(e.target.value)}
+                    placeholder="Search generic names (e.g. Paracetamol, Amoxicillin)..."
+                    className={`w-full rounded-lg pl-7 pr-2 py-0.5 text-[10px] ${inputBg}`}
+                  />
+                </div>
+
+                <div className="flex items-center gap-1 text-[9px]">
+                  <span className="text-slate-500 font-bold shrink-0">Filter:</span>
+                  <button
+                    type="button"
+                    onClick={() => setDrugSearchQuery('')}
+                    className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrugSearchQuery('Paracetamol')}
+                    className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 font-bold hover:bg-emerald-200"
+                  >
+                    Paracetamol
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrugSearchQuery('Amoxicillin')}
+                    className="px-1.5 py-0.5 rounded bg-pink-100 text-pink-900 font-bold hover:bg-pink-200"
+                  >
+                    Amox
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrugSearchQuery('Syrup')}
+                    className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold hover:bg-amber-200"
+                  >
+                    Syrups
+                  </button>
+                </div>
               </div>
 
-              {/* CHECKLIST */}
+              {/* CHECKLIST OF GENERIC MEDICATIONS */}
               <div className="flex-1 overflow-y-auto space-y-1 pr-1">
                 {drugCatalog
-                  .filter((d) => d.name.toLowerCase().includes(drugSearchQuery.toLowerCase()))
+                  .filter((d) => {
+                    const q = drugSearchQuery.toLowerCase();
+                    return d.genericName.toLowerCase().includes(q) || d.dosage.toLowerCase().includes(q);
+                  })
                   .map((d) => {
-                    const label = `${d.name} (${d.dosage} - ${d.duration})`;
+                    const label = `${d.genericName} (${d.dosage})`;
                     const isChecked = selectedDrugs.includes(label);
                     return (
                       <label
                         key={d.id}
                         onClick={() => toggleDrugSelection(label)}
-                        className={`flex items-center gap-2 p-1.5 rounded-lg border text-[10px] cursor-pointer transition ${
+                        className={`flex items-start gap-2 p-1.5 rounded-lg border text-[10px] cursor-pointer transition ${
                           isChecked
                             ? (theme === 'day' ? 'bg-emerald-100 border-emerald-400 text-emerald-950 font-bold' : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300 font-semibold')
                             : (theme === 'day' ? 'bg-white border-slate-200 text-slate-700 hover:border-emerald-300' : 'bg-gray-950/40 border-gray-800/80 text-gray-400')
                         }`}
                       >
-                        <input type="checkbox" checked={isChecked} onChange={() => {}} className="rounded text-emerald-600" />
-                        <div className="truncate">
-                          <span className="font-semibold block">{d.name}</span>
-                          <span className="text-[9px] text-slate-500">{d.dosage} • {d.duration}</span>
+                        <input type="checkbox" checked={isChecked} onChange={() => {}} className="rounded text-emerald-600 mt-0.5" />
+                        <div className="truncate flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-slate-900 truncate">{d.genericName}</span>
+                            <span className={`text-[8px] px-1 py-0.5 rounded font-mono uppercase font-bold ${
+                              d.category === 'adult' ? 'bg-blue-100 text-blue-800' :
+                              d.category === 'pediatric' ? 'bg-amber-100 text-amber-800' :
+                              d.category === 'infant' ? 'bg-pink-100 text-pink-800' : 'bg-slate-100 text-slate-700'
+                            }`}>
+                              {d.category}
+                            </span>
+                          </div>
+                          <span className="text-[9px] text-slate-500 block truncate">{d.dosage} • {d.duration}</span>
                         </div>
                       </label>
                     );
@@ -1354,7 +1401,7 @@ export default function UserWorkspacePage() {
               {drugCatalog.map((d) => (
                 <div key={d.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
                   <div>
-                    <strong className="text-slate-900 block font-bold">{d.name}</strong>
+                    <strong className="text-slate-900 block font-bold">{d.genericName}</strong>
                     <span className="text-[11px] text-slate-600">Dosage: {d.dosage} • Duration: {d.duration}</span>
                   </div>
                   <button
