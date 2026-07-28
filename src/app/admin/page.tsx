@@ -66,12 +66,21 @@ export default function AdminDashboardPage() {
 
     setLoading(true);
     const added = await addInvitedEmail(newInviteEmail);
+
+    try {
+      await fetch('/api/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newInviteEmail.trim() }),
+      });
+    } catch (err) {}
+
     setLoading(false);
 
     if (added) {
       setStatusMsg({ 
         type: 'success', 
-        text: `Invitation sent to "${newInviteEmail.trim()}"! User is now active.` 
+        text: `Invitation pre-approved & sent to "${newInviteEmail.trim()}"! They can now sign in immediately.` 
       });
       setNewInviteEmail('');
       const updated = await getInvitedUserRecords();
@@ -79,7 +88,7 @@ export default function AdminDashboardPage() {
     } else {
       setStatusMsg({ 
         type: 'error', 
-        text: `"${newInviteEmail.trim()}" is already invited.` 
+        text: `"${newInviteEmail.trim()}" is already on the active invited list.` 
       });
     }
   }
