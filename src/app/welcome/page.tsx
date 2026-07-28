@@ -52,6 +52,7 @@ import {
   calculatePediatricDose,
   calculateBsaDose,
   calculateBsa,
+  searchClinicalDrugs,
   Specialty, 
   PrescriptionTemplate, 
   DrugItem 
@@ -1512,17 +1513,8 @@ export default function UserWorkspacePage() {
 
               {/* CHECKLIST OF GENERIC MEDICATIONS WITH CONTRAINDICATION SAFETY GAURDS */}
               <div className="flex-1 overflow-y-auto space-y-1 pr-1">
-                {drugCatalog
-                  .filter((d) => {
-                    const q = drugSearchQuery.toLowerCase();
-                    return (
-                      d.genericName.toLowerCase().includes(q) ||
-                      d.dosage.toLowerCase().includes(q) ||
-                      (d.keywords && d.keywords.toLowerCase().includes(q))
-                    );
-                  })
-                  .map((d) => {
-                    const w = parseFloat(vitals.weight) || 0;
+                {searchClinicalDrugs(drugSearchQuery, drugCatalog).map((d) => {
+                  const w = parseFloat(vitals.weight) || 0;
                     const isContraindicated = w > 0 && w < 30 && d.category === 'adult';
                     const label = `${d.genericName} (${d.dosage})`;
                     const isChecked = selectedDrugs.includes(label);

@@ -27,6 +27,72 @@ export interface DrugItem {
   maxWeight?: number;
 }
 
+export const CLINICAL_SYMPTOM_MAP: Record<string, string[]> = {
+  cough: ['cough', 'dextromethorphan', 'ambroxol', 'terbutaline', 'guaifenesin', 'levosalbutamol', 'codeine', 'astalin', 'linctus'],
+  alkaliser: ['alkaliser', 'alkalizer', 'disodium hydrogen citrate', 'potassium citrate', 'citric acid', 'flavoxate', 'citrate', 'dysuria'],
+  alkalizer: ['alkaliser', 'alkalizer', 'disodium hydrogen citrate', 'potassium citrate', 'citric acid', 'flavoxate', 'citrate', 'dysuria'],
+  dysuria: ['alkaliser', 'disodium hydrogen citrate', 'flavoxate', 'tamsulosin', 'norfloxacin'],
+  burning: ['alkaliser', 'disodium hydrogen citrate', 'pantoprazole', 'sucralfate'],
+  fever: ['paracetamol', 'acetaminophen', 'mefenamic', 'ibuprofen', 'cold sponging'],
+  pyrexia: ['paracetamol', 'acetaminophen', 'mefenamic', 'ibuprofen'],
+  pain: ['paracetamol', 'aceclofenac', 'diclofenac', 'ibuprofen', 'mefenamic', 'tramadol', 'etoricoxib', 'pregabalin', 'thiocolchicoside'],
+  headache: ['paracetamol', 'naproxen', 'domperidone', 'diclofenac', 'etoricoxib'],
+  acidity: ['pantoprazole', 'omeprazole', 'rabeprazole', 'esomeprazole', 'famotidine', 'sucralfate', 'antacid'],
+  gas: ['pantoprazole', 'domperidone', 'rabeprazole', 'simethicone', 'bacillus'],
+  reflux: ['pantoprazole', 'domperidone', 'rabeprazole', 'esomeprazole', 'sucralfate'],
+  vomiting: ['ondansetron', 'domperidone', 'metoclopramide', 'emesis'],
+  nausea: ['ondansetron', 'domperidone', 'metoclopramide'],
+  diarrhea: ['ors', 'bacillus clausii', 'saccharomyces', 'ofloxacin + ornidazole', 'racecadotril', 'loperamide'],
+  'loose motion': ['ors', 'bacillus clausii', 'saccharomyces', 'ofloxacin + ornidazole', 'racecadotril'],
+  constipation: ['lactulose', 'peg 3350', 'liquid paraffin', 'isabgol'],
+  asthma: ['salbutamol', 'budesonide', 'duolin', 'foracort', 'seretide', 'montelukast', 'acebrophylline', 'doxofylline'],
+  wheezing: ['salbutamol', 'budesonide', 'duolin', 'foracort', 'seretide', 'montelukast'],
+  breathlessness: ['salbutamol', 'budesonide', 'duolin', 'oxygen', 'deriphylline'],
+  allergy: ['cetirizine', 'levocetirizine', 'montelukast', 'fexofenadine', 'bilastine', 'hydroxyzine'],
+  itching: ['cetirizine', 'levocetirizine', 'calamine', 'hydrocortisone', 'permethrin', 'clotrimazole'],
+  rash: ['calamine', 'hydrocortisone', 'clobetasol', 'momethasone', 'cetirizine'],
+  fungal: ['fluconazole', 'itraconazole', 'terbinafine', 'clotrimazole', 'luliconazole', 'ketoconazole'],
+  ringworm: ['clotrimazole', 'luliconazole', 'terbinafine', 'itraconazole'],
+  dandruff: ['ketoconazole shampoo'],
+  bp: ['telmisartan', 'amlodipine', 'cilnidipine', 'enalapril', 'ramipril', 'atenolol', 'metoprolol', 'lasix', 'furosemide'],
+  hypertension: ['telmisartan', 'amlodipine', 'cilnidipine', 'enalapril', 'ramipril', 'atenolol', 'metoprolol'],
+  diabetes: ['metformin', 'glimepiride', 'teneligliptin', 'sitagliptin', 'vildagliptin', 'dapagliflozin', 'empagliflozin', 'voglibose'],
+  sugar: ['metformin', 'glimepiride', 'teneligliptin', 'sitagliptin', 'dapagliflozin', 'voglibose'],
+  thyroid: ['thyroxine', 'levothyroxine', 'carbimazole', 'methimazole'],
+  sleep: ['alprazolam', 'clonazepam', 'diazepam', 'lorazepam', 'zolpidem'],
+  insomnia: ['zolpidem', 'alprazolam', 'clonazepam'],
+  anxiety: ['alprazolam', 'clonazepam', 'diazepam', 'propranolol', 'escitalopram'],
+  infection: ['amoxicillin', 'augmentin', 'azithromycin', 'cefixime', 'ceftriaxone', 'ciprofloxacin', 'levofloxacin', 'metronidazole'],
+  eye: ['tobramycin', 'moxifloxacin', 'carboxymethylcellulose', 'olopatadine', 'timolol'],
+  ear: ['paradichlorobenzene', 'ofloxacin ear'],
+  throat: ['paracetamol', 'cetirizine', 'amoxicillin', 'azithromycin', 'povidone gargle'],
+  spasm: ['dicyclomine', 'drotaverine', 'buscopan', 'mebeverine', 'flavoxate'],
+  stone: ['potassium citrate', 'disodium hydrogen citrate', 'tamsulosin', 'alkaliser'],
+  injection: ['adrenaline', 'noradrenaline', 'dopamine', 'dobutamine', 'atropine', 'amiodarone', 'hydrocortisone', 'ceftriaxone', 'meropenem', 'diclofenac injection'],
+  iv: ['adrenaline', 'noradrenaline', 'dopamine', 'dobutamine', 'atropine', 'amiodarone', 'hydrocortisone', 'ceftriaxone', 'meropenem', 'paracetamol iv'],
+  anesthetic: ['propofol', 'ketamine', 'etomidate', 'thiopental', 'sevoflurane', 'isoflurane', 'lignocaine', 'bupivacaine', 'rocuronium', 'succinylcholine', 'vecuronium'],
+};
+
+export function searchClinicalDrugs(query: string, catalog: DrugItem[]): DrugItem[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return catalog;
+
+  const aliasKeywords = CLINICAL_SYMPTOM_MAP[q] || [q];
+
+  return catalog.filter((drug) => {
+    const name = drug.genericName.toLowerCase();
+    const dosage = drug.dosage.toLowerCase();
+    const cat = drug.category.toLowerCase();
+    const kw = (drug.keywords || '').toLowerCase();
+
+    if (name.includes(q) || dosage.includes(q) || cat.includes(q) || kw.includes(q)) {
+      return true;
+    }
+
+    return aliasKeywords.some((alias) => name.includes(alias) || dosage.includes(alias) || kw.includes(alias));
+  });
+}
+
 export interface CalculatedPediatricDose {
   drugName: string;
   recommendedDoseMg: number;
