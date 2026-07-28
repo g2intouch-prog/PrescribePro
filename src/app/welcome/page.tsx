@@ -325,7 +325,7 @@ export default function UserWorkspacePage() {
   };
 
   const handleApplyOdiaShantiMantraFooter = () => {
-    const odiaUrl = '/odia_footer_banner.png';
+    const odiaUrl = '/odia_footer_banner.svg';
     setFooterImg(odiaUrl);
     localStorage.setItem('prescribepro_footer_img', odiaUrl);
     const p = getAdminPresets();
