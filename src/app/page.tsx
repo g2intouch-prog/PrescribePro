@@ -160,10 +160,13 @@ export default function PwaDashboard() {
           {/* Auth Button */}
           {user ? (
             <div className="flex items-center gap-2">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl glass-card text-xs">
+              <button
+                onClick={() => window.location.href = '/welcome'}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl glass-card text-xs hover:border-emerald-500/50 transition"
+              >
                 <User className="h-3.5 w-3.5 text-emerald-400" />
                 <span className="truncate max-w-[120px]">{user.email}</span>
-              </div>
+              </button>
               <button
                 onClick={() => setUser(null)}
                 className="p-2 rounded-xl glass-card hover:bg-gray-800/80 transition text-gray-400 hover:text-red-400"
@@ -174,11 +177,11 @@ export default function PwaDashboard() {
             </div>
           ) : (
             <button
-              onClick={() => setAuthModalOpen(true)}
+              onClick={() => window.location.href = '/auth'}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-gray-950 font-semibold text-xs shadow-md shadow-emerald-500/20 hover:brightness-110 transition"
             >
               <Lock className="h-3.5 w-3.5" />
-              Supabase Auth
+              Authenticator
             </button>
           )}
         </div>
