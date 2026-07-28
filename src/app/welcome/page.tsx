@@ -799,8 +799,8 @@ export default function UserWorkspacePage() {
       {/* 2. THREE VERTICAL SECTIONS */}
       <main className="flex-1 p-2.5 grid grid-cols-1 lg:grid-cols-12 gap-2.5 overflow-hidden h-[calc(100vh-38px)]">
         
-        {/* SECTION 1 (LEFT COLUMN - 4 COLS): PATIENT REGISTRATION & INPUT SUB-PANES */}
-        <section className={`lg:col-span-4 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
+        {/* SECTION 1 (LEFT COLUMN - 3 COLS): PATIENT REGISTRATION & INPUT SUB-PANES */}
+        <section className={`lg:col-span-3 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
           <div className="flex flex-col h-full space-y-3">
             
             <div className={`flex items-center justify-between border-b pb-2 shrink-0 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800/80'}`}>
@@ -1331,122 +1331,71 @@ export default function UserWorkspacePage() {
           </div>
         </section>
 
-        {/* SECTION 2 (CENTER COLUMN - 5 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
-        <section className={`lg:col-span-5 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
+        {/* SECTION 2 (CENTER COLUMN - 7 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
+        <section className={`lg:col-span-7 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
           
-          {/* Section Header */}
-          <div className={`flex items-center justify-between pb-2 border-b shrink-0 mb-2 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800'}`}>
-            <div className="flex items-center gap-3">
-              <div className={`flex items-center gap-1.5 font-bold text-xs ${theme === 'day' ? 'text-blue-700' : 'text-emerald-400'}`}>
-                <FileSpreadsheet className="h-4 w-4" />
-                Section 2: Live Prescription Preview
+          {/* ULTRA-COMPACT SINGLE-LINE CONTROL STRIP */}
+          <div className={`px-2.5 py-1 rounded-xl text-[10px] shrink-0 mb-1.5 border flex items-center justify-between gap-2 overflow-x-auto ${
+            theme === 'day' ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-950 border-gray-800'
+          }`}>
+            {/* LEFT SIDE: TITLE + PAPER SIZE + PAD MODE */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className={`flex items-center gap-1 font-bold text-xs ${theme === 'day' ? 'text-blue-700' : 'text-emerald-400'}`}>
+                <FileSpreadsheet className="h-3.5 w-3.5" />
+                <span className="whitespace-nowrap">Section 2: Preview</span>
               </div>
 
-              {/* VIBRANT DUAL A4 / A5 PAPER SIZE TOGGLE SWITCH */}
+              {/* PAPER SIZE TOGGLE */}
               <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={() => handleSetPageSize('A4')}
-                  className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold transition-all duration-200 flex items-center gap-1 ${
-                    pageSize === 'A4'
-                      ? 'bg-emerald-600 text-white shadow-md scale-105'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold transition ${
+                    pageSize === 'A4' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
-                  title="A4 Standard Full Size (210mm x 297mm)"
+                  title="A4 Standard (210mm x 297mm)"
                 >
                   📄 A4
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSetPageSize('A5')}
-                  className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold transition-all duration-200 flex items-center gap-1 ${
-                    pageSize === 'A5'
-                      ? 'bg-purple-600 text-white shadow-md scale-105'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold transition ${
+                    pageSize === 'A5' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
-                  title="A5 Compact Prescription Pad Size (148mm x 210mm)"
+                  title="A5 Compact (148mm x 210mm)"
                 >
                   📃 A5
                 </button>
               </div>
-            </div>
 
-            <button
-              onClick={handleSaveCurrentAsTemplate}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-pink-600 text-white text-[10px] font-bold shadow hover:bg-pink-700 transition"
-              title="Save current prescription layout & drugs as reusable template"
-            >
-              <BookmarkPlus className="h-3 w-3" /> Save Template
-            </button>
-          </div>
-
-          {/* MILLIMETER SPACING CALIBRATION CONTROL STRIP */}
-          <div className={`p-2 rounded-xl text-xs shrink-0 mb-2 border flex flex-wrap items-center justify-between gap-2 ${
-            theme === 'day' ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-950 border-gray-800'
-          }`}>
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <span className={`font-semibold text-[11px] ${theme === 'day' ? 'text-slate-700' : 'text-gray-300'}`}>Pad Mode:</span>
-                <div className={`flex items-center gap-1 p-0.5 rounded-lg border text-[10px] ${
-                  theme === 'day' ? 'bg-white border-slate-200' : 'bg-gray-900 border-gray-800'
-                }`}>
-                  <button
-                    onClick={() => setPadMode('digital')}
-                    className={`px-2 py-0.5 rounded-md font-medium transition ${
-                      padMode === 'digital' 
-                        ? (theme === 'day' ? 'bg-blue-600 text-white font-bold shadow' : 'bg-emerald-500 text-gray-950 font-bold') 
-                        : 'text-gray-500'
-                    }`}
-                  >
-                    Digital
-                  </button>
-                  <button
-                    onClick={() => setPadMode('preprinted')}
-                    className={`px-2 py-0.5 rounded-md font-medium transition ${
-                      padMode === 'preprinted' 
-                        ? (theme === 'day' ? 'bg-blue-600 text-white font-bold shadow' : 'bg-emerald-500 text-gray-950 font-bold') 
-                        : 'text-gray-500'
-                    }`}
-                  >
-                    Pre-printed Pad
-                  </button>
-                </div>
-              </div>
-
-              {/* PAPER SIZE SELECTOR (A4 / A5) */}
-              <div className="flex items-center gap-1.5">
-                <span className={`font-semibold text-[11px] ${theme === 'day' ? 'text-slate-700' : 'text-gray-300'}`}>Paper Size:</span>
-                <div className={`flex items-center gap-1 p-0.5 rounded-lg border text-[10px] ${
-                  theme === 'day' ? 'bg-white border-slate-200' : 'bg-gray-900 border-gray-800'
-                }`}>
-                  <button
-                    onClick={() => handleSetPageSize('A4')}
-                    className={`px-2 py-0.5 rounded-md font-bold transition ${
-                      pageSize === 'A4'
-                        ? 'bg-emerald-600 text-white shadow'
-                        : 'text-gray-500 hover:text-slate-900'
-                    }`}
-                  >
-                    📄 A4 (Standard)
-                  </button>
-                  <button
-                    onClick={() => handleSetPageSize('A5')}
-                    className={`px-2 py-0.5 rounded-md font-bold transition ${
-                      pageSize === 'A5'
-                        ? 'bg-purple-600 text-white shadow'
-                        : 'text-gray-500 hover:text-slate-900'
-                    }`}
-                  >
-                    📃 A5 (Compact Pad)
-                  </button>
-                </div>
+              {/* PAD MODE TOGGLE */}
+              <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setPadMode('digital')}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition ${
+                    padMode === 'digital' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                >
+                  Digital
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPadMode('preprinted')}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition ${
+                    padMode === 'preprinted' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                >
+                  Pre-printed
+                </button>
               </div>
             </div>
 
-            {/* MILLIMETER CALIBRATION READOUTS */}
-            <div className="flex items-center gap-3 text-[10px]">
+            {/* RIGHT SIDE: MARGIN INPUTS + BANNER HEIGHT + SAVE TEMPLATE */}
+            <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-1">
-                <span className="text-slate-500 font-medium">Top Margin:</span>
+                <span className="text-slate-500 font-medium">Top:</span>
                 <input
                   type="number"
                   min={0}
@@ -1458,7 +1407,7 @@ export default function UserWorkspacePage() {
                     const p = getAdminPresets();
                     saveAdminPresets({ ...p, headerMarginMm: val });
                   }}
-                  className={`w-12 px-1 py-0.5 rounded border text-center font-mono font-bold text-blue-600 ${
+                  className={`w-10 px-1 py-0.5 rounded border text-center font-mono font-bold text-blue-600 text-[10px] ${
                     theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-emerald-400'
                   }`}
                 />
@@ -1466,7 +1415,7 @@ export default function UserWorkspacePage() {
               </div>
 
               <div className="flex items-center gap-1">
-                <span className="text-slate-500 font-medium">Btm Margin:</span>
+                <span className="text-slate-500 font-medium">Btm:</span>
                 <input
                   type="number"
                   min={0}
@@ -1478,7 +1427,7 @@ export default function UserWorkspacePage() {
                     const p = getAdminPresets();
                     saveAdminPresets({ ...p, footerMarginMm: val });
                   }}
-                  className={`w-12 px-1 py-0.5 rounded border text-center font-mono font-bold text-pink-600 ${
+                  className={`w-10 px-1 py-0.5 rounded border text-center font-mono font-bold text-pink-600 text-[10px] ${
                     theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-pink-400'
                   }`}
                 />
@@ -1486,7 +1435,7 @@ export default function UserWorkspacePage() {
               </div>
 
               <div className="flex items-center gap-1">
-                <span className="text-slate-500 font-medium">Banner Ht:</span>
+                <span className="text-slate-500 font-medium">Ht:</span>
                 <input
                   type="number"
                   min={18}
@@ -1497,12 +1446,21 @@ export default function UserWorkspacePage() {
                     setFooterImgHeight(val);
                     localStorage.setItem('prescribepro_footer_img_height', String(val));
                   }}
-                  className={`w-12 px-1 py-0.5 rounded border text-center font-mono font-bold text-purple-600 ${
+                  className={`w-10 px-1 py-0.5 rounded border text-center font-mono font-bold text-purple-600 text-[10px] ${
                     theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-purple-400'
                   }`}
                 />
                 <span className="text-slate-500 font-mono">px</span>
               </div>
+
+              <button
+                type="button"
+                onClick={handleSaveCurrentAsTemplate}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-pink-600 text-white text-[10px] font-bold shadow hover:bg-pink-700 transition shrink-0 ml-1"
+                title="Save Template"
+              >
+                <BookmarkPlus className="h-3.5 w-3.5" /> Save Template
+              </button>
             </div>
           </div>
 
@@ -1521,8 +1479,8 @@ export default function UserWorkspacePage() {
             id="printable-prescription-pad"
             className={`flex-1 bg-white text-gray-900 rounded-xl p-4 shadow-2xl space-y-3 font-sans border border-gray-200 overflow-y-auto flex flex-col justify-between w-full mx-auto transition-all duration-300 ${
               pageSize === 'A5'
-                ? 'aspect-[148/210] max-w-[360px] text-[10px]'
-                : 'aspect-[210/297] max-w-[450px] text-[11px]'
+                ? 'aspect-[148/210] max-w-[440px] text-[10px]'
+                : 'aspect-[210/297] max-w-[560px] text-[11px]'
             }`}
           >
             
@@ -1977,8 +1935,8 @@ export default function UserWorkspacePage() {
 
         </section>
 
-        {/* SECTION 3 (RIGHT COLUMN - 3 COLS): SPECIALTIES, TEMPLATES & DRUGS CATALOG */}
-        <section className={`lg:col-span-3 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
+        {/* SECTION 3 (RIGHT COLUMN - 2 COLS): SPECIALTIES, TEMPLATES & DRUGS CATALOG */}
+        <section className={`lg:col-span-2 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
             
             {/* Header */}
