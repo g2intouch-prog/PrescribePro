@@ -433,9 +433,9 @@ export default function UserWorkspacePage() {
   const isAdmin = email.toLowerCase() === 'g2intouch@gmail.com';
   const currentSpecialty = specialties.find((sp) => sp.id === selectedSpecialtyId);
 
-  // Dynamic Theme Styling
+  // Dynamic Theme Styling: Elliptical Green -> Pink -> Blue Gradient for Day Mode
   const containerBg = theme === 'day'
-    ? 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-100 via-pink-100 to-emerald-100 text-slate-900'
+    ? 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-200 via-pink-200 to-sky-200 text-slate-900'
     : 'bg-gradient-to-b from-[#0b0f19] via-[#090d16] to-[#05070d] text-gray-100';
 
   const headerBg = theme === 'day'
@@ -456,9 +456,7 @@ export default function UserWorkspacePage() {
       {/* 1. ULTRA-COMPACT TOP BANNER (~5PX PADDING / ~38PX HEIGHT) */}
       <header className={`h-[38px] px-3 sm:px-4 py-1 flex items-center justify-between shrink-0 ${headerBg}`}>
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-lg bg-gradient-to-tr from-blue-600 via-pink-500 to-emerald-500 flex items-center justify-center shadow-md">
-            <Layers className="h-3.5 w-3.5 text-white font-bold" />
-          </div>
+          <img src="/icon.png" alt="PrescribePro Logo" className="h-6 w-6 rounded-lg shadow-md border border-slate-200/50" />
           <div className="flex items-center gap-2">
             <h1 className={`font-extrabold text-xs tracking-wide ${
               theme === 'day' ? 'text-slate-900' : 'bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-transparent'
@@ -932,8 +930,8 @@ export default function UserWorkspacePage() {
             </div>
           </div>
 
-          {/* CENTERED LIVE PRESCRIPTION PAD PREVIEW CARD */}
-          <div id="printable-prescription-pad" className="flex-1 bg-white text-gray-900 rounded-xl p-4 shadow-2xl space-y-3 text-[11px] font-sans border border-gray-200 overflow-y-auto flex flex-col justify-between">
+          {/* CENTERED LIVE PRESCRIPTION PAD PREVIEW CARD (A4 PORTRAIT MODE) */}
+          <div id="printable-prescription-pad" className="flex-1 bg-white text-gray-900 rounded-xl p-4 shadow-2xl space-y-3 text-[11px] font-sans border border-gray-200 overflow-y-auto flex flex-col justify-between aspect-[210/297] max-w-[440px] w-full mx-auto">
             
             {/* PAD HEADER */}
             <div>
