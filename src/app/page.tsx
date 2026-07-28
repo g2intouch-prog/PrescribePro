@@ -140,9 +140,9 @@ export default function PwaDashboard() {
           </div>
           <div>
             <h1 className="font-bold text-lg leading-tight tracking-wide bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
-              SQLite PWA App
+              PrescribePro PWA
             </h1>
-            <p className="text-xs text-gray-400 font-mono">*.vercel.app ready</p>
+            <p className="text-xs text-gray-400 font-mono">prescribepro.vercel.app ready</p>
           </div>
         </div>
 

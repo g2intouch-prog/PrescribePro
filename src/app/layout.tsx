@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'PWA App | Supabase & Vercel DB',
-  description: 'Progressive Web Application with Supabase Auth, Vercel Postgres, and Local Storage',
+  title: 'PrescribePro | Supabase & Vercel DB PWA',
+  description: 'PrescribePro Progressive Web Application with Supabase Auth, Vercel Postgres, and SQLite WASM Storage',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'PWA App',
+    title: 'PrescribePro',
   },
 };
 
