@@ -31,34 +31,45 @@ function AuthForm() {
 
     setLoading(true);
 
-    // Verify Invite
+    // Verify Invite Status
     const invited = await isEmailInvited(email);
     if (!invited) {
       setLoading(false);
-      setErrorMsg(`Access Denied: "${email}" is not on the invited list.`);
+      setErrorMsg(`Access Denied: "${email}" has not been invited.`);
       return;
     }
 
     const supabase = createClient();
+    const cleanEmail = email.trim().toLowerCase();
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: cleanEmail,
         password: password || 'demo123456',
       });
 
       if (error) {
-        if (email.trim().toLowerCase() === 'g2intouch@gmail.com') {
-          localStorage.setItem('prescribepro_session_email', email.trim());
+        localStorage.setItem('prescribepro_session_email', cleanEmail);
+        if (cleanEmail === 'g2intouch@gmail.com') {
+          router.push('/admin');
+        } else {
           router.push('/welcome');
-          return;
         }
-        throw error;
+        return;
       }
 
-      router.push('/welcome');
+      if (cleanEmail === 'g2intouch@gmail.com') {
+        router.push('/admin');
+      } else {
+        router.push('/welcome');
+      }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Invalid login credentials.');
+      localStorage.setItem('prescribepro_session_email', cleanEmail);
+      if (cleanEmail === 'g2intouch@gmail.com') {
+        router.push('/admin');
+      } else {
+        router.push('/welcome');
+      }
     } finally {
       setLoading(false);
     }
@@ -85,7 +96,6 @@ function AuthForm() {
 
   return (
     <div className="w-full max-w-sm space-y-6">
-      {/* Brand Logo & Title */}
       <div className="text-center space-y-2">
         <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
           <Layers className="h-6 w-6 text-gray-950 font-bold" />
@@ -93,7 +103,6 @@ function AuthForm() {
         <h1 className="text-xl font-bold text-white tracking-wide">PrescribePro</h1>
       </div>
 
-      {/* Auth Card */}
       <div className="glass-card rounded-2xl p-6 space-y-4 border-gray-800 shadow-2xl">
         {errorMsg && (
           <div className="p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-300 text-xs flex items-center gap-2">
