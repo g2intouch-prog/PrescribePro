@@ -10,8 +10,32 @@ export interface SqliteTask {
   updatedAt: string;
 }
 
+export interface SavedPrescriptionRecord {
+  id?: number;
+  prescriptionId: string;
+  patientRegNo: string;
+  patientName: string;
+  patientMobile: string;
+  patientAge: string;
+  patientGender: string;
+  actionSource: 'print' | 'pdf' | 'whatsapp' | 'email' | 'manual_save';
+  createdAt: string;
+  vitalsJson: string;
+  clinicalExamJson: string;
+  selectedDrugsJson: string;
+  selectedTestsJson: string;
+  testResultsText: string;
+  selectedAdviceJson: string;
+  customAdviceText: string;
+  selectedProceduresJson: string;
+  doctorProfileJson: string;
+  padMode: string;
+  pageSize: string;
+}
+
 let dbInstance: Database | null = null;
 const STORAGE_KEY = 'sqlite_pwa_db_binary';
+const PRESCRIPTIONS_BACKUP_KEY = 'prescribepro_sqlite_prescriptions_backup_v1';
 
 export async function getSqliteDb(): Promise<Database> {
   if (dbInstance) return dbInstance;
@@ -36,7 +60,7 @@ export async function getSqliteDb(): Promise<Database> {
     dbInstance = new SQL.Database();
   }
 
-  // Ensure table exists
+  // Ensure tables exist
   dbInstance.run(`
     CREATE TABLE IF NOT EXISTS pwa_tasks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,6 +70,29 @@ export async function getSqliteDb(): Promise<Database> {
       synced INTEGER DEFAULT 0,
       created_at TEXT,
       updated_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS patient_prescriptions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      prescription_id TEXT UNIQUE NOT NULL,
+      patient_reg_no TEXT NOT NULL,
+      patient_name TEXT NOT NULL,
+      patient_mobile TEXT,
+      patient_age TEXT,
+      patient_gender TEXT,
+      action_source TEXT,
+      created_at TEXT,
+      vitals_json TEXT,
+      clinical_exam_json TEXT,
+      selected_drugs_json TEXT,
+      selected_tests_json TEXT,
+      test_results_text TEXT,
+      selected_advice_json TEXT,
+      custom_advice_text TEXT,
+      selected_procedures_json TEXT,
+      doctor_profile_json TEXT,
+      pad_mode TEXT,
+      page_size TEXT
     );
   `);
 
@@ -61,6 +108,143 @@ function saveSqliteDb() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(array));
   } catch (err) {
     console.error('Error saving SQLite database binary locally:', err);
+  }
+}
+
+// ----------------------------------------------------
+// SQLITE PRESCRIPTION PERSISTENCE & RETRIEVAL FUNCTIONS
+// ----------------------------------------------------
+
+export async function savePrescriptionToSqlite(rec: SavedPrescriptionRecord): Promise<void> {
+  try {
+    const db = await getSqliteDb();
+    db.run(
+      `INSERT OR REPLACE INTO patient_prescriptions (
+        prescription_id, patient_reg_no, patient_name, patient_mobile, patient_age, patient_gender,
+        action_source, created_at, vitals_json, clinical_exam_json, selected_drugs_json,
+        selected_tests_json, test_results_text, selected_advice_json, custom_advice_text,
+        selected_procedures_json, doctor_profile_json, pad_mode, page_size
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        rec.prescriptionId,
+        rec.patientRegNo,
+        rec.patientName,
+        rec.patientMobile,
+        rec.patientAge,
+        rec.patientGender,
+        rec.actionSource,
+        rec.createdAt,
+        rec.vitalsJson,
+        rec.clinicalExamJson,
+        rec.selectedDrugsJson,
+        rec.selectedTestsJson,
+        rec.testResultsText,
+        rec.selectedAdviceJson,
+        rec.customAdviceText,
+        rec.selectedProceduresJson,
+        rec.doctorProfileJson,
+        rec.padMode,
+        rec.pageSize,
+      ]
+    );
+    saveSqliteDb();
+
+    // Also mirror into backup key for high availability
+    if (typeof window !== 'undefined') {
+      const existing = JSON.parse(localStorage.getItem(PRESCRIPTIONS_BACKUP_KEY) || '[]');
+      const filtered = existing.filter((p: any) => p.prescriptionId !== rec.prescriptionId);
+      localStorage.setItem(PRESCRIPTIONS_BACKUP_KEY, JSON.stringify([rec, ...filtered]));
+    }
+  } catch (err) {
+    console.error('Failed to save prescription to SQLite:', err);
+    if (typeof window !== 'undefined') {
+      const existing = JSON.parse(localStorage.getItem(PRESCRIPTIONS_BACKUP_KEY) || '[]');
+      const filtered = existing.filter((p: any) => p.prescriptionId !== rec.prescriptionId);
+      localStorage.setItem(PRESCRIPTIONS_BACKUP_KEY, JSON.stringify([rec, ...filtered]));
+    }
+  }
+}
+
+export async function getPatientPrescriptionsFromSqlite(queryKey: string): Promise<SavedPrescriptionRecord[]> {
+  const q = queryKey.trim().toLowerCase();
+  if (!q) return [];
+
+  try {
+    const db = await getSqliteDb();
+    const res = db.exec(
+      `SELECT * FROM patient_prescriptions 
+       WHERE LOWER(patient_reg_no) = LOWER(?) OR LOWER(patient_mobile) = LOWER(?) OR LOWER(patient_name) LIKE LOWER(?)
+       ORDER BY id DESC`,
+      [q, q, `%${q}%`]
+    );
+
+    let sqliteResults: SavedPrescriptionRecord[] = [];
+    if (res.length > 0) {
+      const columns = res[0].columns;
+      const values = res[0].values;
+      sqliteResults = values.map((row) => {
+        const obj: any = {};
+        columns.forEach((col, idx) => {
+          obj[col] = row[idx];
+        });
+        return {
+          id: obj.id,
+          prescriptionId: obj.prescription_id,
+          patientRegNo: obj.patient_reg_no,
+          patientName: obj.patient_name,
+          patientMobile: obj.patient_mobile,
+          patientAge: obj.patient_age,
+          patientGender: obj.patient_gender,
+          actionSource: obj.action_source,
+          createdAt: obj.created_at,
+          vitalsJson: obj.vitals_json,
+          clinicalExamJson: obj.clinical_exam_json,
+          selectedDrugsJson: obj.selected_drugs_json,
+          selectedTestsJson: obj.selected_tests_json,
+          testResultsText: obj.test_results_text,
+          selectedAdviceJson: obj.selected_advice_json,
+          customAdviceText: obj.custom_advice_text,
+          selectedProceduresJson: obj.selected_procedures_json,
+          doctorProfileJson: obj.doctor_profile_json,
+          padMode: obj.pad_mode,
+          pageSize: obj.page_size,
+        };
+      });
+    }
+
+    // Backup check
+    let backupResults: SavedPrescriptionRecord[] = [];
+    if (typeof window !== 'undefined') {
+      const backup = JSON.parse(localStorage.getItem(PRESCRIPTIONS_BACKUP_KEY) || '[]');
+      backupResults = backup.filter(
+        (p: SavedPrescriptionRecord) =>
+          p.patientRegNo.toLowerCase() === q ||
+          p.patientMobile.toLowerCase() === q ||
+          p.patientName.toLowerCase().includes(q)
+      );
+    }
+
+    // Merge and deduplicate by prescriptionId
+    const map = new Map<string, SavedPrescriptionRecord>();
+    [...sqliteResults, ...backupResults].forEach((item) => {
+      if (!map.has(item.prescriptionId)) map.set(item.prescriptionId, item);
+    });
+
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  } catch (err) {
+    console.error('Error fetching SQLite prescriptions:', err);
+    if (typeof window !== 'undefined') {
+      const backup = JSON.parse(localStorage.getItem(PRESCRIPTIONS_BACKUP_KEY) || '[]');
+      return backup.filter(
+        (p: SavedPrescriptionRecord) =>
+          p.patientRegNo.toLowerCase() === q ||
+          p.patientMobile.toLowerCase() === q ||
+          p.patientName.toLowerCase().includes(q)
+      );
+    }
+    return [];
   }
 }
 

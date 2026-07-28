@@ -46,6 +46,11 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { getAdminPresets, saveAdminPresets, AdminPresets } from '@/lib/db/admin-presets';
 import { 
+  savePrescriptionToSqlite, 
+  getPatientPrescriptionsFromSqlite, 
+  SavedPrescriptionRecord 
+} from '@/lib/db/sqlite';
+import { 
   getSpecialties, 
   saveSpecialties, 
   getDrugCatalog, 
@@ -304,6 +309,97 @@ export default function UserWorkspacePage() {
   });
   const [isDoctorProfileModalOpen, setIsDoctorProfileModalOpen] = useState(false);
 
+  // SQLite Prescription History Timeline State
+  const [sqliteHistory, setSqliteHistory] = useState<SavedPrescriptionRecord[]>([]);
+
+  useEffect(() => {
+    const key = patient?.regNo || patient?.mobile || patient?.name;
+    if (key && key.trim()) {
+      getPatientPrescriptionsFromSqlite(key).then((records) => {
+        setSqliteHistory(records);
+      });
+    } else {
+      setSqliteHistory([]);
+    }
+  }, [patient?.regNo, patient?.mobile, patient?.name]);
+
+  const autoSavePrescription = async (actionSource: 'print' | 'pdf' | 'whatsapp' | 'email' | 'manual_save') => {
+    if (!patient.name || !patient.name.trim()) return;
+
+    const prescriptionId = `RX-${Date.now()}`;
+    const nowIso = new Date().toISOString();
+
+    const record: SavedPrescriptionRecord = {
+      prescriptionId,
+      patientRegNo: patient.regNo || `REG-${Date.now().toString().slice(-4)}`,
+      patientName: patient.name || 'Patient',
+      patientMobile: patient.mobile || '',
+      patientAge: patient.age || '',
+      patientGender: patient.gender || 'Male',
+      actionSource,
+      createdAt: nowIso,
+      vitalsJson: JSON.stringify(vitals),
+      clinicalExamJson: JSON.stringify({
+        chiefComplaints,
+        signsSymptoms,
+        clinicalHistory,
+        familyHistory,
+        drugHistory,
+        examinationFindings,
+        provisionalDiagnosis,
+        differentialDiagnosis,
+        specificAdviceText,
+      }),
+      selectedDrugsJson: JSON.stringify(selectedDrugs),
+      selectedTestsJson: JSON.stringify(selectedTests),
+      testResultsText: testResultsText || '',
+      selectedAdviceJson: JSON.stringify(selectedAdvice),
+      customAdviceText: customAdviceText || '',
+      selectedProceduresJson: JSON.stringify(selectedProcedures),
+      doctorProfileJson: JSON.stringify(doctorProfile),
+      padMode,
+      pageSize,
+    };
+
+    await savePrescriptionToSqlite(record);
+
+    const pastRecords = await getPatientPrescriptionsFromSqlite(patient.regNo || patient.mobile || patient.name);
+    setSqliteHistory(pastRecords);
+  };
+
+  const handleRestoreSqlitePrescription = (rec: SavedPrescriptionRecord) => {
+    try {
+      if (rec.selectedDrugsJson) setSelectedDrugs(JSON.parse(rec.selectedDrugsJson));
+      if (rec.selectedTestsJson) setSelectedTests(JSON.parse(rec.selectedTestsJson));
+      if (rec.testResultsText) setTestResultsText(rec.testResultsText);
+      if (rec.selectedAdviceJson) setSelectedAdvice(JSON.parse(rec.selectedAdviceJson));
+      if (rec.customAdviceText) setCustomAdviceText(rec.customAdviceText);
+      if (rec.selectedProceduresJson) setSelectedProcedures(JSON.parse(rec.selectedProceduresJson));
+
+      if (rec.vitalsJson) {
+        setVitals(JSON.parse(rec.vitalsJson));
+      }
+
+      if (rec.clinicalExamJson) {
+        const parsedE = JSON.parse(rec.clinicalExamJson);
+        if (parsedE.chiefComplaints !== undefined) setChiefComplaints(parsedE.chiefComplaints);
+        if (parsedE.signsSymptoms !== undefined) setSignsSymptoms(parsedE.signsSymptoms);
+        if (parsedE.clinicalHistory !== undefined) setClinicalHistory(parsedE.clinicalHistory);
+        if (parsedE.familyHistory !== undefined) setFamilyHistory(parsedE.familyHistory);
+        if (parsedE.drugHistory !== undefined) setDrugHistory(parsedE.drugHistory);
+        if (parsedE.examinationFindings !== undefined) setExaminationFindings(parsedE.examinationFindings);
+        if (parsedE.provisionalDiagnosis !== undefined) setProvisionalDiagnosis(parsedE.provisionalDiagnosis);
+        if (parsedE.differentialDiagnosis !== undefined) setDifferentialDiagnosis(parsedE.differentialDiagnosis);
+        if (parsedE.specificAdviceText !== undefined) setSpecificAdviceText(parsedE.specificAdviceText);
+      }
+
+      setSaveStatus(`Restored SQLite Rx (${rec.actionSource.toUpperCase()}) from ${new Date(rec.createdAt).toLocaleDateString('en-GB')}!`);
+      setTimeout(() => setSaveStatus(null), 3500);
+    } catch (err) {
+      console.error('Error restoring prescription from SQLite:', err);
+    }
+  };
+
   // PWA Installation State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
@@ -503,6 +599,8 @@ export default function UserWorkspacePage() {
       return;
     }
 
+    autoSavePrescription('manual_save');
+
     const newRecord: PatientRecord = {
       regNo: patient.regNo || `REG-${Date.now().toString().slice(-4)}`,
       mobile: patient.mobile,
@@ -533,7 +631,7 @@ export default function UserWorkspacePage() {
       localStorage.setItem('prescribepro_patients_db', JSON.stringify(updatedDb));
     } catch (err) {}
 
-    setSaveStatus(`Saved record for "${patient.name}" to patient database!`);
+    setSaveStatus(`Saved record for "${patient.name}" to patient database & SQLite!`);
     setTimeout(() => setSaveStatus(null), 3000);
   };
 
@@ -715,7 +813,8 @@ export default function UserWorkspacePage() {
     setSelectedDrugs([...selectedDrugs, 'Tab Custom Generic Medication (1-0-1 after food) x 5 days']);
   };
 
-  const handlePrint = () => {
+  const handlePrint = (actionType: 'print' | 'pdf' = 'print') => {
+    autoSavePrescription(actionType);
     const printArea = document.getElementById('printable-prescription-pad');
     if (!printArea) {
       window.print();
@@ -935,6 +1034,7 @@ export default function UserWorkspacePage() {
   };
 
   const handleWhatsAppSend = () => {
+    autoSavePrescription('whatsapp');
     const phone = patient.mobile.replace(/[^0-9]/g, '') || '919876543210';
     const text = encodeURIComponent(
       `*PrescribePro Prescription Summary*\nPatient: ${patient.name} (${patient.regNo})\nRx Medications: ${selectedDrugs.join(', ')}\nDiagnostics: ${selectedTests.join(', ')}\nAdvice: ${selectedAdvice.join(', ')}\n\nView Digital Prescription at: https://prescribepro.vercel.app/`
@@ -943,6 +1043,7 @@ export default function UserWorkspacePage() {
   };
 
   const handleEmailSend = () => {
+    autoSavePrescription('email');
     const subject = encodeURIComponent(`Prescription Summary - ${patient.name} (${patient.regNo})`);
     const body = encodeURIComponent(
       `PrescribePro Prescription Summary\n\nPatient Name: ${patient.name}\nReg No: ${patient.regNo}\nVitals: Ht ${vitals.height}cm, Wt ${vitals.weight}kg, BP ${vitals.bp}\n\nRx Medications:\n${selectedDrugs.join('\n')}\n\nRecommended Tests:\n${selectedTests.join('\n')}\n\nTest Results:\n${testResultsText}\n\nAdvice:\n${selectedAdvice.join('\n')}\n${customAdviceText}`
@@ -1243,6 +1344,87 @@ export default function UserWorkspacePage() {
                           <p className="font-mono text-slate-700">Rx: {rec.prescription}</p>
                         </div>
                       ))
+                    )}
+                  </div>
+
+                  {/* SQLITE SAVED PRESCRIPTIONS HISTORY TIMELINE */}
+                  <div className="pt-2 space-y-1.5 border-t border-slate-200/80">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1 font-bold text-[10px] uppercase tracking-wider text-emerald-700">
+                        <DatabaseZap className="h-3.5 w-3.5 text-emerald-600" />
+                        SQLite Saved Prescriptions ({sqliteHistory.length})
+                      </div>
+                    </div>
+
+                    {sqliteHistory.length === 0 ? (
+                      <p className="text-[10px] text-slate-400 italic">No saved SQLite prescriptions for this patient yet. Print, PDF, WhatsApp, or Email to auto-save!</p>
+                    ) : (
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        {sqliteHistory.map((rec) => {
+                          const dateFormatted = new Date(rec.createdAt).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          });
+
+                          const drugsArr: string[] = rec.selectedDrugsJson ? JSON.parse(rec.selectedDrugsJson) : [];
+                          const testsArr: string[] = rec.selectedTestsJson ? JSON.parse(rec.selectedTestsJson) : [];
+                          const examObj = rec.clinicalExamJson ? JSON.parse(rec.clinicalExamJson) : {};
+
+                          const actionBadgeClass =
+                            rec.actionSource === 'print' ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                            rec.actionSource === 'pdf' ? 'bg-teal-100 text-teal-800 border-teal-300' :
+                            rec.actionSource === 'whatsapp' ? 'bg-green-100 text-green-800 border-green-300' :
+                            rec.actionSource === 'email' ? 'bg-pink-100 text-pink-800 border-pink-300' :
+                            'bg-purple-100 text-purple-800 border-purple-300';
+
+                          return (
+                            <div
+                              key={rec.prescriptionId}
+                              className={`p-2 rounded-xl text-[10px] space-y-1 border shadow-sm transition ${
+                                theme === 'day' ? 'bg-white/95 border-slate-200 hover:border-emerald-400' : 'bg-gray-900 border-gray-800 text-gray-200'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase border ${actionBadgeClass}`}>
+                                  {rec.actionSource}
+                                </span>
+                                <span className="font-mono text-[9px] text-slate-500">{dateFormatted}</span>
+                              </div>
+
+                              {examObj.provisionalDiagnosis && (
+                                <p className="font-bold text-slate-900 text-[10.5px]">
+                                  Diagnosis: {examObj.provisionalDiagnosis}
+                                </p>
+                              )}
+
+                              {drugsArr.length > 0 && (
+                                <p className="text-slate-700 font-mono text-[9.5px] truncate">
+                                  Rx ({drugsArr.length}): {drugsArr.join(', ')}
+                                </p>
+                              )}
+
+                              {testsArr.length > 0 && (
+                                <p className="text-blue-700 font-mono text-[9px] truncate">
+                                  Tests ({testsArr.length}): {testsArr.join(', ')}
+                                </p>
+                              )}
+
+                              <div className="pt-1 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRestoreSqlitePrescription(rec)}
+                                  className="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[9px] shadow transition flex items-center gap-1"
+                                >
+                                  <RotateCcw className="h-3 w-3" /> Restore Rx to Pad
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -2156,7 +2338,7 @@ export default function UserWorkspacePage() {
           {/* BOTTOM ACTION BAR AT BOTTOM OF CENTER PREVIEW: PRINT, PDF, WHATSAPP, EMAIL */}
           <div className={`grid grid-cols-4 gap-2 pt-2 border-t shrink-0 mt-2 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800'}`}>
             <button
-              onClick={handlePrint}
+              onClick={() => handlePrint('print')}
               className="py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow transition"
               title="Print Prescription"
             >
@@ -2164,7 +2346,7 @@ export default function UserWorkspacePage() {
             </button>
 
             <button
-              onClick={handlePrint}
+              onClick={() => handlePrint('pdf')}
               className="py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow transition"
               title="Export PDF"
             >
