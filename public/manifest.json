@@ -1,0 +1,21 @@
+{
+  "short_name": "PWA App",
+  "name": "Progressive Web App with Supabase & Vercel DB",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#090d16",
+  "theme_color": "#101827",
+  "display": "standalone",
+  "orientation": "portrait"
+}
