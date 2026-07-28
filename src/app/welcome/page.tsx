@@ -1331,8 +1331,8 @@ export default function UserWorkspacePage() {
           </div>
         </section>
 
-        {/* SECTION 2 (CENTER COLUMN - 7 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
-        <section className={`lg:col-span-7 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
+        {/* SECTION 2 (CENTER COLUMN - 6 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
+        <section className={`lg:col-span-6 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
           
           {/* ULTRA-COMPACT SINGLE-LINE CONTROL STRIP */}
           <div className={`px-2.5 py-1 rounded-xl text-[10px] shrink-0 mb-1.5 border flex items-center justify-between gap-2 overflow-x-auto ${
@@ -1935,8 +1935,8 @@ export default function UserWorkspacePage() {
 
         </section>
 
-        {/* SECTION 3 (RIGHT COLUMN - 2 COLS): SPECIALTIES, TEMPLATES & DRUGS CATALOG */}
-        <section className={`lg:col-span-2 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
+        {/* SECTION 3 (RIGHT COLUMN - 3 COLS): SPECIALTIES, TEMPLATES & DRUGS CATALOG */}
+        <section className={`lg:col-span-3 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
             
             {/* Header */}
