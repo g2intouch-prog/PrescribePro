@@ -14,12 +14,15 @@ import {
   Send,
   PauseCircle,
   PlayCircle,
-  BarChart3,
   DatabaseZap,
   LogOut,
   Activity,
-  ArrowRight,
-  KeyRound
+  KeyRound,
+  Plus,
+  Edit2,
+  TestTube,
+  HelpCircle,
+  Image as ImageIcon
 } from 'lucide-react';
 import { 
   getInvitedUserRecords, 
@@ -29,6 +32,7 @@ import {
   InvitedUserRecord 
 } from '@/lib/supabase/auth-guard';
 import { createClient } from '@/lib/supabase/client';
+import { getAdminPresets, saveAdminPresets, AdminPresets } from '@/lib/db/admin-presets';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -37,6 +41,11 @@ export default function AdminDashboardPage() {
   const [newInviteEmail, setNewInviteEmail] = useState('');
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Admin Presets State
+  const [presets, setPresets] = useState<AdminPresets>(getAdminPresets());
+  const [newTestItem, setNewTestItem] = useState('');
+  const [newAdviceItem, setNewAdviceItem] = useState('');
 
   useEffect(() => {
     async function loadAdminData() {
@@ -59,6 +68,7 @@ export default function AdminDashboardPage() {
       setCurrentUser(activeEmail);
       const records = await getInvitedUserRecords();
       setUsers(records);
+      setPresets(getAdminPresets());
     }
     loadAdminData();
   }, [router]);
@@ -122,6 +132,61 @@ export default function AdminDashboardPage() {
     setStatusMsg({ type: 'success', text: `User "${email}" has been completely removed.` });
   }
 
+  // Diagnostic Test Presets Management
+  const handleAddTestItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTestItem.trim()) return;
+    const updated = {
+      ...presets,
+      diagnosticTests: [...presets.diagnosticTests, newTestItem.trim()],
+    };
+    setPresets(updated);
+    saveAdminPresets(updated);
+    setNewTestItem('');
+    setStatusMsg({ type: 'success', text: 'New diagnostic test added to prescription list.' });
+  };
+
+  const handleDeleteTestItem = (item: string) => {
+    const updated = {
+      ...presets,
+      diagnosticTests: presets.diagnosticTests.filter((t) => t !== item),
+    };
+    setPresets(updated);
+    saveAdminPresets(updated);
+    setStatusMsg({ type: 'success', text: 'Diagnostic test removed.' });
+  };
+
+  // Additional Advice Presets Management
+  const handleAddAdviceItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAdviceItem.trim()) return;
+    const updated = {
+      ...presets,
+      additionalAdviceList: [...presets.additionalAdviceList, newAdviceItem.trim()],
+    };
+    setPresets(updated);
+    saveAdminPresets(updated);
+    setNewAdviceItem('');
+    setStatusMsg({ type: 'success', text: 'New additional advice preset added.' });
+  };
+
+  const handleDeleteAdviceItem = (item: string) => {
+    const updated = {
+      ...presets,
+      additionalAdviceList: presets.additionalAdviceList.filter((a) => a !== item),
+    };
+    setPresets(updated);
+    saveAdminPresets(updated);
+    setStatusMsg({ type: 'success', text: 'Advice preset removed.' });
+  };
+
+  const handleSavePadConfig = (padType: 'digital' | 'preprinted') => {
+    const updated = { ...presets, padType };
+    setPresets(updated);
+    saveAdminPresets(updated);
+    setStatusMsg({ type: 'success', text: `Clinic Pad mode set to ${padType.toUpperCase()}` });
+  };
+
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -144,7 +209,7 @@ export default function AdminDashboardPage() {
             <h1 className="font-bold text-lg leading-tight tracking-wide text-white">
               PrescribePro Admin Dashboard
             </h1>
-            <p className="text-xs text-emerald-400 font-mono">User Management & Analytics</p>
+            <p className="text-xs text-emerald-400 font-mono">User Management & Clinical Presets</p>
           </div>
         </div>
 
@@ -163,7 +228,7 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/welcome')}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition"
           >
             <DatabaseZap className="h-3.5 w-3.5" />
@@ -183,11 +248,27 @@ export default function AdminDashboardPage() {
       {/* Main Container */}
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
         
+        {/* Status Notification */}
+        {statusMsg && (
+          <div className={`p-3.5 rounded-xl text-xs flex items-center gap-2.5 border ${
+            statusMsg.type === 'success' 
+              ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300' 
+              : 'bg-red-950/60 border-red-500/40 text-red-300'
+          }`}>
+            {statusMsg.type === 'success' ? (
+              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+            )}
+            <span>{statusMsg.text}</span>
+          </div>
+        )}
+
         {/* Analytics Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="glass-card rounded-2xl p-5 space-y-2 border-gray-800">
             <div className="flex items-center justify-between text-gray-400 text-xs uppercase font-mono">
-              <span>Total Invited Users</span>
+              <span>Total Users</span>
               <Users className="h-4 w-4 text-emerald-400" />
             </div>
             <div className="text-3xl font-extrabold text-white">{users.length}</div>
@@ -214,13 +295,137 @@ export default function AdminDashboardPage() {
 
           <div className="glass-card rounded-2xl p-5 space-y-2 border-teal-500/30">
             <div className="flex items-center justify-between text-teal-400 text-xs uppercase font-mono">
-              <span>System Health</span>
+              <span>Diagnostic Presets</span>
               <Activity className="h-4 w-4 text-teal-400" />
             </div>
-            <div className="text-3xl font-extrabold text-teal-400">100%</div>
-            <p className="text-[11px] text-gray-500">SQLite WASM & Cloud OK</p>
+            <div className="text-3xl font-extrabold text-teal-400">{presets.diagnosticTests.length}</div>
+            <p className="text-[11px] text-gray-500">Checklist items configured</p>
           </div>
         </div>
+
+        {/* CLINICAL PRESETS & PAD CONFIG MANAGER */}
+        <section className="glass-card rounded-2xl p-6 space-y-6 border-emerald-500/30 bg-gradient-to-r from-emerald-950/20 to-teal-950/20">
+          <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+            <div>
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Edit2 className="h-5 w-5 text-emerald-400" />
+                Prescription Pad & Suggested List Manager
+              </h3>
+              <p className="text-xs text-gray-400 mt-0.5">Customize default diagnostic tests, advice presets, and clinic pad layout.</p>
+            </div>
+          </div>
+
+          {/* PAD MODE TOGGLE */}
+          <div className="p-4 rounded-xl glass-card border-gray-800 space-y-3">
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+              <ImageIcon className="h-4 w-4" /> Default Clinic Pad Type
+            </h4>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => handleSavePadConfig('digital')}
+                className={`flex-1 py-2 rounded-xl border text-xs font-semibold transition ${
+                  presets.padType === 'digital'
+                    ? 'bg-emerald-500 border-emerald-500 text-gray-950 font-bold'
+                    : 'bg-gray-950 border-gray-800 text-gray-400 hover:text-white'
+                }`}
+              >
+                Digital Pad (Fills Header & Footer)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSavePadConfig('preprinted')}
+                className={`flex-1 py-2 rounded-xl border text-xs font-semibold transition ${
+                  presets.padType === 'preprinted'
+                    ? 'bg-emerald-500 border-emerald-500 text-gray-950 font-bold'
+                    : 'bg-gray-950 border-gray-800 text-gray-400 hover:text-white'
+                }`}
+              >
+                Pre-printed Pad (Leaves Header & Footer Blank)
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* 1. DIAGNOSTIC TESTS MANAGER */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
+                <TestTube className="h-4 w-4" /> Suggested Diagnostic Tests Checklist
+              </h4>
+
+              <form onSubmit={handleAddTestItem} className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTestItem}
+                  onChange={(e) => setNewTestItem(e.target.value)}
+                  placeholder="e.g., Vitamin D3, USG Abdomen..."
+                  className="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-teal-500"
+                />
+                <button
+                  type="submit"
+                  className="px-3 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-gray-950 font-bold text-xs shadow flex items-center gap-1"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Add Test
+                </button>
+              </form>
+
+              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                {presets.diagnosticTests.map((t) => (
+                  <div key={t} className="flex items-center justify-between p-2 rounded-lg glass-card border-gray-800 text-xs">
+                    <span className="text-gray-200">{t}</span>
+                    <button
+                      onClick={() => handleDeleteTestItem(t)}
+                      className="p-1 text-gray-500 hover:text-red-400 transition"
+                      title="Delete Test"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. ADDITIONAL ADVICE PRESETS MANAGER */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                <HelpCircle className="h-4 w-4" /> Suggested Advice Presets
+              </h4>
+
+              <form onSubmit={handleAddAdviceItem} className="flex gap-2">
+                <input
+                  type="text"
+                  value={newAdviceItem}
+                  onChange={(e) => setNewAdviceItem(e.target.value)}
+                  placeholder="e.g., Cold Sponging, Sitz Bath..."
+                  className="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500"
+                />
+                <button
+                  type="submit"
+                  className="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-xs shadow flex items-center gap-1"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Add Advice
+                </button>
+              </form>
+
+              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                {presets.additionalAdviceList.map((adv) => (
+                  <div key={adv} className="flex items-center justify-between p-2 rounded-lg glass-card border-gray-800 text-xs">
+                    <span className="text-gray-200">{adv}</span>
+                    <button
+                      onClick={() => handleDeleteAdviceItem(adv)}
+                      className="p-1 text-gray-500 hover:text-red-400 transition"
+                      title="Delete Advice"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </section>
 
         {/* Send Invitation Form */}
         <div className="glass-card rounded-2xl p-6 space-y-4 border-gray-800">
@@ -228,21 +433,6 @@ export default function AdminDashboardPage() {
             <UserPlus className="h-5 w-5 text-emerald-400" />
             Send New Email Invitation
           </h3>
-
-          {statusMsg && (
-            <div className={`p-3.5 rounded-xl text-xs flex items-center gap-2.5 border ${
-              statusMsg.type === 'success' 
-                ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300' 
-                : 'bg-red-950/60 border-red-500/40 text-red-300'
-            }`}>
-              {statusMsg.type === 'success' ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-              ) : (
-                <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
-              )}
-              <span>{statusMsg.text}</span>
-            </div>
-          )}
 
           <form onSubmit={handleSendInvite} className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
