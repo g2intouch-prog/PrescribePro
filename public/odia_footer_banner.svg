@@ -3,21 +3,21 @@
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Oriya:wght@600;700&amp;display=swap');
       .text-line1 {
-        font-family: 'Noto Serif Oriya', 'Segoe UI Historic', 'Kalinga', serif;
+        font-family: 'Noto Serif Oriya', 'Nirmala UI', 'Kalinga', 'Segoe UI Historic', serif;
         font-size: 32px;
         font-weight: 700;
         fill: #065f46;
         text-anchor: middle;
       }
       .text-line2 {
-        font-family: 'Noto Serif Oriya', 'Segoe UI Historic', 'Kalinga', serif;
+        font-family: 'Noto Serif Oriya', 'Nirmala UI', 'Kalinga', 'Segoe UI Historic', serif;
         font-size: 32px;
         font-weight: 700;
         fill: #065f46;
         text-anchor: middle;
       }
       .text-line3 {
-        font-family: 'Noto Serif Oriya', 'Segoe UI Historic', 'Kalinga', serif;
+        font-family: 'Noto Serif Oriya', 'Nirmala UI', 'Kalinga', 'Segoe UI Historic', serif;
         font-size: 28px;
         font-weight: 700;
         fill: #047857;
@@ -43,7 +43,7 @@
     <line x1="1060" y1="120" x2="1180" y2="120" stroke-dasharray="4,4" />
   </g>
 
-  <!-- Flawless Odia Script Shanti Mantra Lines -->
+  <!-- Exact Odia Script Shanti Mantra Lines (କଶ୍ଚିତ୍ & ଭବେତ୍) -->
   <text x="600" y="72" class="text-line1">ॐ ସର୍ବେ ଭବନ୍ତୁ ସୁଖିନଃ, ସର୍ବେ ସନ୍ତୁ ନିରାମୟାଃ।</text>
   <text x="600" y="136" class="text-line2">ସର୍ବେ ଭଦ୍ରାଣି ପଶ୍ୟନ୍ତୁ, ମା କଶ୍ଚିତ୍ ଦୁଃଖଭାଗ୍ ଭବେତ୍।</text>
   <text x="600" y="196" class="text-line3">ॐ ଶାନ୍ତିଃ! ଶାନ୍ତିଃ! ଶାନ୍ତିଃ!</text>
