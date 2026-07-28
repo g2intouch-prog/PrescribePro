@@ -16,18 +16,27 @@ import {
   LogOut, 
   ShieldCheck, 
   Layers,
-  Sparkles
+  Sparkles,
+  DatabaseZap
 } from 'lucide-react';
-import { db, LocalTask } from '@/lib/db/indexeddb';
+import { 
+  SqliteTask, 
+  getSqliteTasks, 
+  addSqliteTask, 
+  toggleSqliteTask, 
+  deleteSqliteTask, 
+  markSqliteTasksSynced 
+} from '@/lib/db/sqlite';
 
 export default function PwaDashboard() {
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [canInstall, setCanInstall] = useState<boolean>(false);
-  const [tasks, setTasks] = useState<LocalTask[]>([]);
+  const [tasks, setTasks] = useState<SqliteTask[]>([]);
   const [newTitle, setNewTitle] = useState('');
   const [category, setCategory] = useState('Personal');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSqliteReady, setIsSqliteReady] = useState(false);
 
   // Auth State
   const [user, setUser] = useState<{ email: string } | null>(null);
@@ -36,7 +45,7 @@ export default function PwaDashboard() {
   const [authPass, setAuthPass] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
 
-  // Monitor network online/offline state
+  // Monitor network online/offline state & initialize SQLite
   useEffect(() => {
     setIsOnline(navigator.onLine);
     const handleOnline = () => setIsOnline(true);
@@ -54,8 +63,8 @@ export default function PwaDashboard() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Load initial tasks from local IndexedDB
-    loadLocalTasks();
+    // Initialize SQLite database
+    loadSqliteTasks();
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -64,12 +73,13 @@ export default function PwaDashboard() {
     };
   }, []);
 
-  async function loadLocalTasks() {
+  async function loadSqliteTasks() {
     try {
-      const allTasks = await db.tasks.toArray();
-      setTasks(allTasks.reverse());
+      const allTasks = await getSqliteTasks();
+      setTasks(allTasks);
+      setIsSqliteReady(true);
     } catch (err) {
-      console.error('Error reading IndexedDB:', err);
+      console.error('Error reading SQLite tasks:', err);
     }
   }
 
@@ -77,48 +87,28 @@ export default function PwaDashboard() {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const newTask: LocalTask = {
-      title: newTitle.trim(),
-      category,
-      completed: false,
-      synced: isOnline,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    await db.tasks.add(newTask);
+    await addSqliteTask(newTitle.trim(), category, isOnline);
     setNewTitle('');
-    await loadLocalTasks();
+    await loadSqliteTasks();
   }
 
-  async function toggleTask(id?: number, currentStatus?: boolean) {
-    if (!id) return;
-    await db.tasks.update(id, {
-      completed: !currentStatus,
-      updatedAt: new Date().toISOString(),
-    });
-    await loadLocalTasks();
+  async function handleToggleTask(id: number, currentCompleted: boolean) {
+    await toggleSqliteTask(id, currentCompleted);
+    await loadSqliteTasks();
   }
 
-  async function deleteTask(id?: number) {
-    if (!id) return;
-    await db.tasks.delete(id);
-    await loadLocalTasks();
+  async function handleDeleteTask(id: number) {
+    await deleteSqliteTask(id);
+    await loadSqliteTasks();
   }
 
   async function handleSyncData() {
     setIsSyncing(true);
     setTimeout(async () => {
-      // Mark all local tasks as synced
-      const all = await db.tasks.toArray();
-      for (const t of all) {
-        if (t.id && !t.synced) {
-          await db.tasks.update(t.id, { synced: true });
-        }
-      }
-      await loadLocalTasks();
+      await markSqliteTasksSynced();
+      await loadSqliteTasks();
       setIsSyncing(false);
-    }, 1200);
+    }, 1000);
   }
 
   const handleInstallClick = async () => {
@@ -150,7 +140,7 @@ export default function PwaDashboard() {
           </div>
           <div>
             <h1 className="font-bold text-lg leading-tight tracking-wide bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
-              Vercel PWA
+              SQLite PWA App
             </h1>
             <p className="text-xs text-gray-400 font-mono">*.vercel.app ready</p>
           </div>
@@ -255,34 +245,34 @@ export default function PwaDashboard() {
             </p>
           </div>
 
-          {/* Local Save Card */}
-          <div className="glass-card rounded-2xl p-5 space-y-3 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition text-cyan-400">
-              <HardDrive className="h-16 w-16" />
+          {/* SQLite Local Card */}
+          <div className="glass-card rounded-2xl p-5 space-y-3 relative overflow-hidden group border-emerald-500/30">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition text-emerald-400">
+              <DatabaseZap className="h-16 w-16" />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold tracking-wider text-cyan-400 uppercase">Offline Storage</span>
-              <span className="h-2 w-2 rounded-full bg-cyan-400" />
+              <span className="text-xs font-semibold tracking-wider text-emerald-400 uppercase">Offline Database</span>
+              <span className={`h-2 w-2 rounded-full ${isSqliteReady ? 'bg-emerald-400' : 'bg-amber-400 animate-ping'}`} />
             </div>
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <HardDrive className="h-4 w-4 text-cyan-400" /> IndexedDB (Dexie)
+              <DatabaseZap className="h-4 w-4 text-emerald-400" /> SQLite (sql.js WASM)
             </h3>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Instant local saving. All data persists offline and syncs with cloud when reconnected.
+              Real SQL queries running locally in WebAssembly. Full offline storage with binary persistence.
             </p>
           </div>
 
         </div>
 
-        {/* Data Persistence Workspace */}
+        {/* SQLite Data Workspace */}
         <section className="glass-card rounded-2xl p-6 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-800">
             <div>
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-emerald-400" /> Local & Cloud Task Store
+                <Sparkles className="h-5 w-5 text-emerald-400" /> Local SQLite Database Workspace
               </h2>
               <p className="text-xs text-gray-400 mt-1">
-                Data saved here writes immediately to IndexedDB locally, working seamlessly offline.
+                Executes native SQLite SQL queries (`INSERT`, `SELECT`, `UPDATE`) in WASM with offline persistence.
               </p>
             </div>
             <button
@@ -291,7 +281,7 @@ export default function PwaDashboard() {
               className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gray-800/80 hover:bg-gray-800 text-xs font-semibold text-gray-300 hover:text-white border border-gray-700/60 disabled:opacity-50 transition"
             >
               <RefreshCw className={`h-3.5 w-3.5 text-emerald-400 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'Syncing...' : 'Sync Local & Cloud'}
+              {isSyncing ? 'Syncing...' : 'Sync SQLite & Vercel DB'}
             </button>
           </div>
 
@@ -301,7 +291,7 @@ export default function PwaDashboard() {
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Add a new task or offline data note..."
+              placeholder="Execute SQLite INSERT statement (e.g., Add new task)..."
               className="flex-1 bg-gray-950/80 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 transition"
             />
             <select
@@ -311,13 +301,13 @@ export default function PwaDashboard() {
             >
               <option value="Personal">Personal</option>
               <option value="Work">Work</option>
-              <option value="PWA Feature">PWA Feature</option>
+              <option value="SQLite Feature">SQLite Feature</option>
             </select>
             <button
               type="submit"
               className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-gray-950 font-bold text-xs shadow-md shadow-emerald-500/20 hover:brightness-110 transition"
             >
-              <Plus className="h-4 w-4" /> Add Item
+              <Plus className="h-4 w-4" /> SQL Insert
             </button>
           </form>
 
@@ -325,9 +315,9 @@ export default function PwaDashboard() {
           <div className="space-y-2.5">
             {tasks.length === 0 ? (
               <div className="text-center py-10 glass-card rounded-xl border-dashed border-gray-800">
-                <HardDrive className="h-8 w-8 text-gray-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">No items saved locally yet.</p>
-                <p className="text-xs text-gray-600 mt-1">Add your first task above to test local IndexedDB saving.</p>
+                <DatabaseZap className="h-8 w-8 text-gray-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">SQLite table `pwa_tasks` is currently empty.</p>
+                <p className="text-xs text-gray-600 mt-1">Insert a row above to execute your first SQLite query!</p>
               </div>
             ) : (
               tasks.map((task) => (
@@ -337,7 +327,7 @@ export default function PwaDashboard() {
                 >
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => toggleTask(task.id, task.completed)}
+                      onClick={() => handleToggleTask(task.id, task.completed)}
                       className={`h-5 w-5 rounded-lg border flex items-center justify-center transition ${
                         task.completed
                           ? 'bg-emerald-500 border-emerald-500 text-gray-950'
@@ -354,15 +344,18 @@ export default function PwaDashboard() {
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-gray-400">
                           {task.category}
                         </span>
+                        <span className="text-[10px] font-mono text-gray-500">
+                          SQLite ID #{task.id}
+                        </span>
                         <span className={`text-[10px] ${task.synced ? 'text-emerald-400/80' : 'text-amber-400/80'}`}>
-                          {task.synced ? 'Synced' : 'Local Only'}
+                          {task.synced ? 'Synced' : 'Local SQLite'}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <button
-                    onClick={() => deleteTask(task.id)}
+                    onClick={() => handleDeleteTask(task.id)}
                     className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -436,7 +429,7 @@ export default function PwaDashboard() {
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-gray-600 border-t border-gray-900">
-        Deployable to Vercel • Service Worker Registered • Local Storage Ready
+        Deployable to Vercel • SQLite WASM Active • Offline Storage Persistent
       </footer>
     </div>
   );
