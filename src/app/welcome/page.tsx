@@ -94,6 +94,7 @@ export default function UserWorkspacePage() {
     'CBC (Complete Blood Count)',
     'HbA1c (Glycated Hemoglobin)',
   ]);
+  const [testFilterQuery, setTestFilterQuery] = useState('');
   const [testResultsText, setTestResultsText] = useState(
     'Hemoglobin: 14.2 g/dL | Fasting Sugar: 98 mg/dL | HbA1c: 5.6%'
   );
@@ -514,26 +515,47 @@ export default function UserWorkspacePage() {
 
               {/* TAB 3: DIAGNOSTIC TESTS & RESULTS */}
               {activeLeftTab === 'tests' && (
-                <div className="space-y-3 text-xs">
-                  <span className="text-xs font-bold text-teal-400 block">Recommended Diagnostics Checklist</span>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
-                    {presets.diagnosticTests.map((t) => {
-                      const isChecked = selectedTests.includes(t);
-                      return (
-                        <label
-                          key={t}
-                          onClick={() => toggleTestSelection(t)}
-                          className={`flex items-center gap-2 p-1.5 rounded-lg border text-[11px] cursor-pointer transition ${
-                            isChecked
-                              ? 'bg-teal-950/60 border-teal-500/40 text-teal-300'
-                              : 'bg-gray-950/40 border-gray-800/80 text-gray-400'
-                          }`}
-                        >
-                          <input type="checkbox" checked={isChecked} onChange={() => {}} className="rounded text-teal-500" />
-                          <span className="truncate">{t}</span>
-                        </label>
-                      );
-                    })}
+                <div className="space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-teal-400">Recommended Diagnostics</span>
+                    <span className="text-[10px] text-gray-500 font-mono">
+                      {presets.diagnosticTests.length} Tests Available
+                    </span>
+                  </div>
+
+                  {/* REAL-TIME SEARCH BOX */}
+                  <div className="relative">
+                    <Search className="h-3.5 w-3.5 text-gray-500 absolute left-2.5 top-2" />
+                    <input
+                      type="text"
+                      value={testFilterQuery}
+                      onChange={(e) => setTestFilterQuery(e.target.value)}
+                      placeholder="Search lab tests (e.g. CBC, Lipid, Thyroid, X-Ray)..."
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg pl-8 pr-2.5 py-1 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-teal-500"
+                    />
+                  </div>
+
+                  {/* SCROLLABLE CHECKLIST */}
+                  <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                    {presets.diagnosticTests
+                      .filter((t) => t.toLowerCase().includes(testFilterQuery.toLowerCase()))
+                      .map((t) => {
+                        const isChecked = selectedTests.includes(t);
+                        return (
+                          <label
+                            key={t}
+                            onClick={() => toggleTestSelection(t)}
+                            className={`flex items-center gap-2 p-1.5 rounded-lg border text-[11px] cursor-pointer transition ${
+                              isChecked
+                                ? 'bg-teal-950/60 border-teal-500/40 text-teal-300 font-semibold'
+                                : 'bg-gray-950/40 border-gray-800/80 text-gray-400 hover:border-gray-700'
+                            }`}
+                          >
+                            <input type="checkbox" checked={isChecked} onChange={() => {}} className="rounded text-teal-500" />
+                            <span className="truncate">{t}</span>
+                          </label>
+                        );
+                      })}
                   </div>
 
                   <div className="space-y-1">
