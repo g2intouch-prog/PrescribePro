@@ -2283,7 +2283,7 @@ export default function UserWorkspacePage() {
       )}
 
       {/* ISOLATED TOP-LEVEL A4 PRINT AREA FOR WINDOW.PRINT() */}
-      <div id="isolated-print-area">
+      <div id="isolated-print-area" className="hidden">
         <div
           style={{
             paddingTop: `${headerMarginMm}mm`,
