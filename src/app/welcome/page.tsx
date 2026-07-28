@@ -282,6 +282,21 @@ export default function UserWorkspacePage() {
     }
   };
 
+  const handleUpdateDrugItem = (index: number, newText: string) => {
+    const updated = [...selectedDrugs];
+    updated[index] = newText;
+    setSelectedDrugs(updated);
+  };
+
+  const handleRemoveDrugItem = (index: number) => {
+    const updated = selectedDrugs.filter((_, i) => i !== index);
+    setSelectedDrugs(updated);
+  };
+
+  const handleAddCustomDrugItem = () => {
+    setSelectedDrugs([...selectedDrugs, 'Tab Custom Generic Medication (1-0-1 after food) x 5 days']);
+  };
+
   const calcBmi = () => {
     const h = parseFloat(vitals.height) / 100;
     const w = parseFloat(vitals.weight);
@@ -1096,6 +1111,13 @@ export default function UserWorkspacePage() {
 
             {/* PAD BODY: TWO-COLUMN CANVAS (LEFT PANE = LABS & ADVICE, RIGHT PANE = CLINICAL ASSESSMENT, RX & SPECIFIC ADVICE) */}
             <div className="flex-1 py-1 space-y-1.5 overflow-y-auto">
+              
+              {/* EDITABLE NOTICE BANNER */}
+              <div className="text-[8px] bg-amber-100/90 text-amber-900 px-1.5 py-0.5 rounded border border-amber-300 font-bold flex items-center justify-between print:hidden shrink-0">
+                <span>✏️ Editable Canvas: Click any text directly on pad to edit</span>
+                <span className="text-[7.5px] text-amber-800 font-mono">Human Judgment Mode Active</span>
+              </div>
+
               {/* VITALS DEMOGRAPHY STRIP */}
               <div className="text-[8.5px] bg-emerald-50/80 p-1 rounded border border-emerald-200 text-emerald-950 font-mono flex flex-wrap gap-1.5 justify-between">
                 <span><strong>Ht:</strong> {vitals.height}cm</span>
@@ -1123,12 +1145,17 @@ export default function UserWorkspacePage() {
                         ))}
                       </ul>
                     )}
-                    {testResultsText && (
-                      <div className="bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px]">
-                        <span className="font-bold text-teal-950 block">Results:</span>
-                        <p className="whitespace-pre-wrap text-gray-800">{testResultsText}</p>
-                      </div>
-                    )}
+                    <div className="bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px]">
+                      <span className="font-bold text-teal-950 block">Results:</span>
+                      <p
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => setTestResultsText(e.currentTarget.textContent || '')}
+                        className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-teal-100/50 p-0.5 rounded cursor-text"
+                      >
+                        {testResultsText || 'Click to type test results...'}
+                      </p>
+                    </div>
                   </div>
 
                   {/* ADDITIONAL ADVICE */}
@@ -1143,95 +1170,182 @@ export default function UserWorkspacePage() {
                         ))}
                       </ul>
                     )}
-                    {customAdviceText && (
-                      <p className="text-gray-700 italic mt-0.5 text-[8px]">{customAdviceText}</p>
-                    )}
+                    <p
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => setCustomAdviceText(e.currentTarget.textContent || '')}
+                      className="text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-emerald-100/50 p-0.5 rounded cursor-text"
+                    >
+                      {customAdviceText || 'Click to type additional advice...'}
+                    </p>
                   </div>
                 </div>
 
                 {/* RIGHT PANE: CLINICAL ASSESSMENT, RX DRUGS & SPECIFIC ADVICE (8 COLUMNS) */}
                 <div className="col-span-8 pl-1 space-y-1 text-[9px]">
                   {/* 1. CHIEF COMPLAINT */}
-                  {chiefComplaints && (
-                    <div>
-                      <strong className="text-gray-900 font-bold">C/O (Chief Complaints): </strong>
-                      <span className="text-gray-800">{chiefComplaints}</span>
-                    </div>
-                  )}
+                  <div>
+                    <strong className="text-gray-900 font-bold">C/O (Chief Complaints): </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => setChiefComplaints(e.currentTarget.textContent || '')}
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                    >
+                      {chiefComplaints || 'Click to edit chief complaints...'}
+                    </span>
+                  </div>
 
                   {/* 2. SIGNS & SYMPTOMS */}
-                  {signsSymptoms && (
-                    <div>
-                      <strong className="text-gray-900 font-bold">Signs & Symptoms: </strong>
-                      <span className="text-gray-800">{signsSymptoms}</span>
-                    </div>
-                  )}
+                  <div>
+                    <strong className="text-gray-900 font-bold">Signs & Symptoms: </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => setSignsSymptoms(e.currentTarget.textContent || '')}
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                    >
+                      {signsSymptoms || 'Click to edit signs & symptoms...'}
+                    </span>
+                  </div>
 
                   {/* 3. CLINICAL HISTORY */}
-                  {clinicalHistory && (
-                    <div>
-                      <strong className="text-gray-900 font-bold">H/O (Clinical History): </strong>
-                      <span className="text-gray-800">{clinicalHistory}</span>
-                    </div>
-                  )}
+                  <div>
+                    <strong className="text-gray-900 font-bold">H/O (Clinical History): </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => setClinicalHistory(e.currentTarget.textContent || '')}
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                    >
+                      {clinicalHistory || 'Click to edit clinical history...'}
+                    </span>
+                  </div>
 
                   {/* 4. FAMILY HISTORY */}
-                  {familyHistory && (
-                    <div>
-                      <strong className="text-gray-900 font-bold">Family History: </strong>
-                      <span className="text-gray-800">{familyHistory}</span>
-                    </div>
-                  )}
+                  <div>
+                    <strong className="text-gray-900 font-bold">Family History: </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => setFamilyHistory(e.currentTarget.textContent || '')}
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                    >
+                      {familyHistory || 'Click to edit family history...'}
+                    </span>
+                  </div>
 
                   {/* 5. DRUG HISTORY */}
-                  {drugHistory && (
-                    <div>
-                      <strong className="text-gray-900 font-bold">Drug History / Allergies: </strong>
-                      <span className="text-gray-800">{drugHistory}</span>
-                    </div>
-                  )}
+                  <div>
+                    <strong className="text-gray-900 font-bold">Drug History / Allergies: </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => setDrugHistory(e.currentTarget.textContent || '')}
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                    >
+                      {drugHistory || 'Click to edit drug history...'}
+                    </span>
+                  </div>
 
                   {/* 6. CLINICAL & EXAMINATION FINDINGS */}
-                  {examinationFindings && (
-                    <div>
-                      <strong className="text-gray-900 font-bold">Clinical & Exam Findings: </strong>
-                      <span className="text-gray-800">{examinationFindings}</span>
-                    </div>
-                  )}
+                  <div>
+                    <strong className="text-gray-900 font-bold">Clinical & Exam Findings: </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => setExaminationFindings(e.currentTarget.textContent || '')}
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                    >
+                      {examinationFindings || 'Click to edit exam findings...'}
+                    </span>
+                  </div>
 
                   {/* 7. PROVISIONAL DIAGNOSIS */}
-                  {provisionalDiagnosis && (
-                    <div className="bg-gray-100/90 p-1 rounded font-bold text-gray-900">
-                      <strong>Provisional Diagnosis: </strong> {provisionalDiagnosis}
-                    </div>
-                  )}
+                  <div className="bg-gray-100/90 p-1 rounded font-bold text-gray-900">
+                    <strong>Provisional Diagnosis: </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => setProvisionalDiagnosis(e.currentTarget.textContent || '')}
+                      className="outline-none hover:bg-yellow-200/70 p-0.5 rounded cursor-text"
+                    >
+                      {provisionalDiagnosis || 'Click to edit provisional diagnosis...'}
+                    </span>
+                  </div>
 
                   {/* 8. DIFFERENTIAL DIAGNOSIS */}
-                  {differentialDiagnosis && (
-                    <div className="text-gray-700 italic text-[8.5px]">
-                      <strong>Differential Diagnosis (D/D): </strong> {differentialDiagnosis}
-                    </div>
-                  )}
+                  <div className="text-gray-700 italic text-[8.5px]">
+                    <strong>Differential Diagnosis (D/D): </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => setDifferentialDiagnosis(e.currentTarget.textContent || '')}
+                      className="outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                    >
+                      {differentialDiagnosis || 'Click to edit differential diagnosis...'}
+                    </span>
+                  </div>
 
-                  {/* 9. PRESCRIPTION DRUGS (Rx) */}
-                  {selectedDrugs.length > 0 && (
-                    <div className="bg-blue-50/80 p-1.5 rounded border border-blue-200 space-y-0.5 mt-1">
-                      <strong className="text-blue-950 font-extrabold text-[9.5px] block">Rx Prescribed Medications:</strong>
+                  {/* 9. PRESCRIPTION DRUGS (Rx) - FULLY EDITABLE PER ITEM */}
+                  <div className="bg-blue-50/80 p-1.5 rounded border border-blue-200 space-y-0.5 mt-1">
+                    <div className="flex items-center justify-between border-b border-blue-200 pb-0.5 mb-1">
+                      <strong className="text-blue-950 font-extrabold text-[9.5px]">Rx Prescribed Medications:</strong>
+                      <button
+                        onClick={handleAddCustomDrugItem}
+                        className="text-[8px] bg-blue-600 hover:bg-blue-700 text-white px-1.5 py-0.5 rounded font-bold transition print:hidden"
+                        title="Add Custom Rx Line"
+                      >
+                        + Add Drug Line
+                      </button>
+                    </div>
+
+                    {selectedDrugs.length > 0 ? (
                       <ol className="list-decimal pl-3.5 text-gray-900 font-bold space-y-0.5">
                         {selectedDrugs.map((d, i) => (
-                          <li key={i}>{d}</li>
+                          <li key={i} className="group relative">
+                            <div className="flex items-center justify-between gap-1">
+                              <span
+                                contentEditable
+                                suppressContentEditableWarning
+                                onBlur={(e) => handleUpdateDrugItem(i, e.currentTarget.textContent || '')}
+                                className="outline-none hover:bg-blue-200/60 p-0.5 rounded transition cursor-text flex-1"
+                              >
+                                {d}
+                              </span>
+                              <button
+                                onClick={() => handleRemoveDrugItem(i)}
+                                className="text-red-500 hover:text-red-700 font-bold text-[10px] opacity-0 group-hover:opacity-100 transition px-1 print:hidden shrink-0"
+                                title="Delete line"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </li>
                         ))}
                       </ol>
-                    </div>
-                  )}
+                    ) : (
+                      <p
+                        onClick={handleAddCustomDrugItem}
+                        className="text-[8.5px] text-gray-500 italic cursor-pointer hover:text-blue-700"
+                      >
+                        [No Rx drugs selected. Click here to add a medication line]
+                      </p>
+                    )}
+                  </div>
 
                   {/* 10. SPECIFIC ADVICE */}
-                  {specificAdviceText && (
-                    <div className="bg-amber-50 p-1 rounded border border-amber-200 text-amber-950 mt-1 text-[8.5px]">
-                      <strong className="font-bold text-amber-900 block">Specific Clinical Advice:</strong>
-                      <p className="whitespace-pre-wrap">{specificAdviceText}</p>
-                    </div>
-                  )}
+                  <div className="bg-amber-50 p-1 rounded border border-amber-200 text-amber-950 mt-1 text-[8.5px]">
+                    <strong className="font-bold text-amber-900 block">Specific Clinical Advice:</strong>
+                    <p
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => setSpecificAdviceText(e.currentTarget.textContent || '')}
+                      className="whitespace-pre-wrap outline-none hover:bg-amber-100/70 p-0.5 rounded cursor-text"
+                    >
+                      {specificAdviceText || 'Click to edit specific clinical advice...'}
+                    </p>
+                  </div>
                 </div>
 
               </div>
