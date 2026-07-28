@@ -142,10 +142,11 @@ export default function UserWorkspacePage() {
 
   // Diagnostic Tests & Results State
   const [selectedTests, setSelectedTests] = useState<string[]>([
-    'CBC (Complete Blood Count)',
+    'CBC (Complete Blood Count with Differential)',
     'HbA1c (Glycated Hemoglobin)',
   ]);
   const [testFilterQuery, setTestFilterQuery] = useState('');
+  const [newCustomTestInput, setNewCustomTestInput] = useState('');
   const [testResultsText, setTestResultsText] = useState(
     'Hemoglobin: 14.2 g/dL | Fasting Sugar: 98 mg/dL | HbA1c: 5.6%'
   );
@@ -343,6 +344,27 @@ export default function UserWorkspacePage() {
       localStorage.setItem('prescribepro_footer_img_height', String(next));
       return next;
     });
+  };
+
+  const handleAddCustomTest = (e: React.FormEvent) => {
+    e.preventDefault();
+    const testName = newCustomTestInput.trim();
+    if (!testName) return;
+
+    if (!selectedTests.includes(testName)) {
+      setSelectedTests((prev) => [...prev, testName]);
+    }
+
+    if (!presets.diagnosticTests.includes(testName)) {
+      const updatedList = [testName, ...presets.diagnosticTests];
+      const updatedPresets = { ...presets, diagnosticTests: updatedList };
+      setPresets(updatedPresets);
+      saveAdminPresets(updatedPresets);
+    }
+
+    setNewCustomTestInput('');
+    setSaveStatus(`Added "${testName}" to tests list & prescription!`);
+    setTimeout(() => setSaveStatus(null), 3000);
   };
 
   const handleSaveDoctorProfile = (e: React.FormEvent) => {
@@ -1195,10 +1217,27 @@ export default function UserWorkspacePage() {
                       type="text"
                       value={testFilterQuery}
                       onChange={(e) => setTestFilterQuery(e.target.value)}
-                      placeholder="Search lab tests (e.g. CBC, Lipid, Thyroid, X-Ray)..."
+                      placeholder="Search lab tests (e.g. Malaria, Scrub Typhus, Dengue, CBC)..."
                       className={`w-full rounded-lg pl-8 pr-2.5 py-1 text-xs ${inputBg}`}
                     />
                   </div>
+
+                  {/* ADD CUSTOM TEST ROW ("ADD AS WE USE") */}
+                  <form onSubmit={handleAddCustomTest} className="flex items-center gap-1.5 pt-0.5">
+                    <input
+                      type="text"
+                      value={newCustomTestInput}
+                      onChange={(e) => setNewCustomTestInput(e.target.value)}
+                      placeholder="+ Add new custom test (e.g. Malaria Slide, Scrub Typhus)..."
+                      className={`flex-1 rounded-lg px-2.5 py-1 text-xs font-semibold ${inputBg}`}
+                    />
+                    <button
+                      type="submit"
+                      className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow transition shrink-0 flex items-center gap-1"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add
+                    </button>
+                  </form>
 
                   <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
                     {presets.diagnosticTests
