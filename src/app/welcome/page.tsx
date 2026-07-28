@@ -605,6 +605,17 @@ export default function UserWorkspacePage() {
         {/* SECTION 2 (CENTER COLUMN - 5 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
         <section className="lg:col-span-5 glass-card rounded-2xl p-3.5 flex flex-col justify-between border-emerald-500/30 overflow-hidden h-full">
           
+          {/* Section Header */}
+          <div className="flex items-center justify-between pb-2 border-b border-gray-800 shrink-0 mb-2">
+            <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
+              <FileSpreadsheet className="h-4 w-4" />
+              Section 2: Live Prescription Preview
+            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30">
+              Module 2
+            </span>
+          </div>
+
           {/* TOP ROW WITHIN 5PX: PAD MODE TOGGLE */}
           <div className="flex items-center justify-between p-2 rounded-xl bg-gray-950 border border-gray-800 text-xs shrink-0 mb-2">
             <span className="text-gray-300 font-semibold text-[11px]">Clinic Pad Mode:</span>
