@@ -31,11 +31,11 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* STRICT A4 PORTRAIT MODE PRINT & PDF RULES (1:1 PERFECT PREVIEW MATCH) */
+/* MULTI-PAGE A4 PORTRAIT PRINT & PDF FLOW RULES */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 10mm 10mm 10mm 10mm;
   }
 
   *, *::before, *::after {
@@ -45,9 +45,10 @@ body {
 
   body {
     background: #ffffff !important;
-    color: #000000 !important;
+    color: #0f172a !important;
     margin: 0 !important;
     padding: 0 !important;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   }
 
   body * {
@@ -60,34 +61,45 @@ body {
   }
 
   #printable-prescription-pad {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 210mm !important;
-    min-height: 297mm !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
     height: auto !important;
-    max-width: 210mm !important;
-    margin: 0 !important;
-    padding: 12mm 15mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
     background: #ffffff !important;
     color: #0f172a !important;
     box-sizing: border-box !important;
     overflow: visible !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
+    display: block !important;
+    aspect-ratio: auto !important;
     font-size: 10pt !important;
     line-height: 1.4 !important;
   }
 
-  /* HIDE ALL INTERACTIVE PRINT-ONLY CONTROLS */
+  /* HIDE ALL INTERACTIVE CONTROLS */
   .print\:hidden {
     display: none !important;
   }
 
-  /* ENSURE GRID PANES KEEP EXACT 2-COLUMN RATIO ON A4 PAPER */
+  /* PREVENT UNWANTED PAGE BREAKS INSIDE CARDS & SECTIONS */
+  #printable-prescription-pad .break-inside-avoid,
+  #printable-prescription-pad > div,
+  #printable-prescription-pad li,
+  #printable-prescription-pad .bg-blue-50\/80,
+  #printable-prescription-pad .bg-emerald-50\/80,
+  #printable-prescription-pad .bg-amber-50,
+  #printable-prescription-pad .bg-teal-50\/80 {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* ENSURE GRID PANES KEEP EXACT 2-COLUMN RATIO ACROSS MULTIPLE PAGES */
   #printable-prescription-pad .grid {
     display: grid !important;
   }
@@ -104,9 +116,9 @@ body {
     grid-column: span 12 / span 12 !important;
   }
 
-  /* PRINT FONT SIZE ADJUSTMENTS FOR A4 PAPER READABILITY */
+  /* OPTIMIZE FONT SIZES & SPACING FOR A4 PRINT & PDF */
   #printable-prescription-pad h3 {
-    font-size: 15pt !important;
+    font-size: 14pt !important;
     line-height: 1.2 !important;
   }
 
@@ -126,7 +138,7 @@ body {
 
   #printable-prescription-pad ol,
   #printable-prescription-pad ul {
-    padding-left: 14pt !important;
+    padding-left: 12pt !important;
   }
 
   #printable-prescription-pad li {
