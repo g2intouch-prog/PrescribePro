@@ -31,16 +31,23 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* STRICT A4 PORTRAIT MODE PRINT & PDF RULES */
+/* STRICT A4 PORTRAIT MODE PRINT & PDF RULES (1:1 PERFECT PREVIEW MATCH) */
 @media print {
   @page {
     size: A4 portrait;
     margin: 0;
   }
 
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   body {
     background: #ffffff !important;
     color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   body * {
@@ -58,12 +65,71 @@ body {
     top: 0 !important;
     width: 210mm !important;
     min-height: 297mm !important;
-    margin: 0 auto !important;
-    padding: 15mm !important;
+    height: auto !important;
+    max-width: 210mm !important;
+    margin: 0 !important;
+    padding: 12mm 15mm !important;
     box-shadow: none !important;
     border: none !important;
     background: #ffffff !important;
-    color: #000000 !important;
+    color: #0f172a !important;
     box-sizing: border-box !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    font-size: 10pt !important;
+    line-height: 1.4 !important;
+  }
+
+  /* HIDE ALL INTERACTIVE PRINT-ONLY CONTROLS */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* ENSURE GRID PANES KEEP EXACT 2-COLUMN RATIO ON A4 PAPER */
+  #printable-prescription-pad .grid {
+    display: grid !important;
+  }
+
+  #printable-prescription-pad .col-span-4 {
+    grid-column: span 4 / span 4 !important;
+  }
+
+  #printable-prescription-pad .col-span-8 {
+    grid-column: span 8 / span 8 !important;
+  }
+
+  #printable-prescription-pad .col-span-12 {
+    grid-column: span 12 / span 12 !important;
+  }
+
+  /* PRINT FONT SIZE ADJUSTMENTS FOR A4 PAPER READABILITY */
+  #printable-prescription-pad h3 {
+    font-size: 15pt !important;
+    line-height: 1.2 !important;
+  }
+
+  #printable-prescription-pad strong {
+    font-weight: 700 !important;
+  }
+
+  #printable-prescription-pad .text-\[8px\],
+  #printable-prescription-pad .text-\[8\.5px\],
+  #printable-prescription-pad .text-\[9px\],
+  #printable-prescription-pad .text-\[9\.5px\],
+  #printable-prescription-pad .text-\[10px\],
+  #printable-prescription-pad .text-\[11px\] {
+    font-size: 9.5pt !important;
+    line-height: 1.35 !important;
+  }
+
+  #printable-prescription-pad ol,
+  #printable-prescription-pad ul {
+    padding-left: 14pt !important;
+  }
+
+  #printable-prescription-pad li {
+    margin-bottom: 2pt !important;
   }
 }
