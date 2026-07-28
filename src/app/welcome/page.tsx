@@ -489,22 +489,14 @@ export default function UserWorkspacePage() {
   const isAdmin = email.toLowerCase() === 'g2intouch@gmail.com';
   const currentSpecialty = specialties.find((sp) => sp.id === selectedSpecialtyId);
 
-  // Dynamic Theme Styling: Elliptical Green -> Pink -> Blue Gradient for Day Mode
-  const containerBg = theme === 'day'
-    ? 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-200 via-pink-200 to-sky-200 text-slate-900'
-    : 'bg-gradient-to-b from-[#0b0f19] via-[#090d16] to-[#05070d] text-gray-100';
+  // Seamless Glassmorphism Styling over Green, Pink & Blue Smudged Oval Background
+  const containerBg = "relative bg-[#f8fafc] before:content-[''] before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_90%_90%_at_50%_45%,_rgba(52,211,153,0.45)_0%,_rgba(244,114,182,0.4)_45%,_rgba(96,165,250,0.45)_75%,_rgba(224,231,255,0.9)_100%)] before:pointer-events-none text-slate-900";
 
-  const headerBg = theme === 'day'
-    ? 'bg-white/80 backdrop-blur-md border-b border-pink-200/80'
-    : 'glass-nav border-b border-gray-800/80';
+  const headerBg = 'bg-white/65 backdrop-blur-xl border-b border-white/60 shadow-sm relative z-10';
 
-  const cardBg = theme === 'day'
-    ? 'bg-white/75 backdrop-blur-md border border-pink-200/60 shadow-xl shadow-slate-200/50 text-slate-800'
-    : 'glass-card border border-gray-800 text-gray-100';
+  const cardBg = 'bg-white/65 backdrop-blur-xl border border-white/70 shadow-2xl shadow-slate-300/40 text-slate-900 relative z-10';
 
-  const inputBg = theme === 'day'
-    ? 'bg-white border border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500'
-    : 'bg-gray-950 border border-gray-800 text-white placeholder-gray-600 focus:border-emerald-500';
+  const inputBg = 'bg-white/80 backdrop-blur-md border border-slate-300/80 text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-400/20';
 
   return (
     <div className={`h-screen flex flex-col overflow-hidden transition-colors duration-300 ${containerBg}`}>
@@ -513,57 +505,30 @@ export default function UserWorkspacePage() {
       <header className={`h-[38px] px-3 sm:px-4 py-1 flex items-center justify-between shrink-0 ${headerBg}`}>
         <div className="flex items-center gap-2">
           <img src="/icon.png" alt="PrescribePro Logo" className="h-6 w-6 rounded-lg shadow-md border border-slate-200/50" />
-          <div className="flex items-center gap-2">
-            <h1 className={`font-extrabold text-xs tracking-wide ${
-              theme === 'day' ? 'text-slate-900' : 'bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-transparent'
-            }`}>
-              PrescribePro
-            </h1>
-            <span className={`text-[9px] font-mono hidden sm:inline ${theme === 'day' ? 'text-emerald-700 font-bold' : 'text-emerald-400'}`}>
-              • Day/Night Workspace
-            </span>
-          </div>
+          <h1 className="font-extrabold text-xs tracking-wide text-slate-900">
+            PrescribePro
+          </h1>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <button
-            onClick={toggleTheme}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold transition shadow ${
-              theme === 'day'
-                ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-slate-950'
-                : 'bg-indigo-950 text-indigo-300 border border-indigo-500/40'
-            }`}
-          >
-            {theme === 'day' ? <Sun className="h-3 w-3 text-slate-950" /> : <Moon className="h-3 w-3 text-indigo-400" />}
-            <span>{theme === 'day' ? 'Day Mode' : 'Dark Mode'}</span>
-          </button>
-
           {isAdmin && (
             <button
               onClick={() => router.push('/admin')}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold transition ${
-                theme === 'day'
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
-              }`}
+              className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-blue-600 hover:bg-blue-700 text-white shadow transition"
             >
               <ShieldCheck className="h-3 w-3" />
               Admin
             </button>
           )}
 
-          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] border ${
-            theme === 'day' ? 'bg-white/90 border-slate-200 text-slate-700' : 'glass-card border-gray-800 text-gray-200'
-          }`}>
-            <User className="h-3 w-3 text-emerald-500" />
-            <span className="font-mono truncate max-w-[110px]">{email}</span>
+          <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-white/80 border border-white/70 text-slate-700 shadow-sm">
+            <User className="h-3 w-3 text-emerald-600" />
+            <span className="font-mono font-bold truncate max-w-[110px]">{email}</span>
           </div>
 
           <button
             onClick={() => router.push('/change-password')}
-            className={`p-1 rounded-lg transition ${
-              theme === 'day' ? 'bg-white/90 hover:bg-slate-100 text-slate-600' : 'glass-card hover:bg-gray-800 text-gray-400 hover:text-emerald-400'
-            }`}
+            className="p-1 rounded-lg bg-white/80 hover:bg-white text-slate-600 transition shadow-sm"
             title="Change Password"
           >
             <KeyRound className="h-3 w-3" />
@@ -571,9 +536,7 @@ export default function UserWorkspacePage() {
 
           <button
             onClick={handleSignOut}
-            className={`p-1 rounded-lg transition ${
-              theme === 'day' ? 'bg-white/90 hover:bg-red-50 text-red-600' : 'glass-card hover:bg-gray-800 text-gray-400 hover:text-red-400'
-            }`}
+            className="p-1 rounded-lg bg-white/80 hover:bg-red-50 text-red-600 transition shadow-sm"
             title="Sign Out"
           >
             <LogOut className="h-3 w-3" />
