@@ -324,6 +324,14 @@ export default function UserWorkspacePage() {
     saveAdminPresets({ ...p, footerImage: '' });
   };
 
+  const handleApplyOdiaShantiMantraFooter = () => {
+    const odiaUrl = '/odia_footer_banner.png';
+    setFooterImg(odiaUrl);
+    localStorage.setItem('prescribepro_footer_img', odiaUrl);
+    const p = getAdminPresets();
+    saveAdminPresets({ ...p, footerImage: odiaUrl });
+  };
+
   const handleSaveDoctorProfile = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('prescribepro_doctor_profile', JSON.stringify(doctorProfile));
@@ -2526,6 +2534,39 @@ export default function UserWorkspacePage() {
                   </div>
                 ) : (
                   <p className="text-[10px] text-slate-500 italic">No image uploaded. Digital pad displays default clinic text header.</p>
+                )}
+              </div>
+
+              <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 space-y-2">
+                <label className="block font-bold text-purple-950">6. Digital Pad Footer Banner (Optional)</label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs cursor-pointer shadow transition flex items-center gap-1">
+                    <span>🖼️ Upload Custom Footer</span>
+                    <input type="file" accept="image/*" onChange={handleFooterImageUpload} className="hidden" />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleApplyOdiaShantiMantraFooter}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow transition flex items-center gap-1"
+                  >
+                    <span>🕉️ Apply Odia Mantra Banner</span>
+                  </button>
+                  {footerImg && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveFooterImage}
+                      className="px-2.5 py-1 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 font-bold text-xs transition"
+                    >
+                      ✕ Remove
+                    </button>
+                  )}
+                </div>
+                {footerImg ? (
+                  <div className="mt-1 border rounded-lg p-2 bg-white flex items-center justify-center">
+                    <img src={footerImg} alt="Footer Preview" className="h-8 object-contain" />
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-500 italic">No footer banner set. Displays default 1cm signature spacing.</p>
                 )}
               </div>
 
