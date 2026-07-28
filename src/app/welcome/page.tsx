@@ -150,11 +150,8 @@ export default function UserWorkspacePage() {
   );
 
   // Additional Advice State
-  const [selectedAdvice, setSelectedAdvice] = useState<string[]>([
-    'Cold Sponging for High Fever',
-    'Warm Salt Water Gargle 3x daily',
-  ]);
-  const [customAdviceText, setCustomAdviceText] = useState('Maintain light diet and rest.');
+  const [selectedAdvice, setSelectedAdvice] = useState<string[]>([]);
+  const [customAdviceText, setCustomAdviceText] = useState('');
 
   // Clinical Examination & Diagnostic History States
   const [chiefComplaints, setChiefComplaints] = useState('Fever x 3 days, Dry Cough, Bodyache');
@@ -168,14 +165,8 @@ export default function UserWorkspacePage() {
   const [specificAdviceText, setSpecificAdviceText] = useState('Take medications strictly after meals. Return if fever persists >3 days.');
 
   // Surgical Procedures, Maneuvers & Non-Drug Care State
-  const [selectedProcedures, setSelectedProcedures] = useState<string[]>([
-    'Valsalva Maneuver (Expiratory strain against closed airway 10-15s)',
-    'Warm Sitz Bath (15-20 mins in tub 3x daily)',
-    'Quadriceps Strengthening & Knee ROM Exercises (Physiotherapy)',
-    'Cold Sponging for High Fever Protocol',
-    'Warm Salt Water Gargle & Steam Inhalation 3x Daily',
-  ]);
-  const [customProcedureText, setCustomProcedureText] = useState('Rest & light diet. Avoid heavy exertion.');
+  const [selectedProcedures, setSelectedProcedures] = useState<string[]>([]);
+  const [customProcedureText, setCustomProcedureText] = useState('');
 
   // Pad Config & Millimeter Spacing Calibration
   const [padMode, setPadMode] = useState<'digital' | 'preprinted'>('digital');
@@ -245,7 +236,7 @@ export default function UserWorkspacePage() {
 
   const handleClearForm = () => {
     setPatient({
-      regNo: `REG-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      regNo: `REG-${Date.now().toString().slice(-4)}`,
       mobile: '',
       name: '',
       age: '',
@@ -254,7 +245,13 @@ export default function UserWorkspacePage() {
       address: '',
     });
     setMedicalHistory([]);
-    setSaveStatus('Form reset.');
+    setSelectedProcedures([]);
+    setSelectedAdvice([]);
+    setCustomProcedureText('');
+    setCustomAdviceText('');
+    setSelectedDrugs([]);
+    setSelectedTests([]);
+    setSaveStatus('Form reset cleanly.');
     setTimeout(() => setSaveStatus(null), 2000);
   };
 
@@ -1289,34 +1286,38 @@ export default function UserWorkspacePage() {
                     </div>
                   </div>
 
-                  {/* PROCEDURES (ALL NON-DRUG CARE, MANEUVERS & REHAB) */}
-                  <div>
-                    <strong className="text-indigo-900 block font-bold border-b border-indigo-200 pb-0.5 mb-1 uppercase tracking-tighter">
-                      🛠️ Procedures & Non-Drug Care:
-                    </strong>
-                    {selectedProcedures.length > 0 && (
-                      <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5 font-medium">
-                        {selectedProcedures.map((p) => (
-                          <li key={p}>{p}</li>
-                        ))}
-                      </ul>
-                    )}
-                    {selectedAdvice.length > 0 && (
-                      <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5 font-medium">
-                        {selectedAdvice.map((a) => (
-                          <li key={a}>{a}</li>
-                        ))}
-                      </ul>
-                    )}
-                    <p
-                      contentEditable
-                      suppressContentEditableWarning
-                      onBlur={(e) => setCustomProcedureText(e.currentTarget.textContent || '')}
-                      className="text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-indigo-100/50 p-0.5 rounded cursor-text"
-                    >
-                      {customProcedureText || 'Click to edit procedures (e.g. Valsalva maneuver, Sitz bath, Physio)...'}
-                    </p>
-                  </div>
+                  {/* PROCEDURES (ALL NON-DRUG CARE, MANEUVERS & REHAB - ONLY SHOW IF CHECKED OR TYPED) */}
+                  {(selectedProcedures.length > 0 || selectedAdvice.length > 0 || customProcedureText.trim() !== '') && (
+                    <div>
+                      <strong className="text-indigo-900 block font-bold border-b border-indigo-200 pb-0.5 mb-1 uppercase tracking-tighter">
+                        🛠️ Procedures & Non-Drug Care:
+                      </strong>
+                      {selectedProcedures.length > 0 && (
+                        <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5 font-medium">
+                          {selectedProcedures.map((p) => (
+                            <li key={p}>{p}</li>
+                          ))}
+                        </ul>
+                      )}
+                      {selectedAdvice.length > 0 && (
+                        <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5 font-medium">
+                          {selectedAdvice.map((a) => (
+                            <li key={a}>{a}</li>
+                          ))}
+                        </ul>
+                      )}
+                      <p
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => setCustomProcedureText(e.currentTarget.textContent || '')}
+                        className={`text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-indigo-100/50 p-0.5 rounded cursor-text ${
+                          !customProcedureText ? 'print:hidden' : ''
+                        }`}
+                      >
+                        {customProcedureText || 'Click to edit procedures (e.g. Valsalva maneuver, Sitz bath, Physio)...'}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* RIGHT PANE: CLINICAL ASSESSMENT, RX DRUGS & SPECIFIC ADVICE (8 COLUMNS) */}
