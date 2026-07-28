@@ -1,21 +1,24 @@
 {
   "short_name": "PrescribePro",
-  "name": "PrescribePro Clinical PWA Platform",
+  "name": "PrescribePro Clinical Prescription Pad Platform",
   "icons": [
     {
       "src": "/icon.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icon.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
-  "background_color": "#090d16",
-  "theme_color": "#101827",
+  "start_url": "/welcome",
+  "scope": "/",
+  "background_color": "#f8fafc",
+  "theme_color": "#059669",
   "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "any"
 }

@@ -40,7 +40,8 @@ import {
   Check,
   BookmarkPlus,
   AlertTriangle,
-  Calculator
+  Calculator,
+  Download
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { getAdminPresets, saveAdminPresets, AdminPresets } from '@/lib/db/admin-presets';
@@ -181,6 +182,43 @@ export default function UserWorkspacePage() {
   // Pharmacopeia Selector Modal State
   const [isPharmacopeiaModalOpen, setIsPharmacopeiaModalOpen] = useState<boolean>(false);
 
+  // Doctor Profile State (Name, Regd No, Qualification, Designation)
+  const [doctorProfile, setDoctorProfile] = useState({
+    name: 'Dr. Alexander Fleming',
+    regNo: 'MCI-REG-89472',
+    qualification: 'MBBS, MD (Internal Medicine)',
+    designation: 'Senior Consultant Physician & Diabetologist',
+  });
+  const [isDoctorProfileModalOpen, setIsDoctorProfileModalOpen] = useState(false);
+
+  // PWA Installation State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) {
+      alert('PrescribePro App Installation Instructions:\n\n1. In Chrome / Edge (Desktop/Android): Click the Install icon (+) in your browser address bar.\n2. On iPhone / iPad Safari: Tap the Share button and select "Add to Home Screen".');
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
+
   useEffect(() => {
     async function checkUser() {
       const supabase = createClient();
@@ -208,6 +246,15 @@ export default function UserWorkspacePage() {
 
       setDrugCatalog(getDrugCatalog());
 
+      const savedDocProfile = localStorage.getItem('prescribepro_doctor_profile');
+      if (savedDocProfile) {
+        try {
+          setDoctorProfile(JSON.parse(savedDocProfile));
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
       const savedTheme = localStorage.getItem('prescribepro_theme');
       if (savedTheme === 'dark' || savedTheme === 'day') {
         setTheme(savedTheme as 'dark' | 'day');
@@ -217,6 +264,12 @@ export default function UserWorkspacePage() {
     }
     checkUser();
   }, []);
+
+  const handleSaveDoctorProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('prescribepro_doctor_profile', JSON.stringify(doctorProfile));
+    setIsDoctorProfileModalOpen(false);
+  };
 
   const toggleTheme = () => {
     const nextTheme = theme === 'dark' ? 'day' : 'dark';
@@ -490,7 +543,7 @@ export default function UserWorkspacePage() {
   const currentSpecialty = specialties.find((sp) => sp.id === selectedSpecialtyId);
 
   // Seamless Glassmorphism Styling over Green, Pink & Blue Smudged Oval Background
-  const containerBg = "relative bg-[#f8fafc] before:content-[''] before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_90%_90%_at_50%_45%,_rgba(52,211,153,0.45)_0%,_rgba(244,114,182,0.4)_45%,_rgba(96,165,250,0.45)_75%,_rgba(224,231,255,0.9)_100%)] before:pointer-events-none text-slate-900";
+  const containerBg = "bg-transparent text-slate-900";
 
   const headerBg = 'bg-white/65 backdrop-blur-xl border-b border-white/60 shadow-sm relative z-10';
 
@@ -520,6 +573,26 @@ export default function UserWorkspacePage() {
               Admin
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => setIsDoctorProfileModalOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md transition transform active:scale-95"
+            title="Edit Doctor Credentials (Name, Regd No, Qualification, Designation)"
+          >
+            <UserCheck className="h-3 w-3" />
+            <span>Doctor Profile</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleInstallApp}
+            className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:brightness-110 text-white shadow-md transition transform active:scale-95"
+            title="Install PrescribePro as a Standalone App on your Desktop or Phone"
+          >
+            <Download className="h-3 w-3" />
+            <span>Install App</span>
+          </button>
 
           <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-white/80 border border-white/70 text-slate-700 shadow-sm">
             <User className="h-3 w-3 text-emerald-600" />
@@ -1456,23 +1529,66 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
-            {/* PAD FOOTER - PINNED TO ABSOLUTE BOTTOM */}
-            <div className="mt-auto shrink-0 pt-2">
+            {/* PAD FOOTER - PINNED TO ABSOLUTE BOTTOM WITH PHYSICIAN CREDENTIALS */}
+            <div className="mt-auto shrink-0 pt-2 border-t border-gray-200">
               {padMode === 'digital' ? (
                 footerImg ? (
-                  <img src={footerImg} alt="Clinic Footer" className="w-full h-8 object-contain mt-1" />
+                  <div className="space-y-1">
+                    <img src={footerImg} alt="Clinic Footer" className="w-full h-8 object-contain" />
+                    <div className="text-right text-[8px] text-gray-800 space-y-0.5">
+                      <p className="font-extrabold text-[9px] text-gray-900 border-t border-gray-400 pt-0.5 inline-block">
+                        {doctorProfile.name || 'Dr. Attending Physician'}
+                      </p>
+                      {doctorProfile.qualification && <p className="font-semibold text-gray-700">{doctorProfile.qualification}</p>}
+                      {doctorProfile.designation && <p className="italic text-gray-600">{doctorProfile.designation}</p>}
+                      {doctorProfile.regNo && <p className="font-mono text-gray-500 text-[7.5px]">Regd No: {doctorProfile.regNo}</p>}
+                    </div>
+                  </div>
                 ) : (
-                  <div className="border-t border-gray-200 pt-1 text-center text-[8px] text-gray-500 flex justify-between items-center">
-                    <span>PrescribePro Digital Pad</span>
-                    <span>Physician Signature: ______________</span>
+                  <div className="flex items-end justify-between text-[8px] text-gray-700">
+                    <div className="text-left text-[7.5px] text-gray-500 font-medium">
+                      <p className="font-bold text-gray-800">PrescribePro Digital Pad</p>
+                      <p>Date: {new Date().toLocaleDateString('en-GB')}</p>
+                    </div>
+
+                    <div className="text-right space-y-0.5">
+                      <p className="font-extrabold text-[9.5px] text-gray-900 border-t border-gray-400 pt-0.5 inline-block">
+                        {doctorProfile.name || 'Dr. Attending Physician'}
+                      </p>
+                      {doctorProfile.qualification && (
+                        <p className="text-[8.5px] text-gray-700 font-semibold">{doctorProfile.qualification}</p>
+                      )}
+                      {doctorProfile.designation && (
+                        <p className="text-[8px] text-gray-600 italic">{doctorProfile.designation}</p>
+                      )}
+                      {doctorProfile.regNo && (
+                        <p className="text-[7.5px] font-mono text-gray-500">Regd No: {doctorProfile.regNo}</p>
+                      )}
+                    </div>
                   </div>
                 )
               ) : (
-                <div
-                  style={{ height: `${Math.max(16, footerMarginMm * 1.2)}px` }}
-                  className="border-t border-dashed border-gray-300 flex items-center justify-center text-[9px] text-gray-400 font-mono bg-gray-50/50 rounded"
-                >
-                  [Pre-printed Footer Space: {footerMarginMm}mm]
+                <div className="flex items-end justify-between">
+                  <div
+                    style={{ height: `${Math.max(16, footerMarginMm * 1.2)}px` }}
+                    className="border-t border-dashed border-gray-300 flex items-center justify-center text-[9px] text-gray-400 font-mono bg-gray-50/50 rounded flex-1 mr-2"
+                  >
+                    [Pre-printed Footer Space: {footerMarginMm}mm]
+                  </div>
+                  <div className="text-right space-y-0.5">
+                    <p className="font-extrabold text-[9.5px] text-gray-900 border-t border-gray-400 pt-0.5 inline-block">
+                      {doctorProfile.name || 'Dr. Attending Physician'}
+                    </p>
+                    {doctorProfile.qualification && (
+                      <p className="text-[8.5px] text-gray-700 font-semibold">{doctorProfile.qualification}</p>
+                    )}
+                    {doctorProfile.designation && (
+                      <p className="text-[8px] text-gray-600 italic">{doctorProfile.designation}</p>
+                    )}
+                    {doctorProfile.regNo && (
+                      <p className="text-[7.5px] font-mono text-gray-500">Regd No: {doctorProfile.regNo}</p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -2056,6 +2172,101 @@ export default function UserWorkspacePage() {
         </div>
       )}
 
+      {/* DOCTOR PROFILE CREDENTIALS MODAL POPUP */}
+      {isDoctorProfileModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-5 overflow-hidden">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-800 font-extrabold text-base">
+                  👨‍⚕️
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900">
+                    Physician Profile & Credentials
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Displayed at bottom right of every prescription pad & print output
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsDoctorProfileModalOpen(false)}
+                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveDoctorProfile} className="space-y-3 text-xs">
+              <div>
+                <label className="block mb-1 font-bold text-slate-800">1. Full Name & Title</label>
+                <input
+                  type="text"
+                  required
+                  value={doctorProfile.name}
+                  onChange={(e) => setDoctorProfile({ ...doctorProfile, name: e.target.value })}
+                  placeholder="e.g. Dr. Alexander Fleming, MD"
+                  className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-bold text-slate-800">2. Medical Registration No. (Regd. No)</label>
+                <input
+                  type="text"
+                  required
+                  value={doctorProfile.regNo}
+                  onChange={(e) => setDoctorProfile({ ...doctorProfile, regNo: e.target.value })}
+                  placeholder="e.g. MCI/2026/89472"
+                  className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-mono font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-bold text-slate-800">3. Medical Qualification</label>
+                <input
+                  type="text"
+                  required
+                  value={doctorProfile.qualification}
+                  onChange={(e) => setDoctorProfile({ ...doctorProfile, qualification: e.target.value })}
+                  placeholder="e.g. MBBS, MD (Internal Medicine), DNB"
+                  className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-bold text-slate-800">4. Designation & Specialty</label>
+                <input
+                  type="text"
+                  required
+                  value={doctorProfile.designation}
+                  onChange={(e) => setDoctorProfile({ ...doctorProfile, designation: e.target.value })}
+                  placeholder="e.g. Senior Consultant Physician & Diabetologist"
+                  className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                />
+              </div>
+
+              <div className="pt-3 border-t flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsDoctorProfileModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-300 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition"
+                >
+                  Save Physician Profile
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* FULL PHARMACOPEIA GENERIC DRUG SELECTOR MODAL POPUP */}
       {isPharmacopeiaModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
@@ -2245,159 +2456,194 @@ export default function UserWorkspacePage() {
         </div>
       )}
 
-      {/* ISOLATED TOP-LEVEL A4 PRINT AREA FOR WINDOW.PRINT() */}
-      <div id="isolated-print-area" className="hidden">
-        <div
-          style={{
-            paddingTop: `${headerMarginMm}mm`,
-            paddingBottom: `${footerMarginMm}mm`,
-            boxSizing: 'border-box',
-          }}
-          className="w-full bg-white text-slate-900 font-sans p-6 text-xs flex flex-col justify-between min-h-[297mm]"
-        >
-          <div>
-            {/* DIGITAL CLINIC HEADER */}
-            {padMode === 'digital' && (
-              headerImg ? (
-                <img src={headerImg} alt="Clinic Header" className="w-full h-16 object-contain mb-3" />
-              ) : (
-                <div className="border-b-2 border-slate-900 pb-3 mb-3 text-center">
-                  <h1 className="text-xl font-extrabold text-slate-900 tracking-tight uppercase">
-                    PRESCRIBEPRO CLINIC & HEALTH CENTER
-                  </h1>
-                  <p className="text-xs text-slate-700 font-semibold">Multi-Specialty Healthcare • Reg No: 89745-MC</p>
-                  <p className="text-[10px] text-slate-600">Primary Care, Telemedicine & Clinical Diagnostics</p>
-                </div>
-              )
-            )}
-
-            {/* PREPRINTED SPACER HEADER */}
-            {padMode === 'preprinted' && (
-              <div style={{ height: `${headerMarginMm}mm` }} className="w-full" />
-            )}
-
-            {/* PATIENT INFO STRIP */}
-            <div className="bg-slate-100 p-2.5 rounded-lg border border-slate-300 mb-3 grid grid-cols-4 gap-2 text-[11px]">
-              <div><strong>Patient Name:</strong> {patient.name || '—'}</div>
-              <div><strong>Age / Sex:</strong> {patient.age || '—'} Y / {patient.gender || '—'}</div>
-              <div><strong>Weight / Height:</strong> {vitals.weight ? `${vitals.weight} kg` : '—'} / {vitals.height ? `${vitals.height} cm` : '—'}</div>
-              <div><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</div>
-            </div>
-
-            {/* VITALS DEMOGRAPHICS */}
-            <div className="bg-slate-50 p-2 rounded-lg border border-slate-200 mb-3 flex flex-wrap gap-4 text-[10px] text-slate-700">
-              {vitals.bp && <span><strong>BP:</strong> {vitals.bp} mmHg</span>}
-              {vitals.pulse && <span><strong>Pulse:</strong> {vitals.pulse} bpm</span>}
-              {vitals.temp && <span><strong>Temp:</strong> {vitals.temp} °F</span>}
-              {vitals.weight && <span><strong>Weight:</strong> {vitals.weight} kg</span>}
-              {vitals.height && <span><strong>Height:</strong> {vitals.height} cm</span>}
-            </div>
-
-            {/* 2-COLUMN SIDE-BY-SIDE FLEX PRINT ENGINE */}
-            <div className="print-grid w-full">
-              {/* LEFT COLUMN: LABS & PROCEDURES */}
-              <div className="print-left-pane">
-                {selectedTests.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="font-bold text-slate-900 text-xs border-b pb-1 mb-1 uppercase tracking-wider">🔬 Diagnostic Tests & Labs</h4>
-                    <ul className="list-disc pl-4 space-y-0.5 text-[10px]">
-                      {selectedTests.map((t, i) => (
-                        <li key={i}>{t}</li>
-                      ))}
-                    </ul>
-                    {testResultsText && (
-                      <p className="text-[9.5px] italic text-slate-600 mt-1">{testResultsText}</p>
-                    )}
-                  </div>
-                )}
-
-                {selectedProcedures.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="font-bold text-slate-900 text-xs border-b pb-1 mb-1 uppercase tracking-wider">🛠️ Procedures & Non-Drug Care</h4>
-                    <ul className="list-disc pl-4 space-y-0.5 text-[10px]">
-                      {selectedProcedures.map((p, i) => (
-                        <li key={i}>{p}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+    {/* ISOLATED TOP-LEVEL A4 PRINT AREA FOR WINDOW.PRINT() */}
+    <div id="isolated-print-area" className="hidden print:block">
+      <div
+        style={{
+          paddingTop: `${headerMarginMm}mm`,
+          paddingBottom: `${footerMarginMm}mm`,
+          boxSizing: 'border-box',
+        }}
+        className="w-full bg-white text-slate-900 font-sans p-6 text-xs flex flex-col justify-between min-h-[297mm]"
+      >
+        <div>
+          {/* DIGITAL CLINIC HEADER */}
+          {padMode === 'digital' && (
+            headerImg ? (
+              <img src={headerImg} alt="Clinic Header" className="w-full h-16 object-contain mb-3" />
+            ) : (
+              <div className="border-b-2 border-slate-900 pb-3 mb-3 text-center">
+                <h1 className="text-xl font-extrabold text-slate-900 tracking-tight uppercase">
+                  PRESCRIBEPRO CLINIC & HEALTH CENTER
+                </h1>
+                <p className="text-xs text-slate-700 font-semibold">Multi-Specialty Healthcare • Reg No: 89745-MC</p>
+                <p className="text-[10px] text-slate-600">Primary Care, Telemedicine & Clinical Diagnostics</p>
               </div>
+            )
+          )}
 
-              {/* RIGHT COLUMN: CLINICAL ASSESSMENT, DIAGNOSIS, RX MEDICATIONS & ADVICE */}
-              <div className="print-right-pane">
-                {chiefComplaints && (
-                  <div className="mb-2">
-                    <strong className="text-slate-900 block text-xs">Chief Complaints:</strong>
-                    <p className="text-[11px] text-slate-800">{chiefComplaints}</p>
-                  </div>
-                )}
+          {/* PREPRINTED SPACER HEADER */}
+          {padMode === 'preprinted' && (
+            <div style={{ height: `${headerMarginMm}mm` }} className="w-full" />
+          )}
 
-                {provisionalDiagnosis && (
-                  <div className="mb-3 p-1.5 bg-slate-100 border border-slate-300 rounded font-bold text-slate-900 text-xs">
-                    Diagnosis: {provisionalDiagnosis}
-                  </div>
-                )}
+          {/* PATIENT INFO STRIP */}
+          <div className="bg-slate-100 p-2.5 rounded-lg border border-slate-300 mb-3 grid grid-cols-4 gap-2 text-[11px]">
+            <div><strong>Patient Name:</strong> {patient.name || '—'}</div>
+            <div><strong>Age / Sex:</strong> {patient.age || '—'} Y / {patient.gender || '—'}</div>
+            <div><strong>Weight / Height:</strong> {vitals.weight ? `${vitals.weight} kg` : '—'} / {vitals.height ? `${vitals.height} cm` : '—'}</div>
+            <div><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</div>
+          </div>
 
-                {/* RX PRESCRIBED MEDICATIONS */}
+          {/* VITALS DEMOGRAPHICS */}
+          <div className="bg-slate-50 p-2 rounded-lg border border-slate-200 mb-3 flex flex-wrap gap-4 text-[10px] text-slate-700">
+            {vitals.bp && <span><strong>BP:</strong> {vitals.bp} mmHg</span>}
+            {vitals.pulse && <span><strong>Pulse:</strong> {vitals.pulse} bpm</span>}
+            {vitals.temp && <span><strong>Temp:</strong> {vitals.temp} °F</span>}
+            {vitals.weight && <span><strong>Weight:</strong> {vitals.weight} kg</span>}
+            {vitals.height && <span><strong>Height:</strong> {vitals.height} cm</span>}
+          </div>
+
+          {/* 2-COLUMN SIDE-BY-SIDE FLEX PRINT ENGINE */}
+          <div className="print-grid w-full">
+            {/* LEFT COLUMN: LABS & PROCEDURES */}
+            <div className="print-left-pane">
+              {selectedTests.length > 0 && (
                 <div className="mb-4">
-                  <h3 className="text-sm font-extrabold text-slate-900 border-b-2 border-slate-900 pb-1 mb-2 flex items-center justify-between">
-                    <span>Rx - Prescribed Generic Medications</span>
-                  </h3>
-                  {selectedDrugs.length > 0 ? (
-                    <ol className="list-decimal pl-5 space-y-1.5 text-xs text-slate-900 font-medium">
-                      {selectedDrugs.map((drug, index) => (
-                        <li key={index} className="pl-1">
-                          <span className="font-bold">{drug}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  ) : (
-                    <p className="text-slate-400 italic text-xs">No medications prescribed.</p>
+                  <h4 className="font-bold text-slate-900 text-xs border-b pb-1 mb-1 uppercase tracking-wider">🔬 Diagnostic Tests & Labs</h4>
+                  <ul className="list-disc pl-4 space-y-0.5 text-[10px]">
+                    {selectedTests.map((t, i) => (
+                      <li key={i}>{t}</li>
+                    ))}
+                  </ul>
+                  {testResultsText && (
+                    <p className="text-[9.5px] italic text-slate-600 mt-1">{testResultsText}</p>
                   )}
                 </div>
+              )}
 
-                {/* SPECIFIC ADVICE & LIFESTYLE */}
-                {(specificAdviceText || selectedAdvice.length > 0) && (
-                  <div className="mt-4 pt-2 border-t border-slate-300">
-                    <h4 className="font-bold text-slate-900 text-xs mb-1 uppercase tracking-wider">📌 Patient Advice & Follow-Up</h4>
-                    <p className="text-[11px] text-slate-800 mb-1">{specificAdviceText}</p>
-                    {selectedAdvice.length > 0 && (
-                      <ul className="list-disc pl-4 text-[10px] text-slate-700 space-y-0.5">
-                        {selectedAdvice.map((a, i) => (
-                          <li key={i}>{a}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+              {selectedProcedures.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="font-bold text-slate-900 text-xs border-b pb-1 mb-1 uppercase tracking-wider">🛠️ Procedures & Non-Drug Care</h4>
+                  <ul className="list-disc pl-4 space-y-0.5 text-[10px]">
+                    {selectedProcedures.map((p, i) => (
+                      <li key={i}>{p}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* RIGHT COLUMN: CLINICAL ASSESSMENT, DIAGNOSIS, RX MEDICATIONS & ADVICE */}
+            <div className="print-right-pane">
+              {chiefComplaints && (
+                <div className="mb-2">
+                  <strong className="text-slate-900 block text-xs">Chief Complaints:</strong>
+                  <p className="text-[11px] text-slate-800">{chiefComplaints}</p>
+                </div>
+              )}
+
+              {provisionalDiagnosis && (
+                <div className="mb-3 p-1.5 bg-slate-100 border border-slate-300 rounded font-bold text-slate-900 text-xs">
+                  Diagnosis: {provisionalDiagnosis}
+                </div>
+              )}
+
+              {/* RX PRESCRIBED MEDICATIONS */}
+              <div className="mb-4">
+                <h3 className="text-sm font-extrabold text-slate-900 border-b-2 border-slate-900 pb-1 mb-2 flex items-center justify-between">
+                  <span>Rx - Prescribed Generic Medications</span>
+                </h3>
+                {selectedDrugs.length > 0 ? (
+                  <ol className="list-decimal pl-5 space-y-1.5 text-xs text-slate-900 font-medium">
+                    {selectedDrugs.map((drug, index) => (
+                      <li key={index} className="pl-1">
+                        <span className="font-bold">{drug}</span>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="text-slate-400 italic text-xs">No medications prescribed.</p>
+                )}
+              </div>
+
+              {/* SPECIFIC ADVICE & LIFESTYLE */}
+              {(specificAdviceText || selectedAdvice.length > 0) && (
+                <div className="mt-4 pt-2 border-t border-slate-300">
+                  <h4 className="font-bold text-slate-900 text-xs mb-1 uppercase tracking-wider">📌 Patient Advice & Follow-Up</h4>
+                  <p className="text-[11px] text-slate-800 mb-1">{specificAdviceText}</p>
+                  {selectedAdvice.length > 0 && (
+                    <ul className="list-disc pl-4 text-[10px] text-slate-700 space-y-0.5">
+                      {selectedAdvice.map((a, i) => (
+                        <li key={i}>{a}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* DIGITAL & PREPRINTED CLINIC FOOTER - PINNED TO ABSOLUTE BOTTOM */}
+        <div className="mt-auto shrink-0 pt-6">
+          {padMode === 'digital' ? (
+            footerImg ? (
+              <div className="space-y-3">
+                <img src={footerImg} alt="Clinic Footer" className="w-full h-12 object-contain" />
+                <div className="text-right text-[10px] text-slate-800 space-y-0.5">
+                  <p className="font-extrabold text-xs text-slate-900 border-t border-slate-400 pt-0.5 inline-block">
+                    {doctorProfile.name || 'Dr. Attending Physician'}
+                  </p>
+                  {doctorProfile.qualification && <p className="font-semibold text-slate-700">{doctorProfile.qualification}</p>}
+                  {doctorProfile.designation && <p className="italic text-slate-600">{doctorProfile.designation}</p>}
+                  {doctorProfile.regNo && <p className="font-mono text-slate-500 text-[9px]">Regd. No: {doctorProfile.regNo}</p>}
+                </div>
+              </div>
+            ) : (
+              <div className="pt-4 border-t border-slate-300 flex items-end justify-between text-[10px] text-slate-600">
+                <div>
+                  <p className="font-bold text-slate-900">PRESCRIBEPRO CLINIC & HEALTH CENTER</p>
+                  <p>Primary Care, Telemedicine & Clinical Diagnostics</p>
+                </div>
+                <div className="text-right text-slate-900 space-y-0.5">
+                  <p className="font-extrabold text-xs text-slate-900 border-t border-slate-400 pt-0.5 inline-block">
+                    {doctorProfile.name || 'Dr. Attending Physician'}
+                  </p>
+                  {doctorProfile.qualification && (
+                    <p className="font-semibold text-[10px] text-slate-700">{doctorProfile.qualification}</p>
+                  )}
+                  {doctorProfile.designation && (
+                    <p className="italic text-[9.5px] text-slate-600">{doctorProfile.designation}</p>
+                  )}
+                  {doctorProfile.regNo && (
+                    <p className="font-mono text-[9px] text-slate-500">Regd. No: {doctorProfile.regNo}</p>
+                  )}
+                </div>
+              </div>
+            )
+          ) : (
+            <div className="flex items-end justify-between pt-2">
+              <div style={{ height: `${footerMarginMm}mm` }} className="flex-1" />
+              <div className="text-right text-slate-900 space-y-0.5">
+                <p className="font-extrabold text-xs text-slate-900 border-t border-slate-400 pt-0.5 inline-block">
+                  {doctorProfile.name || 'Dr. Attending Physician'}
+                </p>
+                {doctorProfile.qualification && (
+                  <p className="font-semibold text-[10px] text-slate-700">{doctorProfile.qualification}</p>
+                )}
+                {doctorProfile.designation && (
+                  <p className="italic text-[9.5px] text-slate-600">{doctorProfile.designation}</p>
+                )}
+                {doctorProfile.regNo && (
+                  <p className="font-mono text-[9px] text-slate-500">Regd. No: {doctorProfile.regNo}</p>
                 )}
               </div>
             </div>
-          </div>
-
-          {/* DIGITAL CLINIC FOOTER - PINNED TO ABSOLUTE BOTTOM */}
-          <div className="mt-auto shrink-0 pt-6">
-            {padMode === 'digital' ? (
-              footerImg ? (
-                <img src={footerImg} alt="Clinic Footer" className="w-full h-12 object-contain" />
-              ) : (
-                <div className="pt-4 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-600">
-                  <div>
-                    <p className="font-bold">PRESCRIBEPRO CLINIC & HEALTH CENTER</p>
-                    <p>123 Health Avenue, Medical District</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">Attending Medical Practitioner</p>
-                    <p className="border-t border-slate-400 mt-4 pt-0.5 inline-block">Doctor Signature</p>
-                  </div>
-                </div>
-              )
-            ) : (
-              <div style={{ height: `${footerMarginMm}mm` }} className="w-full" />
-            )}
-          </div>
+          )}
         </div>
       </div>
-
     </div>
-  );
+  </div>
+);
 }
