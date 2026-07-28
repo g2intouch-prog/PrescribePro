@@ -236,7 +236,8 @@ export default function UserWorkspacePage() {
       const loadedPresets = getAdminPresets();
       setPresets(loadedPresets);
       setPadMode(loadedPresets.padType || 'digital');
-      setHeaderImg(loadedPresets.headerImage || '');
+      const savedHeaderImg = localStorage.getItem('prescribepro_header_img');
+      setHeaderImg(savedHeaderImg || loadedPresets.headerImage || '');
       setFooterImg(loadedPresets.footerImage || '');
       setHeaderMarginMm(loadedPresets.headerMarginMm ?? 35);
       setFooterMarginMm(loadedPresets.footerMarginMm ?? 20);
@@ -274,6 +275,29 @@ export default function UserWorkspacePage() {
   const handleSetPageSize = (size: 'A4' | 'A5') => {
     setPageSize(size);
     localStorage.setItem('prescribepro_page_size', size);
+  };
+
+  const handleHeaderImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        setHeaderImg(dataUrl);
+        localStorage.setItem('prescribepro_header_img', dataUrl);
+        const p = getAdminPresets();
+        saveAdminPresets({ ...p, headerImage: dataUrl });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveHeaderImage = () => {
+    setHeaderImg('');
+    localStorage.removeItem('prescribepro_header_img');
+    const p = getAdminPresets();
+    saveAdminPresets({ ...p, headerImage: '' });
   };
 
   const handleSaveDoctorProfile = (e: React.FormEvent) => {
@@ -1399,17 +1423,38 @@ export default function UserWorkspacePage() {
             }`}
           >
             
-            {/* PAD HEADER */}
-            <div>
+            {/* PAD HEADER WITH DIRECT IMAGE UPLOAD & LOGO CONTROLS */}
+            <div className="relative group">
               {padMode === 'digital' ? (
                 headerImg ? (
-                  <img src={headerImg} alt="Clinic Header" className="w-full h-12 object-contain mb-2" />
+                  <div className="relative border-b border-gray-200 pb-1 mb-2">
+                    <img src={headerImg} alt="Clinic Header" className="w-full h-12 object-contain" />
+                    <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition rounded flex items-center justify-center gap-2 print:hidden">
+                      <label className="px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-lg cursor-pointer shadow hover:bg-emerald-500">
+                        🖼️ Change Header Logo
+                        <input type="file" accept="image/*" onChange={handleHeaderImageUpload} className="hidden" />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleRemoveHeaderImage}
+                        className="px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded-lg shadow hover:bg-red-500"
+                      >
+                        ✕ Remove
+                      </button>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="border-b-2 border-emerald-600 pb-2 text-center space-y-0.5">
+                  <div className="border-b-2 border-emerald-600 pb-2 text-center space-y-0.5 relative rounded p-1 hover:bg-emerald-50/60 transition">
                     <h3 className="font-extrabold text-sm text-emerald-800 uppercase tracking-wide">
                       PRESCRIBEPRO CLINIC & HEALTH CENTER
                     </h3>
                     <p className="text-[9px] text-gray-600">Multi-Specialty Healthcare • Reg No: 89745-MC</p>
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition rounded flex items-center justify-center print:hidden">
+                      <label className="px-3 py-1 bg-emerald-600 text-white text-[10px] font-extrabold rounded-lg cursor-pointer shadow hover:bg-emerald-500">
+                        🖼️ Upload Clinic Header Image / Logo
+                        <input type="file" accept="image/*" onChange={handleHeaderImageUpload} className="hidden" />
+                      </label>
+                    </div>
                   </div>
                 )
               ) : (
@@ -2399,6 +2444,32 @@ export default function UserWorkspacePage() {
                   placeholder="e.g. Senior Consultant Physician & Diabetologist"
                   className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
                 />
+              </div>
+
+              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-2">
+                <label className="block font-bold text-emerald-950">5. Digital Pad Header Banner / Logo (Optional)</label>
+                <div className="flex items-center gap-3">
+                  <label className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shadow transition flex items-center gap-1">
+                    <span>🖼️ Upload Logo File</span>
+                    <input type="file" accept="image/*" onChange={handleHeaderImageUpload} className="hidden" />
+                  </label>
+                  {headerImg && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveHeaderImage}
+                      className="px-2.5 py-1 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 font-bold text-xs transition"
+                    >
+                      ✕ Remove Logo
+                    </button>
+                  )}
+                </div>
+                {headerImg ? (
+                  <div className="mt-1 border rounded-lg p-2 bg-white flex items-center justify-center">
+                    <img src={headerImg} alt="Header Preview" className="h-10 object-contain" />
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-500 italic">No image uploaded. Digital pad displays default clinic text header.</p>
+                )}
               </div>
 
               <div className="pt-3 border-t flex items-center justify-end gap-2">
