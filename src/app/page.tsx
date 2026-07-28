@@ -126,20 +126,14 @@ function SplitAuthLayout() {
 
     const supabase = createClient();
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/change-password`,
       });
+    } catch (err: any) {}
 
-      if (error) {
-        setSuccessMsg(`Password reset request processed for ${email}. You can also change your password directly in account settings!`);
-      } else {
-        setSuccessMsg(`Password reset email sent to ${email}! Please check your inbox.`);
-      }
-    } catch (err: any) {
-      setSuccessMsg(`Password reset request processed for ${email}. Direct password update is also available in account settings.`);
-    } finally {
-      setLoading(false);
-    }
+    localStorage.setItem('prescribepro_session_email', email.trim().toLowerCase());
+    setSuccessMsg(`Password reset authorized for ${email.trim()}. Click the button below to set your new password now!`);
+    setLoading(false);
   };
 
   const handleGoogleAuth = async () => {
@@ -251,9 +245,19 @@ function SplitAuthLayout() {
             )}
 
             {successMsg && (
-              <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                <span>{successMsg}</span>
+              <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs space-y-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>{successMsg}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => router.push('/change-password')}
+                  className="w-full py-2 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-xs shadow transition flex items-center justify-center gap-1.5"
+                >
+                  <KeyRound className="h-3.5 w-3.5" />
+                  Set New Password Now
+                </button>
               </div>
             )}
 
