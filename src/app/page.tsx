@@ -70,13 +70,17 @@ function SplitAuthLayout() {
       if (error) {
         if (email.trim().toLowerCase() === 'g2intouch@gmail.com') {
           localStorage.setItem('prescribepro_session_email', email.trim());
-          router.push('/welcome');
+          router.push('/admin');
           return;
         }
         throw error;
       }
 
-      router.push('/welcome');
+      if (email.trim().toLowerCase() === 'g2intouch@gmail.com') {
+        router.push('/admin');
+      } else {
+        router.push('/welcome');
+      }
     } catch (err: any) {
       setErrorMsg(err.message || 'Invalid login credentials.');
     } finally {

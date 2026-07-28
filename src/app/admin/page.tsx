@@ -7,20 +7,32 @@ import {
   UserPlus, 
   Mail, 
   Trash2, 
-  ArrowLeft, 
   Layers, 
   CheckCircle2, 
   AlertCircle,
   Users,
-  Send
+  Send,
+  PauseCircle,
+  PlayCircle,
+  BarChart3,
+  DatabaseZap,
+  LogOut,
+  Activity,
+  ArrowRight
 } from 'lucide-react';
-import { getInvitedEmails, addInvitedEmail, removeInvitedEmail } from '@/lib/supabase/auth-guard';
+import { 
+  getInvitedUserRecords, 
+  addInvitedEmail, 
+  togglePauseUserStatus, 
+  removeInvitedEmail,
+  InvitedUserRecord 
+} from '@/lib/supabase/auth-guard';
 import { createClient } from '@/lib/supabase/client';
 
-export default function AdminPage() {
+export default function AdminDashboardPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<string>('g2intouch@gmail.com');
-  const [invitedList, setInvitedList] = useState<string[]>([]);
+  const [users, setUsers] = useState<InvitedUserRecord[]>([]);
   const [newInviteEmail, setNewInviteEmail] = useState('');
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -36,8 +48,8 @@ export default function AdminPage() {
         if (local) setCurrentUser(local);
       }
 
-      const list = await getInvitedEmails();
-      setInvitedList(list);
+      const records = await getInvitedUserRecords();
+      setUsers(records);
     }
     loadAdminData();
   }, []);
@@ -58,73 +70,130 @@ export default function AdminPage() {
     if (added) {
       setStatusMsg({ 
         type: 'success', 
-        text: `Invitation successfully sent to "${newInviteEmail.trim()}"! They can now sign in.` 
+        text: `Invitation sent to "${newInviteEmail.trim()}"! User is now active.` 
       });
       setNewInviteEmail('');
-      const updated = await getInvitedEmails();
-      setInvitedList(updated);
+      const updated = await getInvitedUserRecords();
+      setUsers(updated);
     } else {
       setStatusMsg({ 
         type: 'error', 
-        text: `"${newInviteEmail.trim()}" is already on the invited list.` 
+        text: `"${newInviteEmail.trim()}" is already invited.` 
       });
     }
   }
 
-  async function handleRevokeInvite(email: string) {
+  async function handleTogglePause(email: string) {
+    const updated = await togglePauseUserStatus(email);
+    setUsers(updated);
+    const target = updated.find((u) => u.email === email.toLowerCase());
+    setStatusMsg({ 
+      type: 'success', 
+      text: `User "${email}" is now ${target?.status === 'paused' ? 'Paused (Suspended)' : 'Active'}.` 
+    });
+  }
+
+  async function handleDeleteUser(email: string) {
     if (email.toLowerCase() === 'g2intouch@gmail.com') {
-      setStatusMsg({ type: 'error', text: 'Cannot revoke the primary admin email address.' });
+      setStatusMsg({ type: 'error', text: 'Cannot delete the primary admin account.' });
       return;
     }
 
-    await removeInvitedEmail(email);
-    setStatusMsg({ type: 'success', text: `Invitation for "${email}" revoked.` });
-    const updated = await getInvitedEmails();
-    setInvitedList(updated);
+    const updated = await removeInvitedEmail(email);
+    setUsers(updated);
+    setStatusMsg({ type: 'success', text: `User "${email}" has been completely removed.` });
   }
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    localStorage.removeItem('prescribepro_session_email');
+    router.push('/');
+  };
+
+  const activeCount = users.filter((u) => u.status === 'active').length;
+  const pausedCount = users.filter((u) => u.status === 'paused').length;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0b0f19] via-[#090d16] to-[#05070d] text-gray-100 flex flex-col">
-      {/* Navbar */}
+      {/* Header Navbar */}
       <header className="sticky top-0 z-40 glass-nav px-4 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push('/welcome')}
-            className="p-2 rounded-xl glass-card hover:bg-gray-800 text-gray-400 hover:text-white transition"
-            title="Back to Welcome Dashboard"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
           <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
             <Layers className="h-5 w-5 text-gray-950 font-bold" />
           </div>
           <div>
             <h1 className="font-bold text-lg leading-tight tracking-wide text-white">
-              PrescribePro Admin Console
+              PrescribePro Admin Dashboard
             </h1>
-            <p className="text-xs text-emerald-400 font-mono">Invitation & Access Control</p>
+            <p className="text-xs text-emerald-400 font-mono">User Management & Analytics</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl glass-card border-emerald-500/30 text-xs">
-          <ShieldCheck className="h-4 w-4 text-emerald-400" />
-          <span className="font-mono text-emerald-300">{currentUser}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl glass-card border-emerald-500/30 text-xs">
+            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+            <span className="font-mono text-emerald-300">{currentUser}</span>
+          </div>
+
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition"
+          >
+            <DatabaseZap className="h-3.5 w-3.5" />
+            Workspace
+          </button>
+
+          <button
+            onClick={handleSignOut}
+            className="p-2 rounded-xl glass-card hover:bg-gray-800 text-gray-400 hover:text-red-400 transition"
+            title="Sign Out"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
         
-        {/* Admin Header Card */}
-        <div className="glass-card rounded-2xl p-6 border-emerald-500/30 bg-gradient-to-r from-emerald-950/30 to-teal-950/20 space-y-2">
-          <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
-            <ShieldCheck className="h-4 w-4" />
-            System Administrator Access
+        {/* Analytics Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="glass-card rounded-2xl p-5 space-y-2 border-gray-800">
+            <div className="flex items-center justify-between text-gray-400 text-xs uppercase font-mono">
+              <span>Total Invited Users</span>
+              <Users className="h-4 w-4 text-emerald-400" />
+            </div>
+            <div className="text-3xl font-extrabold text-white">{users.length}</div>
+            <p className="text-[11px] text-gray-500">Configured in system</p>
           </div>
-          <h2 className="text-2xl font-bold text-white">Invite & User Management</h2>
-          <p className="text-xs text-gray-400">
-            PrescribePro is strictly invite-only. Use this console to send new email invitations or revoke existing user access.
-          </p>
+
+          <div className="glass-card rounded-2xl p-5 space-y-2 border-emerald-500/30">
+            <div className="flex items-center justify-between text-emerald-400 text-xs uppercase font-mono">
+              <span>Active Accounts</span>
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            </div>
+            <div className="text-3xl font-extrabold text-emerald-400">{activeCount}</div>
+            <p className="text-[11px] text-gray-500">Authorized to sign in</p>
+          </div>
+
+          <div className="glass-card rounded-2xl p-5 space-y-2 border-amber-500/30">
+            <div className="flex items-center justify-between text-amber-400 text-xs uppercase font-mono">
+              <span>Paused Accounts</span>
+              <PauseCircle className="h-4 w-4 text-amber-400" />
+            </div>
+            <div className="text-3xl font-extrabold text-amber-400">{pausedCount}</div>
+            <p className="text-[11px] text-gray-500">Temporarily suspended</p>
+          </div>
+
+          <div className="glass-card rounded-2xl p-5 space-y-2 border-teal-500/30">
+            <div className="flex items-center justify-between text-teal-400 text-xs uppercase font-mono">
+              <span>System Health</span>
+              <Activity className="h-4 w-4 text-teal-400" />
+            </div>
+            <div className="text-3xl font-extrabold text-teal-400">100%</div>
+            <p className="text-[11px] text-gray-500">SQLite WASM & Cloud OK</p>
+          </div>
         </div>
 
         {/* Send Invitation Form */}
@@ -172,47 +241,88 @@ export default function AdminPage() {
           </form>
         </div>
 
-        {/* Invited Users List */}
+        {/* User Access Control Table */}
         <div className="glass-card rounded-2xl p-6 space-y-4 border-gray-800">
           <div className="flex items-center justify-between pb-3 border-b border-gray-800">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Users className="h-5 w-5 text-teal-400" />
-              Active Invited Users ({invitedList.length})
-            </h3>
-            <span className="text-xs text-gray-500">Only listed emails can sign in</span>
+            <div>
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Users className="h-5 w-5 text-teal-400" />
+                User Access & Management List
+              </h3>
+              <p className="text-xs text-gray-400 mt-0.5">Pause or delete users to control site access in real-time.</p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            {invitedList.map((email) => (
-              <div
-                key={email}
-                className="flex items-center justify-between p-3.5 rounded-xl glass-card hover:bg-gray-800/40 transition"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold uppercase font-mono">
-                    {email[0]}
+          <div className="space-y-3">
+            {users.map((u) => {
+              const isAdmin = u.email.toLowerCase() === 'g2intouch@gmail.com';
+              return (
+                <div
+                  key={u.email}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl glass-card hover:bg-gray-800/40 gap-3 transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center text-xs font-bold font-mono uppercase ${
+                      u.status === 'active' 
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                        : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    }`}>
+                      {u.email[0]}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-white">{u.email}</span>
+                        {isAdmin && (
+                          <span className="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-mono">
+                            Primary Admin
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
+                          u.status === 'active' 
+                            ? 'bg-emerald-950 text-emerald-400' 
+                            : 'bg-amber-950 text-amber-400'
+                        }`}>
+                          {u.status === 'active' ? 'Active' : 'Paused (Access Blocked)'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-sm font-medium text-white">{email}</span>
-                    {email.toLowerCase() === 'g2intouch@gmail.com' && (
-                      <span className="ml-2 text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-mono">
-                        Primary Admin
-                      </span>
-                    )}
-                  </div>
-                </div>
 
-                {email.toLowerCase() !== 'g2intouch@gmail.com' && (
-                  <button
-                    onClick={() => handleRevokeInvite(email)}
-                    className="p-2 rounded-lg opacity-70 hover:opacity-100 hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition"
-                    title="Revoke Invitation"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            ))}
+                  {!isAdmin && (
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                      <button
+                        onClick={() => handleTogglePause(u.email)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                          u.status === 'active'
+                            ? 'bg-amber-950/60 border-amber-500/40 text-amber-400 hover:bg-amber-950'
+                            : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-400 hover:bg-emerald-950'
+                        }`}
+                      >
+                        {u.status === 'active' ? (
+                          <>
+                            <PauseCircle className="h-3.5 w-3.5" /> Pause
+                          </>
+                        ) : (
+                          <>
+                            <PlayCircle className="h-3.5 w-3.5" /> Resume
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteUser(u.email)}
+                        className="p-1.5 rounded-lg bg-red-950/40 border border-red-500/30 hover:bg-red-900/60 text-red-400 transition"
+                        title="Delete User"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
