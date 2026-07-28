@@ -178,6 +178,9 @@ export default function UserWorkspacePage() {
   // Active Left Sub-Tab
   const [activeLeftTab, setActiveLeftTab] = useState<'patient' | 'vitals' | 'clinical' | 'procedures' | 'tests' | 'advice'>('patient');
 
+  // Pharmacopeia Selector Modal State
+  const [isPharmacopeiaModalOpen, setIsPharmacopeiaModalOpen] = useState<boolean>(false);
+
   useEffect(() => {
     async function checkUser() {
       const supabase = createClient();
@@ -1634,9 +1637,18 @@ export default function UserWorkspacePage() {
 
             {/* INTERACTIVE ADDITIONAL DRUGS CHECKLIST (TICK TO APPEND TO RX) */}
             <div className="flex-1 overflow-hidden flex flex-col space-y-1.5 pt-1 border-t border-slate-200">
-              <div className="flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsPharmacopeiaModalOpen(true)}
+                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition transform active:scale-98 shrink-0"
+              >
+                <Pill className="h-4 w-4" />
+                <span>💊 Open Full Generic Drug Pharmacopeia (Popup Modal)</span>
+              </button>
+
+              <div className="flex items-center justify-between shrink-0 pt-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
-                  <Pill className="h-3.5 w-3.5 text-emerald-600" /> Generic Medications (Tick to Rx)
+                  <Pill className="h-3.5 w-3.5 text-emerald-600" /> Generic Quick List
                 </span>
                 <span className="text-[9px] text-slate-500 font-mono font-bold">{drugCatalog.length} Generics</span>
               </div>
@@ -2080,6 +2092,342 @@ export default function UserWorkspacePage() {
           </div>
         </div>
       )}
+
+      {/* FULL PHARMACOPEIA GENERIC DRUG SELECTOR MODAL POPUP */}
+      {isPharmacopeiaModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            {/* MODAL HEADER */}
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 font-bold">
+                  💊
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100">
+                    Universal USFDA & IP Generic Drug Pharmacopeia
+                  </h3>
+                  <p className="text-xs text-slate-500 font-semibold">
+                    100% Pure Generic Preparations • Tick or click to append to Live Prescription Pad ({drugCatalog.length} loaded)
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPharmacopeiaModalOpen(false)}
+                className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 hover:text-slate-900 font-bold text-xs transition"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {/* MODAL SEARCH & SPECIALTY FILTER STRIP */}
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3 bg-slate-100/50 dark:bg-slate-900/50">
+              <div className="relative">
+                <Search className="h-4 w-4 text-slate-400 absolute left-3 top-3" />
+                <input
+                  type="text"
+                  value={drugSearchQuery}
+                  onChange={(e) => setDrugSearchQuery(e.target.value)}
+                  placeholder="Type generic drug name, symptom or condition (e.g. Cefixime, Azithromycin, Toothache, Fits, Asthma)..."
+                  className="w-full rounded-xl pl-9 pr-4 py-2.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-semibold shadow-inner focus:ring-2 focus:ring-emerald-500 outline-none"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                <span className="text-slate-500 font-bold shrink-0 text-[11px]">Filter Specialty:</span>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('')}
+                  className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition ${!drugSearchQuery ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300'}`}
+                >
+                  All Generics
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('dental')}
+                  className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-950 font-bold hover:bg-amber-200 shrink-0"
+                >
+                  🦷 Dental
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('hepatology')}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-950 font-bold hover:bg-emerald-200 shrink-0"
+                >
+                  🫀 Hepatology
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('nephrology')}
+                  className="px-2.5 py-1 rounded-lg bg-sky-100 text-sky-950 font-bold hover:bg-sky-200 shrink-0"
+                >
+                  🫘 Nephrology
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('gynae')}
+                  className="px-2.5 py-1 rounded-lg bg-pink-100 text-pink-950 font-bold hover:bg-pink-200 shrink-0"
+                >
+                  🤰 Gynecology
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('ortho')}
+                  className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-950 font-bold hover:bg-indigo-200 shrink-0"
+                >
+                  🦴 Orthopedics
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('psych')}
+                  className="px-2.5 py-1 rounded-lg bg-violet-100 text-violet-950 font-bold hover:bg-violet-200 shrink-0"
+                >
+                  🧠 Psychiatry
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('cardio')}
+                  className="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-950 font-bold hover:bg-rose-200 shrink-0"
+                >
+                  ❤️ Cardiology
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('gastro')}
+                  className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-950 font-bold hover:bg-amber-200 shrink-0"
+                >
+                  🫁 Gastroenterology
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('eye')}
+                  className="px-2.5 py-1 rounded-lg bg-cyan-100 text-cyan-950 font-bold hover:bg-cyan-200 shrink-0"
+                >
+                  👁️ Ophthalmology
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('ent')}
+                  className="px-2.5 py-1 rounded-lg bg-teal-100 text-teal-950 font-bold hover:bg-teal-200 shrink-0"
+                >
+                  👂 ENT Care
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('derma')}
+                  className="px-2.5 py-1 rounded-lg bg-fuchsia-100 text-fuchsia-950 font-bold hover:bg-fuchsia-200 shrink-0"
+                >
+                  🧴 Dermatology
+                </button>
+              </div>
+            </div>
+
+            {/* MODAL DRUGS CARDS GRID BODY */}
+            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-950">
+              {searchClinicalDrugs(drugSearchQuery, drugCatalog).map((drug) => {
+                const doseLabel = `${drug.genericName} - ${drug.dosage} for ${drug.duration}`;
+                const isChecked = selectedDrugs.includes(doseLabel);
+                return (
+                  <div
+                    key={drug.id}
+                    onClick={() => toggleDrugSelection(doseLabel)}
+                    className={`p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between space-y-2 ${
+                      isChecked
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 shadow-md ring-2 ring-emerald-400'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:bg-emerald-50/50'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-1.5 mb-1">
+                        <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-snug">
+                          {drug.genericName}
+                        </h4>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold shrink-0 ${
+                          isChecked ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}>
+                          {isChecked ? '✓ Added' : '+ Add'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                        Dose: <strong className="text-slate-800 dark:text-slate-200">{drug.dosage}</strong>
+                      </p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-500">
+                        Standard Duration: {drug.duration}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-400">
+                      <span className="uppercase font-bold tracking-wider">{drug.category}</span>
+                      <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">100% Pure Generic</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* MODAL FOOTER */}
+            <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between">
+              <span className="text-xs text-slate-600 dark:text-slate-400 font-bold">
+                {selectedDrugs.length} medications selected on prescription pad
+              </span>
+              <button
+                onClick={() => setIsPharmacopeiaModalOpen(false)}
+                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition"
+              >
+                Done / Back to Prescription Pad
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ISOLATED TOP-LEVEL A4 PRINT AREA FOR WINDOW.PRINT() */}
+      <div id="isolated-print-area">
+        <div
+          style={{
+            paddingTop: `${headerMarginMm}mm`,
+            paddingBottom: `${footerMarginMm}mm`,
+            boxSizing: 'border-box',
+          }}
+          className="w-full bg-white text-slate-900 font-sans p-6 text-xs"
+        >
+          {/* DIGITAL CLINIC HEADER */}
+          {padMode === 'digital' && (
+            headerImg ? (
+              <img src={headerImg} alt="Clinic Header" className="w-full h-16 object-contain mb-3" />
+            ) : (
+              <div className="border-b-2 border-slate-900 pb-3 mb-3 text-center">
+                <h1 className="text-xl font-extrabold text-slate-900 tracking-tight uppercase">
+                  PRESCRIBEPRO CLINIC & HEALTH CENTER
+                </h1>
+                <p className="text-xs text-slate-700 font-semibold">Multi-Specialty Healthcare • Reg No: 89745-MC</p>
+                <p className="text-[10px] text-slate-600">Primary Care, Telemedicine & Clinical Diagnostics</p>
+              </div>
+            )
+          )}
+
+          {/* PREPRINTED SPACER HEADER */}
+          {padMode === 'preprinted' && (
+            <div style={{ height: `${headerMarginMm}mm` }} className="w-full" />
+          )}
+
+          {/* PATIENT INFO STRIP */}
+          <div className="bg-slate-100 p-2.5 rounded-lg border border-slate-300 mb-3 grid grid-cols-4 gap-2 text-[11px]">
+            <div><strong>Patient Name:</strong> {patient.name || '—'}</div>
+            <div><strong>Age / Sex:</strong> {patient.age || '—'} Y / {patient.gender || '—'}</div>
+            <div><strong>Weight / Height:</strong> {vitals.weight ? `${vitals.weight} kg` : '—'} / {vitals.height ? `${vitals.height} cm` : '—'}</div>
+            <div><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</div>
+          </div>
+
+          {/* VITALS DEMOGRAPHICS */}
+          <div className="bg-slate-50 p-2 rounded-lg border border-slate-200 mb-3 flex flex-wrap gap-4 text-[10px] text-slate-700">
+            {vitals.bp && <span><strong>BP:</strong> {vitals.bp} mmHg</span>}
+            {vitals.pulse && <span><strong>Pulse:</strong> {vitals.pulse} bpm</span>}
+            {vitals.temp && <span><strong>Temp:</strong> {vitals.temp} °F</span>}
+            {vitals.weight && <span><strong>Weight:</strong> {vitals.weight} kg</span>}
+            {vitals.height && <span><strong>Height:</strong> {vitals.height} cm</span>}
+          </div>
+
+          {/* 2-COLUMN SIDE-BY-SIDE FLEX PRINT ENGINE */}
+          <div className="print-grid w-full">
+            {/* LEFT COLUMN: LABS & PROCEDURES */}
+            <div className="print-left-pane">
+              {selectedTests.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="font-bold text-slate-900 text-xs border-b pb-1 mb-1 uppercase tracking-wider">🔬 Diagnostic Tests & Labs</h4>
+                  <ul className="list-disc pl-4 space-y-0.5 text-[10px]">
+                    {selectedTests.map((t, i) => (
+                      <li key={i}>{t}</li>
+                    ))}
+                  </ul>
+                  {testResultsText && (
+                    <p className="text-[9.5px] italic text-slate-600 mt-1">{testResultsText}</p>
+                  )}
+                </div>
+              )}
+
+              {selectedProcedures.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="font-bold text-slate-900 text-xs border-b pb-1 mb-1 uppercase tracking-wider">🛠️ Procedures & Non-Drug Care</h4>
+                  <ul className="list-disc pl-4 space-y-0.5 text-[10px]">
+                    {selectedProcedures.map((p, i) => (
+                      <li key={i}>{p}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* RIGHT COLUMN: CLINICAL ASSESSMENT, DIAGNOSIS, RX MEDICATIONS & ADVICE */}
+            <div className="print-right-pane">
+              {chiefComplaints && (
+                <div className="mb-2">
+                  <strong className="text-slate-900 block text-xs">Chief Complaints:</strong>
+                  <p className="text-[11px] text-slate-800">{chiefComplaints}</p>
+                </div>
+              )}
+
+              {provisionalDiagnosis && (
+                <div className="mb-3 p-1.5 bg-slate-100 border border-slate-300 rounded font-bold text-slate-900 text-xs">
+                  Diagnosis: {provisionalDiagnosis}
+                </div>
+              )}
+
+              {/* RX PRESCRIBED MEDICATIONS */}
+              <div className="mb-4">
+                <h3 className="text-sm font-extrabold text-slate-900 border-b-2 border-slate-900 pb-1 mb-2 flex items-center justify-between">
+                  <span>Rx - Prescribed Generic Medications</span>
+                </h3>
+                {selectedDrugs.length > 0 ? (
+                  <ol className="list-decimal pl-5 space-y-1.5 text-xs text-slate-900 font-medium">
+                    {selectedDrugs.map((drug, index) => (
+                      <li key={index} className="pl-1">
+                        <span className="font-bold">{drug}</span>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="text-slate-400 italic text-xs">No medications prescribed.</p>
+                )}
+              </div>
+
+              {/* SPECIFIC ADVICE & LIFESTYLE */}
+              {(specificAdviceText || selectedAdvice.length > 0) && (
+                <div className="mt-4 pt-2 border-t border-slate-300">
+                  <h4 className="font-bold text-slate-900 text-xs mb-1 uppercase tracking-wider">📌 Patient Advice & Follow-Up</h4>
+                  <p className="text-[11px] text-slate-800 mb-1">{specificAdviceText}</p>
+                  {selectedAdvice.length > 0 && (
+                    <ul className="list-disc pl-4 text-[10px] text-slate-700 space-y-0.5">
+                      {selectedAdvice.map((a, i) => (
+                        <li key={i}>{a}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* DIGITAL CLINIC FOOTER */}
+          {padMode === 'digital' && (
+            footerImg ? (
+              <img src={footerImg} alt="Clinic Footer" className="w-full h-12 object-contain mt-6" />
+            ) : (
+              <div className="mt-8 pt-4 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-600">
+                <div>
+                  <p className="font-bold">PRESCRIBEPRO CLINIC & HEALTH CENTER</p>
+                  <p>123 Health Avenue, Medical District</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold">Attending Medical Practitioner</p>
+                  <p className="border-t border-slate-400 mt-4 pt-0.5 inline-block">Doctor Signature</p>
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      </div>
 
     </div>
   );

@@ -35,39 +35,30 @@ body {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm 10mm 10mm 10mm;
+    margin: 0;
   }
 
-  *, *::before, *::after {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  body {
-    background: #ffffff !important;
-    color: #0f172a !important;
+  html, body {
+    width: 210mm !important;
+    height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    overflow: visible !important;
   }
 
-  body * {
-    visibility: hidden !important;
+  /* HIDE ALL INTERACTIVE APP UI ELEMENTS IN PRINT MODE */
+  header, main, section, nav, footer, button, input, select, textarea, .print\:hidden {
+    display: none !important;
   }
 
-  #printable-prescription-pad,
-  #printable-prescription-pad * {
+  /* SHOW ONLY THE TOP-LEVEL ISOLATED PRINT DOCUMENT */
+  #isolated-print-area {
+    display: block !important;
     visibility: visible !important;
-  }
-
-  #printable-prescription-pad {
-    position: relative !important;
-    left: auto !important;
-    top: auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 0 !important;
-    height: auto !important;
+    width: 210mm !important;
     margin: 0 auto !important;
     padding: 0 !important;
     box-shadow: none !important;
@@ -76,81 +67,39 @@ body {
     color: #0f172a !important;
     box-sizing: border-box !important;
     overflow: visible !important;
-    display: block !important;
     aspect-ratio: auto !important;
-    font-size: 10pt !important;
-    line-height: 1.4 !important;
   }
 
-  /* HIDE ALL INTERACTIVE CONTROLS */
-  .print\:hidden {
-    display: none !important;
+  #isolated-print-area * {
+    visibility: visible !important;
   }
 
-  /* PREVENT UNWANTED PAGE BREAKS INSIDE CARDS & SECTIONS */
-  #printable-prescription-pad .break-inside-avoid,
-  #printable-prescription-pad > div,
-  #printable-prescription-pad li,
-  #printable-prescription-pad .bg-blue-50\/80,
-  #printable-prescription-pad .bg-emerald-50\/80,
-  #printable-prescription-pad .bg-amber-50,
-  #printable-prescription-pad .bg-teal-50\/80 {
+  #isolated-print-area .break-inside-avoid,
+  #isolated-print-area > div,
+  #isolated-print-area li {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
-  /* ENSURE GRID PANES KEEP EXACT 2-COLUMN RATIO ACROSS MULTIPLE PAGES IN EXACT ORDER */
-  #printable-prescription-pad .grid-cols-12,
-  #printable-prescription-pad .grid {
-    display: grid !important;
-    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
-    gap: 8px !important;
+  /* 2-COLUMN SIDE-BY-SIDE FLEX PRINT ENGINE */
+  #isolated-print-area .print-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+    gap: 12px !important;
   }
 
-  #printable-prescription-pad .col-span-4 {
-    grid-column: span 4 / span 4 !important;
-    display: block !important;
+  #isolated-print-area .print-left-pane {
+    width: 32% !important;
+    flex-shrink: 0 !important;
+    border-right: 1px dashed #cbd5e1 !important;
+    padding-right: 10px !important;
   }
 
-  #printable-prescription-pad .col-span-8 {
-    grid-column: span 8 / span 8 !important;
-    display: block !important;
-  }
-
-  #printable-prescription-pad .col-span-2 {
-    grid-column: span 2 / span 2 !important;
-  }
-
-  #printable-prescription-pad .col-span-12 {
-    grid-column: span 12 / span 12 !important;
-  }
-
-  /* OPTIMIZE FONT SIZES & SPACING FOR A4 PRINT & PDF */
-  #printable-prescription-pad h3 {
-    font-size: 14pt !important;
-    line-height: 1.2 !important;
-  }
-
-  #printable-prescription-pad strong {
-    font-weight: 700 !important;
-  }
-
-  #printable-prescription-pad .text-\[8px\],
-  #printable-prescription-pad .text-\[8\.5px\],
-  #printable-prescription-pad .text-\[9px\],
-  #printable-prescription-pad .text-\[9\.5px\],
-  #printable-prescription-pad .text-\[10px\],
-  #printable-prescription-pad .text-\[11px\] {
-    font-size: 9.5pt !important;
-    line-height: 1.35 !important;
-  }
-
-  #printable-prescription-pad ol,
-  #printable-prescription-pad ul {
-    padding-left: 12pt !important;
-  }
-
-  #printable-prescription-pad li {
-    margin-bottom: 2pt !important;
+  #isolated-print-area .print-right-pane {
+    width: 68% !important;
+    flex-grow: 1 !important;
+    padding-left: 6px !important;
   }
 }
