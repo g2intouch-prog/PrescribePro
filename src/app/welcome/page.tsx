@@ -1493,8 +1493,8 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
-            {/* PAD FOOTER */}
-            <div>
+            {/* PAD FOOTER - PINNED TO ABSOLUTE BOTTOM */}
+            <div className="mt-auto shrink-0 pt-2">
               {padMode === 'digital' ? (
                 footerImg ? (
                   <img src={footerImg} alt="Clinic Footer" className="w-full h-8 object-contain mt-1" />
@@ -2290,142 +2290,148 @@ export default function UserWorkspacePage() {
             paddingBottom: `${footerMarginMm}mm`,
             boxSizing: 'border-box',
           }}
-          className="w-full bg-white text-slate-900 font-sans p-6 text-xs"
+          className="w-full bg-white text-slate-900 font-sans p-6 text-xs flex flex-col justify-between min-h-[297mm]"
         >
-          {/* DIGITAL CLINIC HEADER */}
-          {padMode === 'digital' && (
-            headerImg ? (
-              <img src={headerImg} alt="Clinic Header" className="w-full h-16 object-contain mb-3" />
-            ) : (
-              <div className="border-b-2 border-slate-900 pb-3 mb-3 text-center">
-                <h1 className="text-xl font-extrabold text-slate-900 tracking-tight uppercase">
-                  PRESCRIBEPRO CLINIC & HEALTH CENTER
-                </h1>
-                <p className="text-xs text-slate-700 font-semibold">Multi-Specialty Healthcare • Reg No: 89745-MC</p>
-                <p className="text-[10px] text-slate-600">Primary Care, Telemedicine & Clinical Diagnostics</p>
-              </div>
-            )
-          )}
-
-          {/* PREPRINTED SPACER HEADER */}
-          {padMode === 'preprinted' && (
-            <div style={{ height: `${headerMarginMm}mm` }} className="w-full" />
-          )}
-
-          {/* PATIENT INFO STRIP */}
-          <div className="bg-slate-100 p-2.5 rounded-lg border border-slate-300 mb-3 grid grid-cols-4 gap-2 text-[11px]">
-            <div><strong>Patient Name:</strong> {patient.name || '—'}</div>
-            <div><strong>Age / Sex:</strong> {patient.age || '—'} Y / {patient.gender || '—'}</div>
-            <div><strong>Weight / Height:</strong> {vitals.weight ? `${vitals.weight} kg` : '—'} / {vitals.height ? `${vitals.height} cm` : '—'}</div>
-            <div><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</div>
-          </div>
-
-          {/* VITALS DEMOGRAPHICS */}
-          <div className="bg-slate-50 p-2 rounded-lg border border-slate-200 mb-3 flex flex-wrap gap-4 text-[10px] text-slate-700">
-            {vitals.bp && <span><strong>BP:</strong> {vitals.bp} mmHg</span>}
-            {vitals.pulse && <span><strong>Pulse:</strong> {vitals.pulse} bpm</span>}
-            {vitals.temp && <span><strong>Temp:</strong> {vitals.temp} °F</span>}
-            {vitals.weight && <span><strong>Weight:</strong> {vitals.weight} kg</span>}
-            {vitals.height && <span><strong>Height:</strong> {vitals.height} cm</span>}
-          </div>
-
-          {/* 2-COLUMN SIDE-BY-SIDE FLEX PRINT ENGINE */}
-          <div className="print-grid w-full">
-            {/* LEFT COLUMN: LABS & PROCEDURES */}
-            <div className="print-left-pane">
-              {selectedTests.length > 0 && (
-                <div className="mb-4">
-                  <h4 className="font-bold text-slate-900 text-xs border-b pb-1 mb-1 uppercase tracking-wider">🔬 Diagnostic Tests & Labs</h4>
-                  <ul className="list-disc pl-4 space-y-0.5 text-[10px]">
-                    {selectedTests.map((t, i) => (
-                      <li key={i}>{t}</li>
-                    ))}
-                  </ul>
-                  {testResultsText && (
-                    <p className="text-[9.5px] italic text-slate-600 mt-1">{testResultsText}</p>
-                  )}
+          <div>
+            {/* DIGITAL CLINIC HEADER */}
+            {padMode === 'digital' && (
+              headerImg ? (
+                <img src={headerImg} alt="Clinic Header" className="w-full h-16 object-contain mb-3" />
+              ) : (
+                <div className="border-b-2 border-slate-900 pb-3 mb-3 text-center">
+                  <h1 className="text-xl font-extrabold text-slate-900 tracking-tight uppercase">
+                    PRESCRIBEPRO CLINIC & HEALTH CENTER
+                  </h1>
+                  <p className="text-xs text-slate-700 font-semibold">Multi-Specialty Healthcare • Reg No: 89745-MC</p>
+                  <p className="text-[10px] text-slate-600">Primary Care, Telemedicine & Clinical Diagnostics</p>
                 </div>
-              )}
+              )
+            )}
 
-              {selectedProcedures.length > 0 && (
-                <div className="mb-4">
-                  <h4 className="font-bold text-slate-900 text-xs border-b pb-1 mb-1 uppercase tracking-wider">🛠️ Procedures & Non-Drug Care</h4>
-                  <ul className="list-disc pl-4 space-y-0.5 text-[10px]">
-                    {selectedProcedures.map((p, i) => (
-                      <li key={i}>{p}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+            {/* PREPRINTED SPACER HEADER */}
+            {padMode === 'preprinted' && (
+              <div style={{ height: `${headerMarginMm}mm` }} className="w-full" />
+            )}
+
+            {/* PATIENT INFO STRIP */}
+            <div className="bg-slate-100 p-2.5 rounded-lg border border-slate-300 mb-3 grid grid-cols-4 gap-2 text-[11px]">
+              <div><strong>Patient Name:</strong> {patient.name || '—'}</div>
+              <div><strong>Age / Sex:</strong> {patient.age || '—'} Y / {patient.gender || '—'}</div>
+              <div><strong>Weight / Height:</strong> {vitals.weight ? `${vitals.weight} kg` : '—'} / {vitals.height ? `${vitals.height} cm` : '—'}</div>
+              <div><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</div>
             </div>
 
-            {/* RIGHT COLUMN: CLINICAL ASSESSMENT, DIAGNOSIS, RX MEDICATIONS & ADVICE */}
-            <div className="print-right-pane">
-              {chiefComplaints && (
-                <div className="mb-2">
-                  <strong className="text-slate-900 block text-xs">Chief Complaints:</strong>
-                  <p className="text-[11px] text-slate-800">{chiefComplaints}</p>
-                </div>
-              )}
+            {/* VITALS DEMOGRAPHICS */}
+            <div className="bg-slate-50 p-2 rounded-lg border border-slate-200 mb-3 flex flex-wrap gap-4 text-[10px] text-slate-700">
+              {vitals.bp && <span><strong>BP:</strong> {vitals.bp} mmHg</span>}
+              {vitals.pulse && <span><strong>Pulse:</strong> {vitals.pulse} bpm</span>}
+              {vitals.temp && <span><strong>Temp:</strong> {vitals.temp} °F</span>}
+              {vitals.weight && <span><strong>Weight:</strong> {vitals.weight} kg</span>}
+              {vitals.height && <span><strong>Height:</strong> {vitals.height} cm</span>}
+            </div>
 
-              {provisionalDiagnosis && (
-                <div className="mb-3 p-1.5 bg-slate-100 border border-slate-300 rounded font-bold text-slate-900 text-xs">
-                  Diagnosis: {provisionalDiagnosis}
-                </div>
-              )}
+            {/* 2-COLUMN SIDE-BY-SIDE FLEX PRINT ENGINE */}
+            <div className="print-grid w-full">
+              {/* LEFT COLUMN: LABS & PROCEDURES */}
+              <div className="print-left-pane">
+                {selectedTests.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="font-bold text-slate-900 text-xs border-b pb-1 mb-1 uppercase tracking-wider">🔬 Diagnostic Tests & Labs</h4>
+                    <ul className="list-disc pl-4 space-y-0.5 text-[10px]">
+                      {selectedTests.map((t, i) => (
+                        <li key={i}>{t}</li>
+                      ))}
+                    </ul>
+                    {testResultsText && (
+                      <p className="text-[9.5px] italic text-slate-600 mt-1">{testResultsText}</p>
+                    )}
+                  </div>
+                )}
 
-              {/* RX PRESCRIBED MEDICATIONS */}
-              <div className="mb-4">
-                <h3 className="text-sm font-extrabold text-slate-900 border-b-2 border-slate-900 pb-1 mb-2 flex items-center justify-between">
-                  <span>Rx - Prescribed Generic Medications</span>
-                </h3>
-                {selectedDrugs.length > 0 ? (
-                  <ol className="list-decimal pl-5 space-y-1.5 text-xs text-slate-900 font-medium">
-                    {selectedDrugs.map((drug, index) => (
-                      <li key={index} className="pl-1">
-                        <span className="font-bold">{drug}</span>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p className="text-slate-400 italic text-xs">No medications prescribed.</p>
+                {selectedProcedures.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="font-bold text-slate-900 text-xs border-b pb-1 mb-1 uppercase tracking-wider">🛠️ Procedures & Non-Drug Care</h4>
+                    <ul className="list-disc pl-4 space-y-0.5 text-[10px]">
+                      {selectedProcedures.map((p, i) => (
+                        <li key={i}>{p}</li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
 
-              {/* SPECIFIC ADVICE & LIFESTYLE */}
-              {(specificAdviceText || selectedAdvice.length > 0) && (
-                <div className="mt-4 pt-2 border-t border-slate-300">
-                  <h4 className="font-bold text-slate-900 text-xs mb-1 uppercase tracking-wider">📌 Patient Advice & Follow-Up</h4>
-                  <p className="text-[11px] text-slate-800 mb-1">{specificAdviceText}</p>
-                  {selectedAdvice.length > 0 && (
-                    <ul className="list-disc pl-4 text-[10px] text-slate-700 space-y-0.5">
-                      {selectedAdvice.map((a, i) => (
-                        <li key={i}>{a}</li>
+              {/* RIGHT COLUMN: CLINICAL ASSESSMENT, DIAGNOSIS, RX MEDICATIONS & ADVICE */}
+              <div className="print-right-pane">
+                {chiefComplaints && (
+                  <div className="mb-2">
+                    <strong className="text-slate-900 block text-xs">Chief Complaints:</strong>
+                    <p className="text-[11px] text-slate-800">{chiefComplaints}</p>
+                  </div>
+                )}
+
+                {provisionalDiagnosis && (
+                  <div className="mb-3 p-1.5 bg-slate-100 border border-slate-300 rounded font-bold text-slate-900 text-xs">
+                    Diagnosis: {provisionalDiagnosis}
+                  </div>
+                )}
+
+                {/* RX PRESCRIBED MEDICATIONS */}
+                <div className="mb-4">
+                  <h3 className="text-sm font-extrabold text-slate-900 border-b-2 border-slate-900 pb-1 mb-2 flex items-center justify-between">
+                    <span>Rx - Prescribed Generic Medications</span>
+                  </h3>
+                  {selectedDrugs.length > 0 ? (
+                    <ol className="list-decimal pl-5 space-y-1.5 text-xs text-slate-900 font-medium">
+                      {selectedDrugs.map((drug, index) => (
+                        <li key={index} className="pl-1">
+                          <span className="font-bold">{drug}</span>
+                        </li>
                       ))}
-                    </ul>
+                    </ol>
+                  ) : (
+                    <p className="text-slate-400 italic text-xs">No medications prescribed.</p>
                   )}
                 </div>
-              )}
+
+                {/* SPECIFIC ADVICE & LIFESTYLE */}
+                {(specificAdviceText || selectedAdvice.length > 0) && (
+                  <div className="mt-4 pt-2 border-t border-slate-300">
+                    <h4 className="font-bold text-slate-900 text-xs mb-1 uppercase tracking-wider">📌 Patient Advice & Follow-Up</h4>
+                    <p className="text-[11px] text-slate-800 mb-1">{specificAdviceText}</p>
+                    {selectedAdvice.length > 0 && (
+                      <ul className="list-disc pl-4 text-[10px] text-slate-700 space-y-0.5">
+                        {selectedAdvice.map((a, i) => (
+                          <li key={i}>{a}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* DIGITAL CLINIC FOOTER */}
-          {padMode === 'digital' && (
-            footerImg ? (
-              <img src={footerImg} alt="Clinic Footer" className="w-full h-12 object-contain mt-6" />
+          {/* DIGITAL CLINIC FOOTER - PINNED TO ABSOLUTE BOTTOM */}
+          <div className="mt-auto shrink-0 pt-6">
+            {padMode === 'digital' ? (
+              footerImg ? (
+                <img src={footerImg} alt="Clinic Footer" className="w-full h-12 object-contain" />
+              ) : (
+                <div className="pt-4 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-600">
+                  <div>
+                    <p className="font-bold">PRESCRIBEPRO CLINIC & HEALTH CENTER</p>
+                    <p>123 Health Avenue, Medical District</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold">Attending Medical Practitioner</p>
+                    <p className="border-t border-slate-400 mt-4 pt-0.5 inline-block">Doctor Signature</p>
+                  </div>
+                </div>
+              )
             ) : (
-              <div className="mt-8 pt-4 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-600">
-                <div>
-                  <p className="font-bold">PRESCRIBEPRO CLINIC & HEALTH CENTER</p>
-                  <p>123 Health Avenue, Medical District</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold">Attending Medical Practitioner</p>
-                  <p className="border-t border-slate-400 mt-4 pt-0.5 inline-block">Doctor Signature</p>
-                </div>
-              </div>
-            )
-          )}
+              <div style={{ height: `${footerMarginMm}mm` }} className="w-full" />
+            )}
+          </div>
         </div>
       </div>
 
