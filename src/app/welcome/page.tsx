@@ -154,13 +154,24 @@ export default function UserWorkspacePage() {
   ]);
   const [customAdviceText, setCustomAdviceText] = useState('Maintain light diet and rest.');
 
+  // Clinical Examination & Diagnostic History States
+  const [chiefComplaints, setChiefComplaints] = useState('Fever x 3 days, Dry Cough, Bodyache');
+  const [signsSymptoms, setSignsSymptoms] = useState('Mild pharyngeal erythema, Low-grade fever, Fatigue');
+  const [clinicalHistory, setClinicalHistory] = useState('No prior hospitalizations or major surgeries.');
+  const [familyHistory, setFamilyHistory] = useState('Father: Hypertension | Mother: Type 2 Diabetes');
+  const [drugHistory, setDrugHistory] = useState('Tab Paracetamol 500mg S.O.S. NKDA (No Known Drug Allergies).');
+  const [examinationFindings, setExaminationFindings] = useState('Chest: Clear bilateral breath sounds. Abdomen: Soft.');
+  const [provisionalDiagnosis, setProvisionalDiagnosis] = useState('Acute Upper Respiratory Tract Infection (URTI)');
+  const [differentialDiagnosis, setDifferentialDiagnosis] = useState('1. Viral Bronchitis  2. Influenza A');
+  const [specificAdviceText, setSpecificAdviceText] = useState('Take medications strictly after meals. Return if fever persists >3 days.');
+
   // Pad Config
   const [padMode, setPadMode] = useState<'digital' | 'preprinted'>('digital');
   const [headerImg, setHeaderImg] = useState<string>('');
   const [footerImg, setFooterImg] = useState<string>('');
 
   // Active Left Sub-Tab
-  const [activeLeftTab, setActiveLeftTab] = useState<'patient' | 'vitals' | 'tests' | 'advice'>('patient');
+  const [activeLeftTab, setActiveLeftTab] = useState<'patient' | 'vitals' | 'clinical' | 'tests' | 'advice'>('patient');
 
   useEffect(() => {
     async function checkUser() {
@@ -549,7 +560,7 @@ export default function UserWorkspacePage() {
             </div>
 
             {/* Quick Sub-Tab Selector */}
-            <div className={`grid grid-cols-4 p-1 rounded-xl text-[10px] shrink-0 border ${
+            <div className={`grid grid-cols-5 p-1 rounded-xl text-[10px] shrink-0 border ${
               theme === 'day' ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-950 border-gray-800'
             }`}>
               <button
@@ -573,6 +584,17 @@ export default function UserWorkspacePage() {
                 }`}
               >
                 Vitals
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveLeftTab('clinical')}
+                className={`py-1 rounded-lg font-semibold transition ${
+                  activeLeftTab === 'clinical' 
+                    ? (theme === 'day' ? 'bg-blue-600 text-white shadow' : 'bg-emerald-500 text-gray-950')
+                    : (theme === 'day' ? 'text-slate-600' : 'text-gray-400')
+                }`}
+              >
+                Exam & Hx
               </button>
               <button
                 type="button"
@@ -774,7 +796,111 @@ export default function UserWorkspacePage() {
                 </div>
               )}
 
-              {/* TAB 3: DIAGNOSTIC TESTS */}
+              {/* TAB 3: CLINICAL EXAMINATION & DIAGNOSIS HISTORY */}
+              {activeLeftTab === 'clinical' && (
+                <div className="space-y-2 text-xs overflow-y-auto max-h-[380px] pr-1">
+                  <div>
+                    <label className="block mb-0.5 font-bold text-slate-700">1. Chief Complaints (C/O)</label>
+                    <input
+                      type="text"
+                      value={chiefComplaints}
+                      onChange={(e) => setChiefComplaints(e.target.value)}
+                      placeholder="e.g. Fever x 3 days, Dry Cough, Bodyache"
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-0.5 font-bold text-slate-700">2. Signs & Symptoms</label>
+                    <input
+                      type="text"
+                      value={signsSymptoms}
+                      onChange={(e) => setSignsSymptoms(e.target.value)}
+                      placeholder="e.g. Pharyngeal erythema, Low-grade fever, Fatigue"
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-0.5 font-bold text-slate-700">3. Clinical History (H/O)</label>
+                    <input
+                      type="text"
+                      value={clinicalHistory}
+                      onChange={(e) => setClinicalHistory(e.target.value)}
+                      placeholder="e.g. No prior hospitalizations or major surgeries."
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-0.5 font-bold text-slate-700">4. Family History</label>
+                    <input
+                      type="text"
+                      value={familyHistory}
+                      onChange={(e) => setFamilyHistory(e.target.value)}
+                      placeholder="e.g. Father: HTN | Mother: Type 2 Diabetes"
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-0.5 font-bold text-slate-700">5. Drug History / Allergies</label>
+                    <input
+                      type="text"
+                      value={drugHistory}
+                      onChange={(e) => setDrugHistory(e.target.value)}
+                      placeholder="e.g. Tab PCM 500mg taken yesterday. NKDA."
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-0.5 font-bold text-slate-700">6. Clinical & Exam Findings</label>
+                    <input
+                      type="text"
+                      value={examinationFindings}
+                      onChange={(e) => setExaminationFindings(e.target.value)}
+                      placeholder="e.g. Chest: Clear bilateral breath sounds. Abdomen: Soft"
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-0.5 font-bold text-slate-700">7. Provisional Diagnosis</label>
+                    <input
+                      type="text"
+                      value={provisionalDiagnosis}
+                      onChange={(e) => setProvisionalDiagnosis(e.target.value)}
+                      placeholder="e.g. Acute Upper Respiratory Tract Infection (URTI)"
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-0.5 font-bold text-slate-700">8. Differential Diagnosis (D/D)</label>
+                    <input
+                      type="text"
+                      value={differentialDiagnosis}
+                      onChange={(e) => setDifferentialDiagnosis(e.target.value)}
+                      placeholder="e.g. 1. Viral Bronchitis  2. Influenza A"
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-0.5 font-bold text-slate-700">10. Specific Clinical Advice</label>
+                    <textarea
+                      value={specificAdviceText}
+                      onChange={(e) => setSpecificAdviceText(e.target.value)}
+                      placeholder="Specific clinical instructions for the patient..."
+                      rows={2}
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: DIAGNOSTIC TESTS */}
               {activeLeftTab === 'tests' && (
                 <div className="space-y-2.5 text-xs">
                   <div className="flex items-center justify-between">
@@ -967,57 +1093,147 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
-            {/* PAD BODY (VITALS, RX DRUGS, DIAGNOSTICS & ADVICE) */}
-            <div className="space-y-2.5 flex-1 py-1">
-              <div className="text-[9px] bg-emerald-50 p-1.5 rounded border border-emerald-200 text-emerald-950 font-mono flex flex-wrap gap-2">
+            {/* PAD BODY: TWO-COLUMN CANVAS (LEFT PANE = LABS & ADVICE, RIGHT PANE = CLINICAL ASSESSMENT, RX & SPECIFIC ADVICE) */}
+            <div className="flex-1 py-1 space-y-1.5 overflow-y-auto">
+              {/* VITALS DEMOGRAPHY STRIP */}
+              <div className="text-[8.5px] bg-emerald-50/80 p-1 rounded border border-emerald-200 text-emerald-950 font-mono flex flex-wrap gap-1.5 justify-between">
                 <span><strong>Ht:</strong> {vitals.height}cm</span>
                 <span><strong>Wt:</strong> {vitals.weight}kg</span>
                 <span><strong>BP:</strong> {vitals.bp}</span>
                 <span><strong>Pulse:</strong> {vitals.pulse}</span>
+                <span><strong>Temp:</strong> {vitals.temp}°F</span>
                 <span><strong>BMI:</strong> {calcBmi()}</span>
               </div>
 
-              {/* RX MEDICATIONS LIST */}
-              {selectedDrugs.length > 0 && (
-                <div className="text-[10px] space-y-1 bg-blue-50/70 p-2 rounded-lg border border-blue-200">
-                  <strong className="text-blue-900 block font-bold">Rx Prescribed Medications:</strong>
-                  <ol className="list-decimal pl-4 text-slate-800 space-y-0.5">
-                    {selectedDrugs.map((d, i) => (
-                      <li key={i} className="font-semibold">{d}</li>
-                    ))}
-                  </ol>
-                </div>
-              )}
+              {/* TWO PANES CONTAINER */}
+              <div className="grid grid-cols-12 gap-1.5 pt-1 border-t border-gray-200 text-[9px]">
+                
+                {/* LEFT PANE: LAB TEST REPORTS & ADDITIONAL ADVICE (4 COLUMNS) */}
+                <div className="col-span-4 border-r border-gray-200 pr-1.5 space-y-2 text-[8.5px]">
+                  {/* LAB TEST REPORTS & RESULTS */}
+                  <div>
+                    <strong className="text-teal-900 block font-bold border-b border-teal-200 pb-0.5 mb-1 uppercase tracking-tighter">
+                      🔬 Lab Tests & Reports:
+                    </strong>
+                    {selectedTests.length > 0 && (
+                      <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5">
+                        {selectedTests.map((t) => (
+                          <li key={t}>{t}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {testResultsText && (
+                      <div className="bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px]">
+                        <span className="font-bold text-teal-950 block">Results:</span>
+                        <p className="whitespace-pre-wrap text-gray-800">{testResultsText}</p>
+                      </div>
+                    )}
+                  </div>
 
-              {selectedTests.length > 0 && (
-                <div className="text-[9px] space-y-0.5">
-                  <strong className="text-teal-800 block">Recommended Diagnostics:</strong>
-                  <ul className="list-disc pl-3 text-gray-700 space-y-0.5">
-                    {selectedTests.map((t) => (
-                      <li key={t}>{t}</li>
-                    ))}
-                  </ul>
+                  {/* ADDITIONAL ADVICE */}
+                  <div>
+                    <strong className="text-emerald-900 block font-bold border-b border-emerald-200 pb-0.5 mb-1 uppercase tracking-tighter">
+                      🌱 Additional Advice:
+                    </strong>
+                    {selectedAdvice.length > 0 && (
+                      <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5">
+                        {selectedAdvice.map((a) => (
+                          <li key={a}>{a}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {customAdviceText && (
+                      <p className="text-gray-700 italic mt-0.5 text-[8px]">{customAdviceText}</p>
+                    )}
+                  </div>
                 </div>
-              )}
 
-              {testResultsText && (
-                <div className="text-[9px] bg-gray-50 p-1.5 rounded border border-gray-200">
-                  <strong className="text-gray-700 block mb-0.5">Test Results:</strong>
-                  <p className="text-gray-800 font-mono whitespace-pre-wrap">{testResultsText}</p>
-                </div>
-              )}
+                {/* RIGHT PANE: CLINICAL ASSESSMENT, RX DRUGS & SPECIFIC ADVICE (8 COLUMNS) */}
+                <div className="col-span-8 pl-1 space-y-1 text-[9px]">
+                  {/* 1. CHIEF COMPLAINT */}
+                  {chiefComplaints && (
+                    <div>
+                      <strong className="text-gray-900 font-bold">C/O (Chief Complaints): </strong>
+                      <span className="text-gray-800">{chiefComplaints}</span>
+                    </div>
+                  )}
 
-              {selectedAdvice.length > 0 && (
-                <div className="text-[9px] space-y-0.5">
-                  <strong className="text-emerald-800 block">Special Advice & Instructions:</strong>
-                  <ul className="list-disc pl-3 text-gray-700 space-y-0.5">
-                    {selectedAdvice.map((a) => (
-                      <li key={a}>{a}</li>
-                    ))}
-                    {customAdviceText && <li>{customAdviceText}</li>}
-                  </ul>
+                  {/* 2. SIGNS & SYMPTOMS */}
+                  {signsSymptoms && (
+                    <div>
+                      <strong className="text-gray-900 font-bold">Signs & Symptoms: </strong>
+                      <span className="text-gray-800">{signsSymptoms}</span>
+                    </div>
+                  )}
+
+                  {/* 3. CLINICAL HISTORY */}
+                  {clinicalHistory && (
+                    <div>
+                      <strong className="text-gray-900 font-bold">H/O (Clinical History): </strong>
+                      <span className="text-gray-800">{clinicalHistory}</span>
+                    </div>
+                  )}
+
+                  {/* 4. FAMILY HISTORY */}
+                  {familyHistory && (
+                    <div>
+                      <strong className="text-gray-900 font-bold">Family History: </strong>
+                      <span className="text-gray-800">{familyHistory}</span>
+                    </div>
+                  )}
+
+                  {/* 5. DRUG HISTORY */}
+                  {drugHistory && (
+                    <div>
+                      <strong className="text-gray-900 font-bold">Drug History / Allergies: </strong>
+                      <span className="text-gray-800">{drugHistory}</span>
+                    </div>
+                  )}
+
+                  {/* 6. CLINICAL & EXAMINATION FINDINGS */}
+                  {examinationFindings && (
+                    <div>
+                      <strong className="text-gray-900 font-bold">Clinical & Exam Findings: </strong>
+                      <span className="text-gray-800">{examinationFindings}</span>
+                    </div>
+                  )}
+
+                  {/* 7. PROVISIONAL DIAGNOSIS */}
+                  {provisionalDiagnosis && (
+                    <div className="bg-gray-100/90 p-1 rounded font-bold text-gray-900">
+                      <strong>Provisional Diagnosis: </strong> {provisionalDiagnosis}
+                    </div>
+                  )}
+
+                  {/* 8. DIFFERENTIAL DIAGNOSIS */}
+                  {differentialDiagnosis && (
+                    <div className="text-gray-700 italic text-[8.5px]">
+                      <strong>Differential Diagnosis (D/D): </strong> {differentialDiagnosis}
+                    </div>
+                  )}
+
+                  {/* 9. PRESCRIPTION DRUGS (Rx) */}
+                  {selectedDrugs.length > 0 && (
+                    <div className="bg-blue-50/80 p-1.5 rounded border border-blue-200 space-y-0.5 mt-1">
+                      <strong className="text-blue-950 font-extrabold text-[9.5px] block">Rx Prescribed Medications:</strong>
+                      <ol className="list-decimal pl-3.5 text-gray-900 font-bold space-y-0.5">
+                        {selectedDrugs.map((d, i) => (
+                          <li key={i}>{d}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
+                  {/* 10. SPECIFIC ADVICE */}
+                  {specificAdviceText && (
+                    <div className="bg-amber-50 p-1 rounded border border-amber-200 text-amber-950 mt-1 text-[8.5px]">
+                      <strong className="font-bold text-amber-900 block">Specific Clinical Advice:</strong>
+                      <p className="whitespace-pre-wrap">{specificAdviceText}</p>
+                    </div>
+                  )}
                 </div>
-              )}
+
+              </div>
             </div>
 
             {/* PAD FOOTER */}
