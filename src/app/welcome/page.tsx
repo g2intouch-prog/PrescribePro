@@ -1738,6 +1738,20 @@ export default function UserWorkspacePage() {
                   </button>
                   <button
                     type="button"
+                    onClick={() => setDrugSearchQuery('dental')}
+                    className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-950 font-bold hover:bg-amber-200 shrink-0"
+                  >
+                    Dental
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrugSearchQuery('gynae')}
+                    className="px-1.5 py-0.5 rounded bg-pink-100 text-pink-950 font-bold hover:bg-pink-200 shrink-0"
+                  >
+                    Gynecology
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setDrugSearchQuery('ortho')}
                     className="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-950 font-bold hover:bg-indigo-200 shrink-0"
                   >

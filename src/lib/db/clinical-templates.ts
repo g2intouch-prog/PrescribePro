@@ -109,8 +109,18 @@ export const CLINICAL_SYMPTOM_MAP: Record<string, string[]> = {
   urology: ['disodium hydrogen citrate', 'potassium citrate', 'tamsulosin', 'flavoxate', 'finasteride', 'darifenacin', 'solifenacin', 'furosemide'],
   nephrology: ['potassium citrate', 'disodium hydrogen citrate', 'ketoanalogues', 'furosemide', 'erythropoietin'],
 
-  gynecology: ['dydrogesterone', 'progesterone', 'tranexamic acid', 'norethisterone', 'ferrous ascorbate', 'folic acid', 'clomiphene', 'cabergoline', 'isoxsuprine'],
-  obgyn: ['dydrogesterone', 'progesterone', 'tranexamic acid', 'norethisterone', 'ferrous ascorbate', 'folic acid', 'clomiphene', 'cabergoline', 'isoxsuprine'],
+  gynecology: ['dydrogesterone', 'progesterone', 'tranexamic acid', 'norethisterone', 'ferrous ascorbate', 'folic acid', 'clomiphene', 'cabergoline', 'isoxsuprine', 'candid v', 'clindamycin vaginal', 'miconazole'],
+  gynaecology: ['dydrogesterone', 'progesterone', 'tranexamic acid', 'norethisterone', 'ferrous ascorbate', 'folic acid', 'clomiphene', 'cabergoline', 'isoxsuprine', 'candid v', 'clindamycin vaginal', 'miconazole'],
+  gynae: ['dydrogesterone', 'progesterone', 'tranexamic acid', 'norethisterone', 'ferrous ascorbate', 'folic acid', 'clomiphene', 'cabergoline', 'isoxsuprine', 'candid v', 'clindamycin vaginal', 'miconazole'],
+  obgyn: ['dydrogesterone', 'progesterone', 'tranexamic acid', 'norethisterone', 'ferrous ascorbate', 'folic acid', 'clomiphene', 'cabergoline', 'isoxsuprine', 'candid v', 'clindamycin vaginal', 'miconazole'],
+  obstetrics: ['dydrogesterone', 'progesterone', 'tranexamic acid', 'norethisterone', 'ferrous ascorbate', 'folic acid', 'clomiphene', 'cabergoline', 'isoxsuprine'],
+
+  dental: ['ketorolac', 'ketorol', 'amoxicillin', 'metronidazole', 'flagyl', 'chlorhexidine', 'mouthwash', 'kenacort', 'oral gel', 'lignocaine gel', 'toothpaste', 'toothache', 'teeth', 'tooth'],
+  dentistry: ['ketorolac', 'ketorol', 'amoxicillin', 'metronidazole', 'flagyl', 'chlorhexidine', 'mouthwash', 'kenacort', 'oral gel', 'lignocaine gel', 'toothpaste', 'toothache', 'teeth', 'tooth'],
+  dentist: ['ketorolac', 'ketorol', 'amoxicillin', 'metronidazole', 'flagyl', 'chlorhexidine', 'mouthwash', 'kenacort', 'oral gel', 'lignocaine gel', 'toothpaste', 'toothache', 'teeth', 'tooth'],
+  toothache: ['ketorolac', 'ketorol', 'amoxicillin', 'metronidazole', 'flagyl', 'chlorhexidine', 'kenacort', 'lignocaine gel'],
+  teeth: ['ketorolac', 'ketorol', 'amoxicillin', 'metronidazole', 'flagyl', 'chlorhexidine', 'toothpaste'],
+  tooth: ['ketorolac', 'ketorol', 'amoxicillin', 'metronidazole', 'flagyl', 'chlorhexidine', 'toothpaste'],
 
   procedure: ['dressing', 'debridement', 'incision', 'drainage', 'excision', 'pop cast', 'catheterization', 'ryles tube', 'injection', 'valsalva', 'sitz bath', 'epley', 'vagal'],
   valsalva: ['valsalva maneuver', 'expiratory strain', 'vagal maneuver'],
@@ -530,6 +540,33 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'ab18', genericName: 'Fluconazole IV Infusion (200mg/100ml)', category: 'adult', dosage: '200mg to 400mg IV infusion once daily', duration: '7-14 days Systemic Candidiasis', minAge: 12 },
   { id: 'ab19', genericName: 'Amphotericin B Liposomal IV (50mg)', category: 'adult', dosage: '3 to 5 mg/kg IV infusion in D5W over 2 hours', duration: '14 days Severe Systemic Fungal', minAge: 12 },
   { id: 'ab20', genericName: 'Caspofungin Acetate IV Injection', category: 'adult', dosage: '70mg IV loading dose, then 50mg daily', duration: '14 days Invasive Candidiasis', minAge: 18 },
+
+  // ==========================================
+  // 5. DENTAL & DENTISTRY PREPARATIONS
+  // ==========================================
+  { id: 'dent1', genericName: 'Ketorolac Tromethamine 10mg Dispersible Tablet (Ketorol-DT)', category: 'adult', dosage: '1 tablet dissolved in 15ml water 3 times daily (max 5 days)', duration: '3 days', keywords: 'dental dentistry toothache teeth tooth pain dispersible ketorolac ketorol', minAge: 12 },
+  { id: 'dent2', genericName: 'Amoxicillin 500mg + Clavulanic Acid 125mg (Moxkind-CV 625)', category: 'adult', dosage: '1 tablet twice daily after meals', duration: '5 days', keywords: 'dental dentistry tooth infection dental abscess teeth amoxicillin clavulanate', minAge: 12 },
+  { id: 'dent3', genericName: 'Metronidazole 400mg Tablet (Flagyl Dental)', category: 'adult', dosage: '1 tablet 3 times daily after meals', duration: '5 days', keywords: 'dental dentistry anaerobic infection periapical abscess metronidazole flagyl', minAge: 12 },
+  { id: 'dent4', genericName: 'Aceclofenac 100mg + Paracetamol 325mg (Zerodol-P Dental Pain)', category: 'adult', dosage: '1 tablet twice daily after meals', duration: '5 days', keywords: 'dental dentistry toothache pain relief aceclofenac paracetamol', minAge: 12 },
+  { id: 'dent5', genericName: 'Chlorhexidine Gluconate 0.2% Mouthwash (Clohex / Rexidin 150ml)', category: 'all', dosage: 'Rinse with 10ml for 60 seconds twice daily post meals', duration: '7 days', keywords: 'dental mouthwash chlorhexidine oral rinse gingivitis post extraction' },
+  { id: 'dent6', genericName: 'Povidone Iodine 1% Oral Gargle & Mouthwash', category: 'all', dosage: 'Dilute with equal warm water and gargle 3 times daily', duration: '5 days', keywords: 'dental mouthwash gargle povidone iodine oral infection' },
+  { id: 'dent7', genericName: 'Triamcinolone Acetonide 0.1% Dental Paste (Kenacort Oral Paste)', category: 'all', dosage: 'Apply thin dab over mouth ulcer at bedtime', duration: '5 days', keywords: 'dental mouth ulcer stomatitis triamcinolone oral paste' },
+  { id: 'dent8', genericName: 'Choline Salicylate + Lignocaine HCl Gel (Orajel / Mucopain)', category: 'all', dosage: 'Gently rub small amount on affected gum/ulcer 4 times daily', duration: '5 days', keywords: 'dental mouth gel ulcer pain toothache relief lignocaine' },
+  { id: 'dent9', genericName: 'Potassium Nitrate 5% + Sodium Monofluorophosphate Sensitivity Toothpaste', category: 'all', dosage: 'Brush gently twice daily for 2 minutes', duration: '30 days', keywords: 'dental toothpaste sensitivity sensitive teeth potassium nitrate thermoseal' },
+
+  // ==========================================
+  // 6. GYNECOLOGY & OBSTETRICS (GYNAE & OBGYN)
+  // ==========================================
+  { id: 'gyn1', genericName: 'Dydrogesterone 10mg Tablet (Duphaston)', category: 'adult', dosage: '1 tablet twice daily from Day 11 to Day 25 of cycle', duration: '14 days', keywords: 'gynecology gynaecology gynae obgyn irregular periods endometriosis dydrogesterone duphaston', minAge: 15 },
+  { id: 'gyn2', genericName: 'Progesterone 200mg SR Capsule (Susten / Macgest)', category: 'adult', dosage: '1 capsule at bedtime orally or vaginally', duration: '14 days', keywords: 'gynecology gynaecology gynae obgyn pregnancy support progesterone susten', minAge: 18 },
+  { id: 'gyn3', genericName: 'Tranexamic Acid 500mg + Mefenamic Acid 250mg (Pause-MF)', category: 'adult', dosage: '1 tablet 3 times daily during heavy menstrual bleeding', duration: '4 days', keywords: 'gynecology gynaecology gynae obgyn heavy bleeding menorrhagia tranexamic mefenamic', minAge: 12 },
+  { id: 'gyn4', genericName: 'Norethisterone 5mg Tablet (Primolut-N)', category: 'adult', dosage: '1 tablet 3 times daily starting 3 days before expected period', duration: '5 days', keywords: 'gynecology gynaecology gynae obgyn delay periods dysmenorrhea norethisterone primolut', minAge: 14 },
+  { id: 'gyn5', genericName: 'Ferrous Ascorbate 100mg + Folic Acid 1.5mg (Orofer XT / Autrin)', category: 'adult', dosage: '1 tablet once daily after main meal', duration: '60 days', keywords: 'gynecology gynaecology gynae obgyn pregnancy anemia iron folic acid orofer', minAge: 12 },
+  { id: 'gyn6', genericName: 'Isoxsuprine 40mg SR Tablet (Duvadilan SR)', category: 'adult', dosage: '1 tablet twice daily after meals', duration: '14 days', keywords: 'gynecology gynaecology gynae obgyn uterine relaxant isoxsuprine duvadilan dysmenorrhea', minAge: 18 },
+  { id: 'gyn7', genericName: 'Cabergoline 0.5mg Tablet (Dostinex)', category: 'adult', dosage: '0.25mg twice weekly or 1mg single dose for lactation suppression', duration: 'Single dose / 2 weeks', keywords: 'gynecology gynaecology gynae obgyn cabergoline hyperprolactinemia lactation', minAge: 18 },
+  { id: 'gyn8', genericName: 'Clomiphene Citrate 50mg Tablet (Fertomid)', category: 'adult', dosage: '1 tablet once daily for 5 days starting Day 2 of cycle', duration: '5 days', keywords: 'gynecology gynaecology gynae obgyn fertility ovulation clomiphene fertomid', minAge: 18 },
+  { id: 'gyn9', genericName: 'Clotrimazole 100mg Vaginal Suppository (Candid V6)', category: 'adult', dosage: '1 vaginal tablet inserted high at bedtime for 6 consecutive nights', duration: '6 days', keywords: 'gynecology gynaecology gynae obgyn vaginal discharge candidiasis clotrimazole candid v', minAge: 18 },
+  { id: 'gyn10', genericName: 'Clindamycin 100mg + Clotrimazole 100mg Vaginal Softgel Suppository', category: 'adult', dosage: '1 softgel inserted vaginally at bedtime for 7 nights', duration: '7 days', keywords: 'gynecology gynaecology gynae obgyn bacterial vaginosis vaginal candidiasis clindamycin clotrimazole', minAge: 18 },
 ];
 
 const DEFAULT_SPECIALTIES: Specialty[] = [
