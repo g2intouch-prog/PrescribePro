@@ -53,6 +53,7 @@ import {
   calculateBsaDose,
   calculateBsa,
   searchClinicalDrugs,
+  CLINICAL_PROCEDURES_PRESETS,
   Specialty, 
   PrescriptionTemplate, 
   DrugItem 
@@ -166,13 +167,23 @@ export default function UserWorkspacePage() {
   const [differentialDiagnosis, setDifferentialDiagnosis] = useState('1. Viral Bronchitis  2. Influenza A');
   const [specificAdviceText, setSpecificAdviceText] = useState('Take medications strictly after meals. Return if fever persists >3 days.');
 
+  // Surgical Procedures, Maneuvers & Non-Drug Care State
+  const [selectedProcedures, setSelectedProcedures] = useState<string[]>([
+    'Valsalva Maneuver (Expiratory strain against closed airway 10-15s)',
+    'Warm Sitz Bath (15-20 mins in tub 3x daily)',
+    'Quadriceps Strengthening & Knee ROM Exercises (Physiotherapy)',
+    'Cold Sponging for High Fever Protocol',
+    'Warm Salt Water Gargle & Steam Inhalation 3x Daily',
+  ]);
+  const [customProcedureText, setCustomProcedureText] = useState('Rest & light diet. Avoid heavy exertion.');
+
   // Pad Config
   const [padMode, setPadMode] = useState<'digital' | 'preprinted'>('digital');
   const [headerImg, setHeaderImg] = useState<string>('');
   const [footerImg, setFooterImg] = useState<string>('');
 
   // Active Left Sub-Tab
-  const [activeLeftTab, setActiveLeftTab] = useState<'patient' | 'vitals' | 'clinical' | 'tests' | 'advice'>('patient');
+  const [activeLeftTab, setActiveLeftTab] = useState<'patient' | 'vitals' | 'clinical' | 'procedures' | 'tests' | 'advice'>('patient');
 
   useEffect(() => {
     async function checkUser() {
@@ -271,6 +282,14 @@ export default function UserWorkspacePage() {
       setSelectedAdvice(selectedAdvice.filter((a) => a !== adviceName));
     } else {
       setSelectedAdvice([...selectedAdvice, adviceName]);
+    }
+  };
+
+  const toggleProcedureSelection = (procName: string) => {
+    if (selectedProcedures.includes(procName)) {
+      setSelectedProcedures(selectedProcedures.filter((p) => p !== procName));
+    } else {
+      setSelectedProcedures([...selectedProcedures, procName]);
     }
   };
 
@@ -614,6 +633,17 @@ export default function UserWorkspacePage() {
               </button>
               <button
                 type="button"
+                onClick={() => setActiveLeftTab('procedures')}
+                className={`py-1 rounded-lg font-semibold transition ${
+                  activeLeftTab === 'procedures' 
+                    ? (theme === 'day' ? 'bg-blue-600 text-white shadow' : 'bg-emerald-500 text-gray-950')
+                    : (theme === 'day' ? 'text-slate-600' : 'text-gray-400')
+                }`}
+              >
+                Procedures
+              </button>
+              <button
+                type="button"
                 onClick={() => setActiveLeftTab('tests')}
                 className={`py-1 rounded-lg font-semibold transition ${
                   activeLeftTab === 'tests' 
@@ -622,17 +652,6 @@ export default function UserWorkspacePage() {
                 }`}
               >
                 Tests
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveLeftTab('advice')}
-                className={`py-1 rounded-lg font-semibold transition ${
-                  activeLeftTab === 'advice' 
-                    ? (theme === 'day' ? 'bg-blue-600 text-white shadow' : 'bg-emerald-500 text-gray-950')
-                    : (theme === 'day' ? 'text-slate-600' : 'text-gray-400')
-                }`}
-              >
-                Advice
               </button>
             </div>
 
@@ -916,7 +935,54 @@ export default function UserWorkspacePage() {
                 </div>
               )}
 
-              {/* TAB 4: DIAGNOSTIC TESTS */}
+              {/* TAB 4: SURGICAL PROCEDURES & PHYSIOTHERAPY REHAB */}
+              {activeLeftTab === 'procedures' && (
+                <div className="space-y-2 text-xs overflow-y-auto max-h-[380px] pr-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-indigo-700">Surgical Procedures & Physiotherapy</span>
+                    <span className="text-[10px] text-slate-500 font-mono font-bold">
+                      {CLINICAL_PROCEDURES_PRESETS.length} Protocols
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                    {CLINICAL_PROCEDURES_PRESETS.map((proc, idx) => {
+                      const isChecked = selectedProcedures.includes(proc);
+                      return (
+                        <label
+                          key={idx}
+                          className={`p-1.5 rounded-lg border flex items-center justify-between cursor-pointer transition text-[11px] ${
+                            isChecked
+                              ? 'bg-indigo-100/80 border-indigo-400 font-bold text-indigo-950'
+                              : 'bg-white/80 border-slate-200 text-slate-700 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span className="truncate pr-2">{proc}</span>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleProcedureSelection(proc)}
+                            className="h-3.5 w-3.5 text-indigo-600 rounded"
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div>
+                    <label className="block mb-0.5 font-bold text-slate-700">Custom Procedure / Rehab Protocol</label>
+                    <textarea
+                      value={customProcedureText}
+                      onChange={(e) => setCustomProcedureText(e.target.value)}
+                      placeholder="e.g. Quadriceps isometric exercises 10 reps t.d.s..."
+                      rows={2}
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: DIAGNOSTIC TESTS */}
               {activeLeftTab === 'tests' && (
                 <div className="space-y-2.5 text-xs">
                   <div className="flex items-center justify-between">
@@ -1158,13 +1224,20 @@ export default function UserWorkspacePage() {
                     </div>
                   </div>
 
-                  {/* ADDITIONAL ADVICE */}
+                  {/* PROCEDURES (ALL NON-DRUG CARE, MANEUVERS & REHAB) */}
                   <div>
-                    <strong className="text-emerald-900 block font-bold border-b border-emerald-200 pb-0.5 mb-1 uppercase tracking-tighter">
-                      🌱 Additional Advice:
+                    <strong className="text-indigo-900 block font-bold border-b border-indigo-200 pb-0.5 mb-1 uppercase tracking-tighter">
+                      🛠️ Procedures & Non-Drug Care:
                     </strong>
+                    {selectedProcedures.length > 0 && (
+                      <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5 font-medium">
+                        {selectedProcedures.map((p) => (
+                          <li key={p}>{p}</li>
+                        ))}
+                      </ul>
+                    )}
                     {selectedAdvice.length > 0 && (
-                      <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5">
+                      <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5 font-medium">
                         {selectedAdvice.map((a) => (
                           <li key={a}>{a}</li>
                         ))}
@@ -1173,10 +1246,10 @@ export default function UserWorkspacePage() {
                     <p
                       contentEditable
                       suppressContentEditableWarning
-                      onBlur={(e) => setCustomAdviceText(e.currentTarget.textContent || '')}
-                      className="text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-emerald-100/50 p-0.5 rounded cursor-text"
+                      onBlur={(e) => setCustomProcedureText(e.currentTarget.textContent || '')}
+                      className="text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-indigo-100/50 p-0.5 rounded cursor-text"
                     >
-                      {customAdviceText || 'Click to type additional advice...'}
+                      {customProcedureText || 'Click to edit procedures (e.g. Valsalva maneuver, Sitz bath, Physio)...'}
                     </p>
                   </div>
                 </div>
@@ -1453,7 +1526,14 @@ export default function UserWorkspacePage() {
               </label>
               <select
                 value={selectedSpecialtyId}
-                onChange={(e) => setSelectedSpecialtyId(e.target.value)}
+                onChange={(e) => {
+                  const specId = e.target.value;
+                  setSelectedSpecialtyId(specId);
+                  const specName = specialties.find((s) => s.id === specId)?.name || '';
+                  if (specName) {
+                    setDrugSearchQuery(specName.toLowerCase().split(' ')[0]);
+                  }
+                }}
                 className={`w-full rounded-lg px-2 py-1 text-xs font-semibold ${inputBg}`}
               >
                 {specialties.map((sp) => (
@@ -1573,7 +1653,7 @@ export default function UserWorkspacePage() {
                     type="text"
                     value={drugSearchQuery}
                     onChange={(e) => setDrugSearchQuery(e.target.value)}
-                    placeholder="Search generic names (e.g. Paracetamol, Amoxicillin)..."
+                    placeholder="Search specialty drugs (e.g. Orthopedics, Psychiatry, Eye)..."
                     className={`w-full rounded-lg pl-7 pr-2 py-0.5 text-[10px] ${inputBg}`}
                   />
                 </div>
@@ -1586,6 +1666,34 @@ export default function UserWorkspacePage() {
                     className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200 shrink-0"
                   >
                     All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrugSearchQuery('ortho')}
+                    className="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-950 font-bold hover:bg-indigo-200 shrink-0"
+                  >
+                    Orthopedics
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrugSearchQuery('psych')}
+                    className="px-1.5 py-0.5 rounded bg-violet-100 text-violet-950 font-bold hover:bg-violet-200 shrink-0"
+                  >
+                    Psychiatry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrugSearchQuery('cardio')}
+                    className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-950 font-bold hover:bg-rose-200 shrink-0"
+                  >
+                    Cardiology
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrugSearchQuery('gastro')}
+                    className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-950 font-bold hover:bg-amber-200 shrink-0"
+                  >
+                    Gastroenterology
                   </button>
                   <button
                     type="button"
@@ -1635,13 +1743,6 @@ export default function UserWorkspacePage() {
                     className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-900 font-bold hover:bg-purple-200 shrink-0"
                   >
                     Anesthetics
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('Syrup')}
-                    className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold hover:bg-amber-200 shrink-0"
-                  >
-                    Syrups / Drops
                   </button>
                 </div>
               </div>

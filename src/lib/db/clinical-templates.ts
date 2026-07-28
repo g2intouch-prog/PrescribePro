@@ -85,13 +85,68 @@ export const CLINICAL_SYMPTOM_MAP: Record<string, string[]> = {
   cream: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'clotrimazole', 'luliconazole'],
   ointment: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'mupirocin', 'burnol', 'silver sulfadiazine'],
 
-  throat: ['paracetamol', 'cetirizine', 'amoxicillin', 'azithromycin', 'povidone gargle'],
-  spasm: ['dicyclomine', 'drotaverine', 'buscopan', 'mebeverine', 'flavoxate'],
-  stone: ['potassium citrate', 'disodium hydrogen citrate', 'tamsulosin', 'alkaliser'],
-  injection: ['adrenaline', 'noradrenaline', 'dopamine', 'dobutamine', 'atropine', 'amiodarone', 'hydrocortisone', 'ceftriaxone', 'meropenem', 'diclofenac injection'],
-  iv: ['adrenaline', 'noradrenaline', 'dopamine', 'dobutamine', 'atropine', 'amiodarone', 'hydrocortisone', 'ceftriaxone', 'meropenem', 'paracetamol iv'],
-  anesthetic: ['propofol', 'ketamine', 'etomidate', 'thiopental', 'sevoflurane', 'isoflurane', 'lignocaine', 'bupivacaine', 'rocuronium', 'succinylcholine', 'vecuronium'],
+  orthopedics: ['aceclofenac', 'diclofenac', 'etoricoxib', 'thiocolchicoside', 'chymoral', 'tramadol', 'pregabalin', 'gabapentin', 'glucosamine', 'diacerein', 'methotrexate', 'sulfasalazine', 'hydroxychloroquine', 'tizanidine', 'baclofen', 'calcium', 'calcitriol'],
+  ortho: ['aceclofenac', 'diclofenac', 'etoricoxib', 'thiocolchicoside', 'chymoral', 'tramadol', 'pregabalin', 'gabapentin', 'glucosamine', 'diacerein', 'methotrexate', 'sulfasalazine', 'hydroxychloroquine', 'tizanidine', 'baclofen', 'calcium', 'calcitriol'],
+  rheumatology: ['methotrexate', 'sulfasalazine', 'hydroxychloroquine', 'aceclofenac', 'etoricoxib', 'diacerein', 'prednisolone'],
+
+  psychiatry: ['alprazolam', 'clonazepam', 'diazepam', 'lorazepam', 'zolpidem', 'escitalopram', 'sertraline', 'fluoxetine', 'duloxetine', 'amitriptyline', 'quetiapine', 'olanzapine', 'risperidone', 'valproate', 'levetiracetam', 'phenytoin', 'carbamazepine', 'donepezil'],
+  psych: ['alprazolam', 'clonazepam', 'diazepam', 'lorazepam', 'zolpidem', 'escitalopram', 'sertraline', 'fluoxetine', 'duloxetine', 'amitriptyline', 'quetiapine', 'olanzapine', 'risperidone', 'valproate', 'levetiracetam', 'phenytoin', 'carbamazepine', 'donepezil'],
+  neurology: ['levetiracetam', 'phenytoin', 'valproate', 'carbamazepine', 'donepezil', 'pregabalin', 'gabapentin', 'clonazepam', 'amitriptyline'],
+  neuro: ['levetiracetam', 'phenytoin', 'valproate', 'carbamazepine', 'donepezil', 'pregabalin', 'gabapentin', 'clonazepam', 'amitriptyline'],
+
+  cardiology: ['telmisartan', 'amlodipine', 'atenolol', 'losartan', 'sacubitril', 'aspirin', 'clopidogrel', 'rosuvastatin', 'atorvastatin', 'metoprolol', 'enalapril', 'ramipril', 'lasix', 'furosemide', 'amiodarone', 'nitroglycerin'],
+  cardio: ['telmisartan', 'amlodipine', 'atenolol', 'losartan', 'sacubitril', 'aspirin', 'clopidogrel', 'rosuvastatin', 'atorvastatin', 'metoprolol', 'enalapril', 'ramipril', 'lasix', 'furosemide', 'amiodarone', 'nitroglycerin'],
+
+  gastroenterology: ['pantoprazole', 'rabeprazole', 'omeprazole', 'esomeprazole', 'sucralfate', 'dicyclomine', 'drotaverine', 'bacillus clausii', 'saccharomyces', 'ors', 'racecadotril', 'loperamide', 'lactulose', 'peg 3350'],
+  gastro: ['pantoprazole', 'rabeprazole', 'omeprazole', 'esomeprazole', 'sucralfate', 'dicyclomine', 'drotaverine', 'bacillus clausii', 'saccharomyces', 'ors', 'racecadotril', 'loperamide', 'lactulose', 'peg 3350'],
+
+  pulmonology: ['foracort', 'seretide', 'duolin', 'levosalbutamol', 'budesonide', 'montelukast', 'acebrophylline', 'doxofylline', 'cough syrup'],
+  pulmo: ['foracort', 'seretide', 'duolin', 'levosalbutamol', 'budesonide', 'montelukast', 'acebrophylline', 'doxofylline', 'cough syrup'],
+
+  endocrinology: ['metformin', 'glimepiride', 'teneligliptin', 'sitagliptin', 'dapagliflozin', 'voglibose', 'thyroxine', 'carbimazole'],
+  endo: ['metformin', 'glimepiride', 'teneligliptin', 'sitagliptin', 'dapagliflozin', 'voglibose', 'thyroxine', 'carbimazole'],
+
+  urology: ['disodium hydrogen citrate', 'potassium citrate', 'tamsulosin', 'flavoxate', 'finasteride', 'darifenacin', 'solifenacin', 'furosemide'],
+  nephrology: ['potassium citrate', 'disodium hydrogen citrate', 'ketoanalogues', 'furosemide', 'erythropoietin'],
+
+  gynecology: ['dydrogesterone', 'progesterone', 'tranexamic acid', 'norethisterone', 'ferrous ascorbate', 'folic acid', 'clomiphene', 'cabergoline', 'isoxsuprine'],
+  obgyn: ['dydrogesterone', 'progesterone', 'tranexamic acid', 'norethisterone', 'ferrous ascorbate', 'folic acid', 'clomiphene', 'cabergoline', 'isoxsuprine'],
+
+  procedure: ['dressing', 'debridement', 'incision', 'drainage', 'excision', 'pop cast', 'catheterization', 'ryles tube', 'injection', 'valsalva', 'sitz bath', 'epley', 'vagal'],
+  valsalva: ['valsalva maneuver', 'expiratory strain', 'vagal maneuver'],
+  sitz: ['sitz bath', 'warm sitz bath', 'povidone sitz bath', 'hemorrhoids bath'],
+  seitz: ['sitz bath', 'warm sitz bath', 'povidone sitz bath', 'hemorrhoids bath'],
+  epley: ['epley maneuver', 'vertigo repositioning', 'bppv'],
+  vagal: ['vagal maneuver', 'carotid sinus massage', 'valsalva'],
+  surgery: ['debridement', 'incision', 'drainage', 'excision', 'stitching', 'suturing'],
+  surgical: ['debridement', 'incision', 'drainage', 'excision', 'stitching', 'suturing'],
+  physiotherapy: ['quadriceps', 'range of motion', 'swd', 'tens', 'traction', 'spirometry', 'kegel', 'core stability'],
+  physio: ['quadriceps', 'range of motion', 'swd', 'tens', 'traction', 'spirometry', 'kegel', 'core stability'],
+  exercise: ['quadriceps', 'range of motion', 'swd', 'tens', 'traction', 'spirometry', 'kegel', 'core stability'],
 };
+
+export const CLINICAL_PROCEDURES_PRESETS: string[] = [
+  'Valsalva Maneuver (Expiratory strain against closed airway for 10-15s)',
+  'Warm Sitz Bath (15-20 mins in tub 3x daily for Hemorrhoids / Fissure / Episiotomy)',
+  'Modified Epley Maneuver (Canalith Repositioning Procedure for BPPV Vertigo)',
+  'Vagal Maneuvers (Carotid Sinus Massage / Cold Facial Immersion under ECG)',
+  'Warm Salt Water Gargle & Steam Inhalation 3x Daily',
+  'Cold Sponging for High Fever Protocol',
+  'Wound Debridement & Sterile Dressing under Local Anesthesia',
+  'Abscess Incision & Drainage (I&D) under Local Anesthesia',
+  'Excision of Sebaceous Cyst / Lipoma under Local Anesthesia',
+  'Closed Reduction & POP Cast Immobilization for Fracture',
+  'Intra-articular Corticosteroid Injection (Knee / Shoulder Joint)',
+  'Foley Urinary Catheterization under Aseptic Precautions',
+  'Nasogastric Tube (Ryle\'s Tube) Insertion',
+  'Quadriceps Strengthening & Knee ROM Exercises (Physiotherapy)',
+  'Passive & Active Range of Motion Exercises for Frozen Shoulder',
+  'Short Wave Diathermy (SWD) & TENS Therapy for Low Back Pain',
+  'Cervical & Lumbar Traction Protocol',
+  'Incentive Spirometry & Chest Physiotherapy 4x Daily',
+  'Pelvic Floor / Kegel Strengthening Exercises',
+  'Postural Correction & Core Stability Exercises'
+];
 
 export function searchClinicalDrugs(query: string, catalog: DrugItem[]): DrugItem[] {
   const q = query.trim().toLowerCase();
