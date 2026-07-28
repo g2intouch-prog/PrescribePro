@@ -171,6 +171,7 @@ export default function UserWorkspacePage() {
 
   // Pad Config & Millimeter Spacing Calibration
   const [padMode, setPadMode] = useState<'digital' | 'preprinted'>('digital');
+  const [pageSize, setPageSize] = useState<'A4' | 'A5'>('A4');
   const [headerImg, setHeaderImg] = useState<string>('');
   const [footerImg, setFooterImg] = useState<string>('');
   const [headerMarginMm, setHeaderMarginMm] = useState<number>(35);
@@ -255,6 +256,11 @@ export default function UserWorkspacePage() {
         }
       }
 
+      const savedPageSize = localStorage.getItem('prescribepro_page_size');
+      if (savedPageSize === 'A4' || savedPageSize === 'A5') {
+        setPageSize(savedPageSize as 'A4' | 'A5');
+      }
+
       const savedTheme = localStorage.getItem('prescribepro_theme');
       if (savedTheme === 'dark' || savedTheme === 'day') {
         setTheme(savedTheme as 'dark' | 'day');
@@ -264,6 +270,11 @@ export default function UserWorkspacePage() {
     }
     checkUser();
   }, []);
+
+  const handleSetPageSize = (size: 'A4' | 'A5') => {
+    setPageSize(size);
+    localStorage.setItem('prescribepro_page_size', size);
+  };
 
   const handleSaveDoctorProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -371,6 +382,59 @@ export default function UserWorkspacePage() {
 
   const handleAddCustomDrugItem = () => {
     setSelectedDrugs([...selectedDrugs, 'Tab Custom Generic Medication (1-0-1 after food) x 5 days']);
+  };
+
+  const handlePrint = () => {
+    const printArea = document.getElementById('isolated-print-area');
+    if (!printArea) {
+      window.print();
+      return;
+    }
+
+    const printWindow = window.open('', '_blank', 'width=900,height=1000');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+
+    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map((s) => s.outerHTML)
+      .join('\n');
+
+    const isA5 = pageSize === 'A5';
+    const paperWidth = isA5 ? '148mm' : '210mm';
+    const paperHeight = isA5 ? '210mm' : '297mm';
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Prescription Pad (${pageSize}) - ${patient.name || 'Patient'}</title>
+          ${styles}
+          <style>
+            @page { size: ${pageSize} portrait; margin: 0; }
+            body { background: white !important; color: #0f172a !important; padding: 0 !important; margin: 0 !important; font-family: system-ui, -apple-system, sans-serif !important; }
+            #isolated-print-area { display: flex !important; flex-direction: column !important; justify-content: space-between !important; visibility: visible !important; width: ${paperWidth} !important; min-height: ${paperHeight} !important; margin: 0 auto !important; padding: ${isA5 ? '8mm 10mm' : '12mm 15mm'} !important; box-sizing: border-box !important; }
+            #isolated-print-area * { visibility: visible !important; }
+            .print-grid { display: flex !important; flex-direction: row !important; align-items: flex-start !important; width: 100% !important; gap: ${isA5 ? '10px' : '16px'} !important; }
+            .print-left-pane { width: 33% !important; flex-shrink: 0 !important; border-right: 1px dashed #cbd5e1 !important; padding-right: ${isA5 ? '8px' : '12px'} !important; }
+            .print-right-pane { width: 67% !important; flex-grow: 1 !important; padding-left: ${isA5 ? '6px' : '8px'} !important; }
+          </style>
+        </head>
+        <body class="bg-white text-slate-900 font-sans p-4 text-xs min-h-[${paperHeight}]">
+          <div id="isolated-print-area">
+            ${printArea.innerHTML}
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 400);
   };
 
   const calcBmi = () => {
@@ -512,8 +576,6 @@ export default function UserWorkspacePage() {
     setDrugCatalog(updated);
     saveDrugCatalog(updated);
   };
-
-  const handlePrint = () => window.print();
 
   const handleWhatsAppSend = () => {
     const phone = patient.mobile.replace(/[^0-9]/g, '') || '919876543210';
@@ -1157,31 +1219,62 @@ export default function UserWorkspacePage() {
           <div className={`p-2 rounded-xl text-xs shrink-0 mb-2 border flex flex-wrap items-center justify-between gap-2 ${
             theme === 'day' ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-950 border-gray-800'
           }`}>
-            <div className="flex items-center gap-2">
-              <span className={`font-semibold text-[11px] ${theme === 'day' ? 'text-slate-700' : 'text-gray-300'}`}>Pad Mode:</span>
-              <div className={`flex items-center gap-1 p-0.5 rounded-lg border text-[10px] ${
-                theme === 'day' ? 'bg-white border-slate-200' : 'bg-gray-900 border-gray-800'
-              }`}>
-                <button
-                  onClick={() => setPadMode('digital')}
-                  className={`px-2 py-0.5 rounded-md font-medium transition ${
-                    padMode === 'digital' 
-                      ? (theme === 'day' ? 'bg-blue-600 text-white font-bold shadow' : 'bg-emerald-500 text-gray-950 font-bold') 
-                      : 'text-gray-500'
-                  }`}
-                >
-                  Digital
-                </button>
-                <button
-                  onClick={() => setPadMode('preprinted')}
-                  className={`px-2 py-0.5 rounded-md font-medium transition ${
-                    padMode === 'preprinted' 
-                      ? (theme === 'day' ? 'bg-blue-600 text-white font-bold shadow' : 'bg-emerald-500 text-gray-950 font-bold') 
-                      : 'text-gray-500'
-                  }`}
-                >
-                  Pre-printed Pad
-                </button>
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <span className={`font-semibold text-[11px] ${theme === 'day' ? 'text-slate-700' : 'text-gray-300'}`}>Pad Mode:</span>
+                <div className={`flex items-center gap-1 p-0.5 rounded-lg border text-[10px] ${
+                  theme === 'day' ? 'bg-white border-slate-200' : 'bg-gray-900 border-gray-800'
+                }`}>
+                  <button
+                    onClick={() => setPadMode('digital')}
+                    className={`px-2 py-0.5 rounded-md font-medium transition ${
+                      padMode === 'digital' 
+                        ? (theme === 'day' ? 'bg-blue-600 text-white font-bold shadow' : 'bg-emerald-500 text-gray-950 font-bold') 
+                        : 'text-gray-500'
+                    }`}
+                  >
+                    Digital
+                  </button>
+                  <button
+                    onClick={() => setPadMode('preprinted')}
+                    className={`px-2 py-0.5 rounded-md font-medium transition ${
+                      padMode === 'preprinted' 
+                        ? (theme === 'day' ? 'bg-blue-600 text-white font-bold shadow' : 'bg-emerald-500 text-gray-950 font-bold') 
+                        : 'text-gray-500'
+                    }`}
+                  >
+                    Pre-printed Pad
+                  </button>
+                </div>
+              </div>
+
+              {/* PAPER SIZE SELECTOR (A4 / A5) */}
+              <div className="flex items-center gap-1.5">
+                <span className={`font-semibold text-[11px] ${theme === 'day' ? 'text-slate-700' : 'text-gray-300'}`}>Paper Size:</span>
+                <div className={`flex items-center gap-1 p-0.5 rounded-lg border text-[10px] ${
+                  theme === 'day' ? 'bg-white border-slate-200' : 'bg-gray-900 border-gray-800'
+                }`}>
+                  <button
+                    onClick={() => handleSetPageSize('A4')}
+                    className={`px-2 py-0.5 rounded-md font-bold transition ${
+                      pageSize === 'A4'
+                        ? 'bg-emerald-600 text-white shadow'
+                        : 'text-gray-500 hover:text-slate-900'
+                    }`}
+                  >
+                    📄 A4 (Standard)
+                  </button>
+                  <button
+                    onClick={() => handleSetPageSize('A5')}
+                    className={`px-2 py-0.5 rounded-md font-bold transition ${
+                      pageSize === 'A5'
+                        ? 'bg-purple-600 text-white shadow'
+                        : 'text-gray-500 hover:text-slate-900'
+                    }`}
+                  >
+                    📃 A5 (Compact Pad)
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -2464,7 +2557,7 @@ export default function UserWorkspacePage() {
           paddingBottom: `${footerMarginMm}mm`,
           boxSizing: 'border-box',
         }}
-        className="w-full bg-white text-slate-900 font-sans p-6 text-xs flex flex-col justify-between min-h-[297mm]"
+        className={`w-full bg-white text-slate-900 font-sans p-6 text-xs flex flex-col justify-between ${pageSize === 'A5' ? 'min-h-[210mm]' : 'min-h-[297mm]'}`}
       >
         <div>
           {/* DIGITAL CLINIC HEADER */}
