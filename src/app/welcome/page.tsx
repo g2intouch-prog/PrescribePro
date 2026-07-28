@@ -1589,6 +1589,27 @@ export default function UserWorkspacePage() {
                   </button>
                   <button
                     type="button"
+                    onClick={() => setDrugSearchQuery('eye')}
+                    className="px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-950 font-bold hover:bg-cyan-200 shrink-0"
+                  >
+                    Eye Drops
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrugSearchQuery('ent')}
+                    className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-950 font-bold hover:bg-teal-200 shrink-0"
+                  >
+                    ENT / Nasal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrugSearchQuery('derma')}
+                    className="px-1.5 py-0.5 rounded bg-orange-100 text-orange-950 font-bold hover:bg-orange-200 shrink-0"
+                  >
+                    Dermatology
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setDrugSearchQuery('cough')}
                     className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 font-bold hover:bg-emerald-200 shrink-0"
                   >

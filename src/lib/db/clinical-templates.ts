@@ -63,8 +63,28 @@ export const CLINICAL_SYMPTOM_MAP: Record<string, string[]> = {
   insomnia: ['zolpidem', 'alprazolam', 'clonazepam'],
   anxiety: ['alprazolam', 'clonazepam', 'diazepam', 'propranolol', 'escitalopram'],
   infection: ['amoxicillin', 'augmentin', 'azithromycin', 'cefixime', 'ceftriaxone', 'ciprofloxacin', 'levofloxacin', 'metronidazole'],
-  eye: ['tobramycin', 'moxifloxacin', 'carboxymethylcellulose', 'olopatadine', 'timolol'],
-  ear: ['paradichlorobenzene', 'ofloxacin ear'],
+  eye: ['eye drops', 'eyedrop', 'opthalmic', 'ophthalmic', 'moxifloxacin', 'tobramycin', 'ofloxacin', 'carboxymethylcellulose', 'olopatadine', 'timolol', 'brimonidine', 'atropine', 'nepafenac'],
+  eyedrop: ['eye drops', 'eyedrop', 'opthalmic', 'ophthalmic', 'moxifloxacin', 'tobramycin', 'ofloxacin', 'carboxymethylcellulose', 'olopatadine', 'timolol', 'brimonidine', 'atropine', 'nepafenac'],
+  'eye drop': ['eye drops', 'eyedrop', 'opthalmic', 'ophthalmic', 'moxifloxacin', 'tobramycin', 'ofloxacin', 'carboxymethylcellulose', 'olopatadine', 'timolol', 'brimonidine', 'atropine', 'nepafenac'],
+  ophthalmic: ['eye drops', 'eyedrop', 'opthalmic', 'ophthalmic', 'moxifloxacin', 'tobramycin', 'ofloxacin', 'carboxymethylcellulose', 'olopatadine', 'timolol', 'brimonidine', 'atropine', 'nepafenac'],
+  opthalmic: ['eye drops', 'eyedrop', 'opthalmic', 'ophthalmic', 'moxifloxacin', 'tobramycin', 'ofloxacin', 'carboxymethylcellulose', 'olopatadine', 'timolol', 'brimonidine', 'atropine', 'nepafenac'],
+  ophthalmology: ['eye drops', 'eyedrop', 'opthalmic', 'ophthalmic', 'moxifloxacin', 'tobramycin', 'ofloxacin', 'carboxymethylcellulose', 'olopatadine', 'timolol', 'brimonidine', 'atropine', 'nepafenac'],
+  opthalmology: ['eye drops', 'eyedrop', 'opthalmic', 'ophthalmic', 'moxifloxacin', 'tobramycin', 'ofloxacin', 'carboxymethylcellulose', 'olopatadine', 'timolol', 'brimonidine', 'atropine', 'nepafenac'],
+
+  ent: ['ear drops', 'eardrop', 'nasal spray', 'nasal drops', 'gargle', 'mouthwash', 'waxpol', 'candibiotic', 'fluticasone', 'otrivin', 'betadine', 'chlorhexidine', 'oraivid'],
+  ear: ['ear drops', 'eardrop', 'candibiotic', 'waxpol', 'ofloxacin ear'],
+  eardrop: ['ear drops', 'eardrop', 'candibiotic', 'waxpol', 'ofloxacin ear'],
+  'ear drop': ['ear drops', 'eardrop', 'candibiotic', 'waxpol', 'ofloxacin ear'],
+  nasal: ['nasal spray', 'nasal drops', 'fluticasone', 'otrivin', 'nasoclear', 'xylometazoline'],
+  'nasal drop': ['nasal spray', 'nasal drops', 'fluticasone', 'otrivin', 'nasoclear', 'xylometazoline'],
+  'nasal spray': ['nasal spray', 'nasal drops', 'fluticasone', 'otrivin', 'nasoclear', 'xylometazoline'],
+
+  dermatology: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'clotrimazole', 'luliconazole', 'permethrin', 'calamine'],
+  derma: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'clotrimazole', 'luliconazole', 'permethrin', 'calamine'],
+  skin: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'clotrimazole', 'luliconazole', 'permethrin', 'calamine'],
+  cream: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'clotrimazole', 'luliconazole'],
+  ointment: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'mupirocin', 'burnol', 'silver sulfadiazine'],
+
   throat: ['paracetamol', 'cetirizine', 'amoxicillin', 'azithromycin', 'povidone gargle'],
   spasm: ['dicyclomine', 'drotaverine', 'buscopan', 'mebeverine', 'flavoxate'],
   stone: ['potassium citrate', 'disodium hydrogen citrate', 'tamsulosin', 'alkaliser'],
@@ -260,7 +280,50 @@ export function calculatePediatricDose(weightKg: number): CalculatedPediatricDos
 // UNRESTRICTED USFDA & INDIAN PHARMACOPOEIA (IP) CLINICAL PHARMACOPEIA CATALOG
 export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   // ==========================================
-  // 1. COMBINATION DRUGS & CLINICAL SEARCH ALIASES (COUGH, ALKALISER, ETC.)
+  // 1. OPHTHALMOLOGY (EYE DROPS & OPHTHALMIC PREPARATIONS)
+  // ==========================================
+  { id: 'oph1', genericName: 'Moxifloxacin 0.5% Eye Drops (Vigamox)', category: 'all', dosage: '1 drop in affected eye 3 times daily', duration: '7 days', keywords: 'eye drops eyedrop opthalmic ophthalmic eye infection conjunctivitis moxifloxacin' },
+  { id: 'oph2', genericName: 'Tobramycin 0.3% + Dexamethasone 0.1% Eye Drops (Tobradex)', category: 'all', dosage: '1 drop in affected eye 4 times daily', duration: '5 days', keywords: 'eye drops eyedrop opthalmic ophthalmic Tobramycin Dexamethasone eye inflammation conjunctivitis' },
+  { id: 'oph3', genericName: 'Ofloxacin 0.3% Eye Drops (Oflox)', category: 'all', dosage: '1 drop 4 times daily', duration: '7 days', keywords: 'eye drops eyedrop opthalmic ophthalmic ofloxacin corneal ulcer' },
+  { id: 'oph4', genericName: 'Carboxymethylcellulose 0.5% Lubricating Eye Drops (Refresh Tears)', category: 'all', dosage: '1 to 2 drops as needed (S.O.S)', duration: '30 days', keywords: 'eye drops eyedrop opthalmic ophthalmic dry eyes artificial tears lubricant' },
+  { id: 'oph5', genericName: 'Sodium Hyaluronate 0.1% Eye Drops (Hylocomol)', category: 'all', dosage: '1 drop 4 times daily for severe dry eyes', duration: '30 days', keywords: 'eye drops eyedrop opthalmic ophthalmic dry eyes artificial tears' },
+  { id: 'oph6', genericName: 'Olopatadine 0.1% Ophthalmic Solution (Patanol)', category: 'all', dosage: '1 drop twice daily for allergic conjunctivitis', duration: '14 days', keywords: 'eye drops eyedrop opthalmic ophthalmic allergy itching conjunctivitis' },
+  { id: 'oph7', genericName: 'Timolol Maleate 0.5% Ophthalmic Solution (Timoptic)', category: 'adult', dosage: '1 drop twice daily in affected eye', duration: '30 days', keywords: 'eye drops eyedrop opthalmic ophthalmic glaucoma iop timolol', minAge: 18 },
+  { id: 'oph8', genericName: 'Brimonidine Tartrate 0.2% Eye Drops (Alphagan)', category: 'adult', dosage: '1 drop 3 times daily', duration: '30 days', keywords: 'eye drops eyedrop opthalmic ophthalmic glaucoma iop brimonidine', minAge: 18 },
+  { id: 'oph9', genericName: 'Nepafenac 0.1% Ophthalmic Suspension (Nevanac)', category: 'adult', dosage: '1 drop 3 times daily post cataract surgery', duration: '14 days', keywords: 'eye drops eyedrop opthalmic ophthalmic cataract postop nsaid nepafenac', minAge: 18 },
+  { id: 'oph10', genericName: 'Atropine Sulfate 1% Eye Drops', category: 'all', dosage: '1 drop once daily (mydriatic / cycloplegic)', duration: '3 days', keywords: 'eye drops eyedrop opthalmic ophthalmic atropine cycloplegic mydriatic uveitis' },
+
+  // ==========================================
+  // 2. ENT (EAR DROPS, NASAL SPRAYS & MOUTHWASHES)
+  // ==========================================
+  { id: 'ent1', genericName: 'Ofloxacin + Beclomethasone + Clotrimazole + Lignocaine Ear Drops (Candibiotic)', category: 'all', dosage: '3 to 4 drops in affected ear 3 times daily', duration: '7 days', keywords: 'ear drops eardrop ent otitis externa otomycosis ear infection ear pain' },
+  { id: 'ent2', genericName: 'Paradichlorobenzene + Benzocaine + Chlorbutol Ear Wax Drops (Waxpol)', category: 'all', dosage: '4 to 5 drops 3 times daily for 3 days before syringing', duration: '3 days', keywords: 'ear drops eardrop ent ear wax cerumen wax softener' },
+  { id: 'ent3', genericName: 'Fluticasone Furoate Nasal Spray (50mcg per actuation)', category: 'all', dosage: '2 puffs in each nostril once daily', duration: '14 days', keywords: 'nasal spray nasal drops ent rhinitis allergic rhinitis fluticasone sinusitis' },
+  { id: 'ent4', genericName: 'Xylometazoline 0.1% Adult Nasal Drops (Otrivin)', category: 'adult', dosage: '2 drops in each nostril 2-3 times daily (max 5 days)', duration: '3 days', keywords: 'nasal drops nasal spray ent decongestant blocked nose otrivin', minAge: 12 },
+  { id: 'ent5', genericName: 'Xylometazoline 0.05% Pediatric Nasal Drops (Otrivin Paediatric)', category: 'pediatric', dosage: '1-2 drops in each nostril b.d.', duration: '3 days', keywords: 'nasal drops ent pediatric blocked nose otrivin', minAge: 1, maxAge: 12 },
+  { id: 'ent6', genericName: 'Normal Saline 0.9% Nasal Drops / Spray (Nasoclear)', category: 'all', dosage: '2-3 drops in each nostril as needed', duration: '7 days', keywords: 'nasal drops nasal spray ent saline dry nose infant nose' },
+  { id: 'ent7', genericName: 'Povidone Iodine 2% Gargle / Mouthwash (Betadine)', category: 'all', dosage: 'Gargle 10ml diluted with warm water 3 times daily', duration: '5 days', keywords: 'gargle mouthwash ent sore throat tonsillitis throat infection povidone' },
+  { id: 'ent8', genericName: 'Chlorhexidine Gluconate 0.2% Mouthwash (Rexidin)', category: 'all', dosage: 'Rinse 10ml for 1 minute twice daily after meals', duration: '7 days', keywords: 'mouthwash ent gingivitis oral hygiene mouth ulcer chlorhexidine' },
+  { id: 'ent9', genericName: 'Choline Salicylate + Lignocaine Oral Gel (Orajel / Mucopain)', category: 'all', dosage: 'Apply small amount on mouth ulcers 3-4 times daily before meals', duration: '5 days', keywords: 'mouth gel ent mouth ulcer aphthous stomatitis ulcer pain relief' },
+
+  // ==========================================
+  // 3. DERMATOLOGY (CREAMS, OINTMENTS, LOTIONS & SHAMPOOS)
+  // ==========================================
+  { id: 'derm1', genericName: 'Mupirocin 2% Ointment (Bactroban / T-Bact)', category: 'all', dosage: 'Apply thin layer on affected area 3 times daily', duration: '7 days', keywords: 'dermatology derma skin cream ointment mupirocin impetigo wound infection' },
+  { id: 'derm2', genericName: 'Fusidic Acid 2% Cream (Fucidin)', category: 'all', dosage: 'Apply twice daily', duration: '7 days', keywords: 'dermatology derma skin cream fusidic acid bacterial skin infection' },
+  { id: 'derm3', genericName: 'Silver Sulfadiazine 1% Burn Ointment (Burnol)', category: 'all', dosage: 'Apply sterile layer on burn area twice daily', duration: '7 days', keywords: 'dermatology derma skin cream ointment burn silver sulfadiazine' },
+  { id: 'derm4', genericName: 'Clobetasol Propionate 0.05% Cream (Tenovate)', category: 'adult', dosage: 'Apply thin layer once daily (max 2 weeks)', duration: '7 days', keywords: 'dermatology derma skin cream steroid clobetasol eczema psoriasis itching', minAge: 12 },
+  { id: 'derm5', genericName: 'Momethasone Furoate 0.1% Cream (Elocon)', category: 'all', dosage: 'Apply thin layer once daily', duration: '7 days', keywords: 'dermatology derma skin cream steroid momethasone eczema rash itching' },
+  { id: 'derm6', genericName: 'Clotrimazole 1% Antifungal Cream (Candid)', category: 'all', dosage: 'Apply twice daily on affected area', duration: '14 days', keywords: 'dermatology derma skin cream antifungal clotrimazole ringworm tinea' },
+  { id: 'derm7', genericName: 'Luliconazole 1% Cream (Lulifin)', category: 'all', dosage: 'Apply once daily for 1 to 2 weeks', duration: '14 days', keywords: 'dermatology derma skin cream antifungal luliconazole ringworm tinea cruris' },
+  { id: 'derm8', genericName: 'Terbinafine 1% Cream (Lamisil)', category: 'all', dosage: 'Apply 1-2 times daily', duration: '14 days', keywords: 'dermatology derma skin cream antifungal terbinafine athlete foot tinea' },
+  { id: 'derm9', genericName: 'Ketoconazole 2% Anti-dandruff Shampoo (Scalpe / Nizoral)', category: 'all', dosage: 'Apply to scalp twice weekly, leave for 5 minutes then rinse', duration: '30 days', keywords: 'dermatology derma skin shampoo ketoconazole dandruff seborrheic dermatitis' },
+  { id: 'derm10', genericName: 'Permethrin 5% Lotion (Scabper)', category: 'all', dosage: 'Apply neck down over entire body, wash off after 8-12 hours', duration: 'Single application (repeat in 7 days if needed)', keywords: 'dermatology derma skin lotion permethrin scabies lice' },
+  { id: 'derm11', genericName: 'Calamine + Liquid Paraffin Lotion (Lacto Calamine)', category: 'all', dosage: 'Apply gently as needed for itching or sunburn', duration: '7 days', keywords: 'dermatology derma skin lotion calamine itching soothing sunburn rash' },
+  { id: 'derm12', genericName: 'Adapalene 0.1% + Benzoyl Peroxide 2.5% Gel (Epiduo)', category: 'adult', dosage: 'Apply thin layer at bedtime', duration: '30 days', keywords: 'dermatology derma skin gel acne pimples adapalene benzoyl peroxide', minAge: 12 },
+
+  // ==========================================
+  // 4. COMBINATION DRUGS & CLINICAL SEARCH ALIASES (COUGH, ALKALISER, ETC.)
   // ==========================================
   { id: 'cough1', genericName: 'Dextromethorphan + Chlorpheniramine + Phenylephrine (Dry Cough Syrup)', category: 'all', dosage: '10ml (t.d.s after food)', duration: '5 days', keywords: 'cough dry cough linctus cold congestion antihistamine' },
   { id: 'cough2', genericName: 'Ambroxol + Terbutaline + Guaifenesin (Wet / Productive Cough Expectorant)', category: 'all', dosage: '10ml (t.d.s after food)', duration: '5 days', keywords: 'cough wet cough productive cough expectorant phlegm mucus chest congestion' },
