@@ -1474,6 +1474,20 @@ export default function UserWorkspacePage() {
                   </button>
                   <button
                     type="button"
+                    onClick={() => setDrugSearchQuery('cough')}
+                    className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 font-bold hover:bg-emerald-200 shrink-0"
+                  >
+                    Cough Syrups
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrugSearchQuery('alkaliser')}
+                    className="px-1.5 py-0.5 rounded bg-pink-100 text-pink-900 font-bold hover:bg-pink-200 shrink-0"
+                  >
+                    Alkalisers
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setDrugSearchQuery('Injection')}
                     className="px-1.5 py-0.5 rounded bg-red-100 text-red-900 font-bold hover:bg-red-200 shrink-0"
                   >
@@ -1501,7 +1515,11 @@ export default function UserWorkspacePage() {
                 {drugCatalog
                   .filter((d) => {
                     const q = drugSearchQuery.toLowerCase();
-                    return d.genericName.toLowerCase().includes(q) || d.dosage.toLowerCase().includes(q);
+                    return (
+                      d.genericName.toLowerCase().includes(q) ||
+                      d.dosage.toLowerCase().includes(q) ||
+                      (d.keywords && d.keywords.toLowerCase().includes(q))
+                    );
                   })
                   .map((d) => {
                     const w = parseFloat(vitals.weight) || 0;

@@ -20,6 +20,7 @@ export interface DrugItem {
   category: 'adult' | 'pediatric' | 'infant' | 'all';
   dosage: string;
   duration: string;
+  keywords?: string; // Search aliases (e.g. cough, alkaliser, acidity, pain, fever)
   minAge?: number;
   maxAge?: number;
   minWeight?: number;
@@ -193,9 +194,19 @@ export function calculatePediatricDose(weightKg: number): CalculatedPediatricDos
 // UNRESTRICTED USFDA & INDIAN PHARMACOPOEIA (IP) CLINICAL PHARMACOPEIA CATALOG
 export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   // ==========================================
-  // 1. COMBINATION DRUGS (FIXED DOSE COMBINATIONS / FDCs)
+  // 1. COMBINATION DRUGS & CLINICAL SEARCH ALIASES (COUGH, ALKALISER, ETC.)
   // ==========================================
-  { id: 'fdc1', genericName: 'Aceclofenac + Paracetamol', category: 'adult', dosage: '100mg/325mg (1-0-1 after food)', duration: '5 days', minAge: 12, minWeight: 40 },
+  { id: 'cough1', genericName: 'Dextromethorphan + Chlorpheniramine + Phenylephrine (Dry Cough Syrup)', category: 'all', dosage: '10ml (t.d.s after food)', duration: '5 days', keywords: 'cough dry cough linctus cold congestion antihistamine' },
+  { id: 'cough2', genericName: 'Ambroxol + Terbutaline + Guaifenesin (Wet / Productive Cough Expectorant)', category: 'all', dosage: '10ml (t.d.s after food)', duration: '5 days', keywords: 'cough wet cough productive cough expectorant phlegm mucus chest congestion' },
+  { id: 'cough3', genericName: 'Levosalbutamol + Ambroxol + Guaifenesin Syrup', category: 'all', dosage: '5ml to 10ml (t.d.s)', duration: '5 days', keywords: 'cough bronchospasm asthma wheezing cough syrup expectorant' },
+  { id: 'cough4', genericName: 'Codeine Phosphate + Chlorpheniramine Linctus', category: 'adult', dosage: '5ml (t.d.s for painful dry cough)', duration: '3 days', keywords: 'cough dry cough severe cough linctus', minAge: 18 },
+
+  { id: 'alk1', genericName: 'Disodium Hydrogen Citrate (Systemic & Urinary Alkaliser Syrup 1.37g/5ml)', category: 'all', dosage: '2 teaspoonfuls (10ml) in 1 glass water t.d.s after meals', duration: '5 days', keywords: 'alkaliser alkalizer urinary alkaliser dysuria burning micturition kidney stone uric acid' },
+  { id: 'alk2', genericName: 'Potassium Citrate + Citric Acid Oral Solution (Urinary Alkaliser)', category: 'all', dosage: '15ml in 1 glass water t.d.s after meals', duration: '7 days', keywords: 'alkaliser alkalizer urinary alkaliser dysuria stone citrate' },
+  { id: 'alk3', genericName: 'Potassium Citrate + Magnesium Citrate + Pyridoxine Syrup (Urolithiasis Alkaliser)', category: 'adult', dosage: '10ml in glass of water b.d.', duration: '30 days', keywords: 'alkaliser alkalizer urinary alkaliser kidney stone urolithiasis citrate', minAge: 18 },
+  { id: 'alk4', genericName: 'Disodium Hydrogen Citrate Syrup + Flavoxate 200mg (Alkaliser & Antispasmodic)', category: 'adult', dosage: '10ml syrup t.d.s + 1 tab Flavoxate t.d.s', duration: '5 days', keywords: 'alkaliser alkalizer urinary alkaliser dysuria spasm UTI', minAge: 18 },
+
+  { id: 'fdc1', genericName: 'Aceclofenac + Paracetamol', category: 'adult', dosage: '100mg/325mg (1-0-1 after food)', duration: '5 days', keywords: 'pain fever inflammation', minAge: 12, minWeight: 40 },
   { id: 'fdc2', genericName: 'Aceclofenac + Paracetamol + Serratiopeptidase', category: 'adult', dosage: '100mg/325mg/15mg (1-0-1 after food)', duration: '5 days', minAge: 12, minWeight: 40 },
   { id: 'fdc3', genericName: 'Aceclofenac + Paracetamol + Chlorzoxazone', category: 'adult', dosage: '100mg/325mg/250mg (1-0-1 after food)', duration: '5 days', minAge: 18, minWeight: 40 },
   { id: 'fdc4', genericName: 'Diclofenac Potassium + Paracetamol', category: 'adult', dosage: '50mg/325mg (1-0-1 after food)', duration: '3 days', minAge: 12, minWeight: 40 },
