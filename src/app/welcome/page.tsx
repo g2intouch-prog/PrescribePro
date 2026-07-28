@@ -176,6 +176,7 @@ export default function UserWorkspacePage() {
   const [footerImg, setFooterImg] = useState<string>('');
   const [headerMarginMm, setHeaderMarginMm] = useState<number>(35);
   const [footerMarginMm, setFooterMarginMm] = useState<number>(10);
+  const [footerImgHeight, setFooterImgHeight] = useState<number>(45);
 
   // Active Left Sub-Tab
   const [activeLeftTab, setActiveLeftTab] = useState<'patient' | 'vitals' | 'clinical' | 'procedures' | 'tests' | 'advice'>('patient');
@@ -242,6 +243,10 @@ export default function UserWorkspacePage() {
       setFooterImg(savedFooterImg || loadedPresets.footerImage || '');
       setHeaderMarginMm(loadedPresets.headerMarginMm ?? 35);
       setFooterMarginMm(loadedPresets.footerMarginMm ?? 10);
+      const savedFooterImgHeight = localStorage.getItem('prescribepro_footer_img_height');
+      if (savedFooterImgHeight) {
+        setFooterImgHeight(Number(savedFooterImgHeight) || 45);
+      }
 
       const specs = getSpecialties();
       setSpecialties(specs);
@@ -330,6 +335,14 @@ export default function UserWorkspacePage() {
     localStorage.setItem('prescribepro_footer_img', odiaUrl);
     const p = getAdminPresets();
     saveAdminPresets({ ...p, footerImage: odiaUrl });
+  };
+
+  const handleAdjustFooterHeight = (delta: number) => {
+    setFooterImgHeight((prev) => {
+      const next = Math.min(120, Math.max(18, prev + delta));
+      localStorage.setItem('prescribepro_footer_img_height', String(next));
+      return next;
+    });
   };
 
   const handleSaveDoctorProfile = (e: React.FormEvent) => {
@@ -1432,6 +1445,25 @@ export default function UserWorkspacePage() {
                 />
                 <span className="text-slate-500 font-mono">mm</span>
               </div>
+
+              <div className="flex items-center gap-1">
+                <span className="text-slate-500 font-medium">Banner Ht:</span>
+                <input
+                  type="number"
+                  min={18}
+                  max={120}
+                  value={footerImgHeight}
+                  onChange={(e) => {
+                    const val = Math.min(120, Math.max(18, parseInt(e.target.value) || 45));
+                    setFooterImgHeight(val);
+                    localStorage.setItem('prescribepro_footer_img_height', String(val));
+                  }}
+                  className={`w-12 px-1 py-0.5 rounded border text-center font-mono font-bold text-purple-600 ${
+                    theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-purple-400'
+                  }`}
+                />
+                <span className="text-slate-500 font-mono">px</span>
+              </div>
             </div>
           </div>
 
@@ -1760,16 +1792,39 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
-            {/* PAD FOOTER - PINNED TO ABSOLUTE BOTTOM WITH 1CM / CALIBRATED FOOTER SPACE & PHYSICIAN CREDENTIALS */}
+            {/* PAD FOOTER - SIDE-BY-SIDE FLEX: RESIZABLE BANNER ON LEFT, DOCTOR NAME & DESIGNATION ON RIGHT */}
             <div className="mt-auto shrink-0 pt-2 border-t border-gray-200">
               {padMode === 'digital' ? (
-                footerImg ? (
-                  <div className="space-y-1 relative group">
-                    <div className="relative">
-                      <img src={footerImg} alt="Clinic Footer" className="w-full h-8 object-contain" />
-                      <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition rounded flex items-center justify-center gap-2 print:hidden">
+                <div className="flex items-end justify-between text-[8px] text-gray-700">
+                  {/* LEFT SIDE: RESIZABLE BANNER OR UPLOAD CONTAINER */}
+                  {footerImg ? (
+                    <div className="relative group flex-1 mr-3 flex items-end">
+                      <img
+                        src={footerImg}
+                        alt="Clinic Footer Banner"
+                        style={{ height: `${footerImgHeight}px` }}
+                        className="w-full object-contain object-left max-h-[120px] transition-all duration-150"
+                      />
+                      <div className="absolute inset-0 bg-slate-900/75 opacity-0 group-hover:opacity-100 transition rounded-lg flex items-center justify-center gap-1.5 print:hidden p-1">
+                        <button
+                          type="button"
+                          onClick={() => handleAdjustFooterHeight(-5)}
+                          className="px-2 py-0.5 bg-slate-700 text-white text-[9px] font-bold rounded hover:bg-slate-600"
+                          title="Decrease Banner Height"
+                        >
+                          - Ht
+                        </button>
+                        <span className="text-[9px] text-emerald-300 font-mono font-bold">{footerImgHeight}px</span>
+                        <button
+                          type="button"
+                          onClick={() => handleAdjustFooterHeight(5)}
+                          className="px-2 py-0.5 bg-slate-700 text-white text-[9px] font-bold rounded hover:bg-slate-600"
+                          title="Increase Banner Height"
+                        >
+                          + Ht
+                        </button>
                         <label className="px-2 py-0.5 bg-emerald-600 text-white text-[9px] font-bold rounded cursor-pointer hover:bg-emerald-500">
-                          🖼️ Change Footer Image
+                          🖼️ Change
                           <input type="file" accept="image/*" onChange={handleFooterImageUpload} className="hidden" />
                         </label>
                         <button
@@ -1777,57 +1832,44 @@ export default function UserWorkspacePage() {
                           onClick={handleRemoveFooterImage}
                           className="px-2 py-0.5 bg-red-600 text-white text-[9px] font-bold rounded hover:bg-red-500"
                         >
-                          ✕ Remove
+                          ✕
                         </button>
                       </div>
                     </div>
-                    <div className="text-right text-[8px] text-gray-800 space-y-0.5">
-                      <p className="font-extrabold text-[9px] text-gray-900 border-t border-gray-400 pt-0.5 inline-block">
-                        {doctorProfile.name || 'Dr. Attending Physician'}
-                      </p>
-                      {doctorProfile.qualification && <p className="font-semibold text-gray-700">{doctorProfile.qualification}</p>}
-                      {doctorProfile.designation && <p className="italic text-gray-600">{doctorProfile.designation}</p>}
-                      {doctorProfile.regNo && <p className="font-mono text-gray-500 text-[7.5px]">Regd No: {doctorProfile.regNo}</p>}
-                      <p className="text-[7.5px] font-mono text-gray-500 pt-0.5 border-t border-gray-200 mt-0.5">
-                        Date & Time: {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-end justify-between text-[8px] text-gray-700">
-                    {/* EDITABLE 1CM / CALIBRATED FOOTER SPACE & IMAGE UPLOAD BUTTON */}
+                  ) : (
                     <div
-                      style={{ height: `${Math.max(16, footerMarginMm * 1.5)}px` }}
-                      className="group relative flex-1 mr-2 border border-dashed border-slate-300 hover:border-emerald-400 rounded bg-slate-50/50 flex items-center justify-center transition"
+                      style={{ height: `${Math.max(20, footerMarginMm * 1.5)}px` }}
+                      className="group relative flex-1 mr-3 border border-dashed border-slate-300 hover:border-emerald-400 rounded bg-slate-50/50 flex items-center justify-center transition"
                     >
                       <span className="text-[8.5px] text-slate-400 font-mono group-hover:hidden">
-                        [Footer Space: {footerMarginMm}mm ({footerMarginMm / 10} cm)]
+                        [Left Footer Space: {footerMarginMm}mm]
                       </span>
                       <label className="hidden group-hover:flex items-center gap-1 px-2 py-0.5 bg-emerald-600 text-white text-[8.5px] font-bold rounded cursor-pointer shadow hover:bg-emerald-500 print:hidden">
-                        🖼️ Upload Clinic Footer Image
+                        🖼️ Upload Left Banner
                         <input type="file" accept="image/*" onChange={handleFooterImageUpload} className="hidden" />
                       </label>
                     </div>
+                  )}
 
-                    <div className="text-right space-y-0.5 shrink-0">
-                      <p className="font-extrabold text-[9.5px] text-gray-900 border-t border-gray-400 pt-0.5 inline-block">
-                        {doctorProfile.name || 'Dr. Attending Physician'}
-                      </p>
-                      {doctorProfile.qualification && (
-                        <p className="text-[8.5px] text-gray-700 font-semibold">{doctorProfile.qualification}</p>
-                      )}
-                      {doctorProfile.designation && (
-                        <p className="text-[8px] text-gray-600 italic">{doctorProfile.designation}</p>
-                      )}
-                      {doctorProfile.regNo && (
-                        <p className="text-[7.5px] font-mono text-gray-500">Regd No: {doctorProfile.regNo}</p>
-                      )}
-                      <p className="text-[7.5px] font-mono text-gray-500 pt-0.5 border-t border-gray-200 mt-0.5">
-                        Date & Time: {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
+                  {/* RIGHT SIDE: DOCTOR NAME, DESIGNATION & CREDENTIALS */}
+                  <div className="text-right space-y-0.5 shrink-0">
+                    <p className="font-extrabold text-[9.5px] text-gray-900 border-t border-gray-400 pt-0.5 inline-block">
+                      {doctorProfile.name || 'Dr. Attending Physician'}
+                    </p>
+                    {doctorProfile.qualification && (
+                      <p className="text-[8.5px] text-gray-700 font-semibold">{doctorProfile.qualification}</p>
+                    )}
+                    {doctorProfile.designation && (
+                      <p className="text-[8px] text-gray-600 italic">{doctorProfile.designation}</p>
+                    )}
+                    {doctorProfile.regNo && (
+                      <p className="text-[7.5px] font-mono text-gray-500">Regd No: {doctorProfile.regNo}</p>
+                    )}
+                    <p className="text-[7.5px] font-mono text-gray-500 pt-0.5 border-t border-gray-200 mt-0.5">
+                      Date & Time: {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
                   </div>
-                )
+                </div>
               ) : (
                 <div className="flex items-end justify-between">
                   <div
@@ -2912,15 +2954,22 @@ export default function UserWorkspacePage() {
         <div className="mt-auto shrink-0 pt-6">
           {padMode === 'digital' ? (
             footerImg ? (
-              <div className="space-y-3">
-                <img src={footerImg} alt="Clinic Footer" className="w-full h-12 object-contain" />
-                <div className="text-right text-[10px] text-slate-800 space-y-0.5">
+              <div className="pt-2 border-t border-slate-300 flex items-end justify-between text-[10px] text-slate-600">
+                <div className="flex-1 mr-4 flex items-end">
+                  <img
+                    src={footerImg}
+                    alt="Clinic Footer Banner"
+                    style={{ height: `${footerImgHeight}px` }}
+                    className="w-full object-contain object-left max-h-[120px]"
+                  />
+                </div>
+                <div className="text-right text-slate-900 space-y-0.5 shrink-0">
                   <p className="font-extrabold text-xs text-slate-900 border-t border-slate-400 pt-0.5 inline-block">
                     {doctorProfile.name || 'Dr. Attending Physician'}
                   </p>
-                  {doctorProfile.qualification && <p className="font-semibold text-slate-700">{doctorProfile.qualification}</p>}
-                  {doctorProfile.designation && <p className="italic text-slate-600">{doctorProfile.designation}</p>}
-                  {doctorProfile.regNo && <p className="font-mono text-slate-500 text-[9px]">Regd. No: {doctorProfile.regNo}</p>}
+                  {doctorProfile.qualification && <p className="font-semibold text-[10px] text-slate-700">{doctorProfile.qualification}</p>}
+                  {doctorProfile.designation && <p className="italic text-[9.5px] text-slate-600">{doctorProfile.designation}</p>}
+                  {doctorProfile.regNo && <p className="font-mono text-[9px] text-slate-500">Regd. No: {doctorProfile.regNo}</p>}
                   <p className="text-[9px] font-mono text-slate-500 pt-0.5 border-t border-slate-200 mt-0.5">
                     Date & Time: {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
