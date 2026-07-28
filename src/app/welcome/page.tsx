@@ -175,7 +175,7 @@ export default function UserWorkspacePage() {
   const [headerImg, setHeaderImg] = useState<string>('');
   const [footerImg, setFooterImg] = useState<string>('');
   const [headerMarginMm, setHeaderMarginMm] = useState<number>(35);
-  const [footerMarginMm, setFooterMarginMm] = useState<number>(20);
+  const [footerMarginMm, setFooterMarginMm] = useState<number>(10);
 
   // Active Left Sub-Tab
   const [activeLeftTab, setActiveLeftTab] = useState<'patient' | 'vitals' | 'clinical' | 'procedures' | 'tests' | 'advice'>('patient');
@@ -238,9 +238,10 @@ export default function UserWorkspacePage() {
       setPadMode(loadedPresets.padType || 'digital');
       const savedHeaderImg = localStorage.getItem('prescribepro_header_img');
       setHeaderImg(savedHeaderImg || loadedPresets.headerImage || '');
-      setFooterImg(loadedPresets.footerImage || '');
+      const savedFooterImg = localStorage.getItem('prescribepro_footer_img');
+      setFooterImg(savedFooterImg || loadedPresets.footerImage || '');
       setHeaderMarginMm(loadedPresets.headerMarginMm ?? 35);
-      setFooterMarginMm(loadedPresets.footerMarginMm ?? 20);
+      setFooterMarginMm(loadedPresets.footerMarginMm ?? 10);
 
       const specs = getSpecialties();
       setSpecialties(specs);
@@ -298,6 +299,29 @@ export default function UserWorkspacePage() {
     localStorage.removeItem('prescribepro_header_img');
     const p = getAdminPresets();
     saveAdminPresets({ ...p, headerImage: '' });
+  };
+
+  const handleFooterImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        setFooterImg(dataUrl);
+        localStorage.setItem('prescribepro_footer_img', dataUrl);
+        const p = getAdminPresets();
+        saveAdminPresets({ ...p, footerImage: dataUrl });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveFooterImage = () => {
+    setFooterImg('');
+    localStorage.removeItem('prescribepro_footer_img');
+    const p = getAdminPresets();
+    saveAdminPresets({ ...p, footerImage: '' });
   };
 
   const handleSaveDoctorProfile = (e: React.FormEvent) => {
@@ -1728,12 +1752,27 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
-            {/* PAD FOOTER - PINNED TO ABSOLUTE BOTTOM WITH PHYSICIAN CREDENTIALS */}
+            {/* PAD FOOTER - PINNED TO ABSOLUTE BOTTOM WITH 1CM / CALIBRATED FOOTER SPACE & PHYSICIAN CREDENTIALS */}
             <div className="mt-auto shrink-0 pt-2 border-t border-gray-200">
               {padMode === 'digital' ? (
                 footerImg ? (
-                  <div className="space-y-1">
-                    <img src={footerImg} alt="Clinic Footer" className="w-full h-8 object-contain" />
+                  <div className="space-y-1 relative group">
+                    <div className="relative">
+                      <img src={footerImg} alt="Clinic Footer" className="w-full h-8 object-contain" />
+                      <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition rounded flex items-center justify-center gap-2 print:hidden">
+                        <label className="px-2 py-0.5 bg-emerald-600 text-white text-[9px] font-bold rounded cursor-pointer hover:bg-emerald-500">
+                          🖼️ Change Footer Image
+                          <input type="file" accept="image/*" onChange={handleFooterImageUpload} className="hidden" />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleRemoveFooterImage}
+                          className="px-2 py-0.5 bg-red-600 text-white text-[9px] font-bold rounded hover:bg-red-500"
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                    </div>
                     <div className="text-right text-[8px] text-gray-800 space-y-0.5">
                       <p className="font-extrabold text-[9px] text-gray-900 border-t border-gray-400 pt-0.5 inline-block">
                         {doctorProfile.name || 'Dr. Attending Physician'}
@@ -1748,9 +1787,21 @@ export default function UserWorkspacePage() {
                   </div>
                 ) : (
                   <div className="flex items-end justify-between text-[8px] text-gray-700">
-                    <div className="flex-1" />
+                    {/* EDITABLE 1CM / CALIBRATED FOOTER SPACE & IMAGE UPLOAD BUTTON */}
+                    <div
+                      style={{ height: `${Math.max(16, footerMarginMm * 1.5)}px` }}
+                      className="group relative flex-1 mr-2 border border-dashed border-slate-300 hover:border-emerald-400 rounded bg-slate-50/50 flex items-center justify-center transition"
+                    >
+                      <span className="text-[8.5px] text-slate-400 font-mono group-hover:hidden">
+                        [Footer Space: {footerMarginMm}mm ({footerMarginMm / 10} cm)]
+                      </span>
+                      <label className="hidden group-hover:flex items-center gap-1 px-2 py-0.5 bg-emerald-600 text-white text-[8.5px] font-bold rounded cursor-pointer shadow hover:bg-emerald-500 print:hidden">
+                        🖼️ Upload Clinic Footer Image
+                        <input type="file" accept="image/*" onChange={handleFooterImageUpload} className="hidden" />
+                      </label>
+                    </div>
 
-                    <div className="text-right space-y-0.5">
+                    <div className="text-right space-y-0.5 shrink-0">
                       <p className="font-extrabold text-[9.5px] text-gray-900 border-t border-gray-400 pt-0.5 inline-block">
                         {doctorProfile.name || 'Dr. Attending Physician'}
                       </p>
@@ -1772,12 +1823,12 @@ export default function UserWorkspacePage() {
               ) : (
                 <div className="flex items-end justify-between">
                   <div
-                    style={{ height: `${Math.max(16, footerMarginMm * 1.2)}px` }}
+                    style={{ height: `${Math.max(16, footerMarginMm * 1.5)}px` }}
                     className="border-t border-dashed border-gray-300 flex items-center justify-center text-[9px] text-gray-400 font-mono bg-gray-50/50 rounded flex-1 mr-2"
                   >
-                    [Pre-printed Footer Space: {footerMarginMm}mm]
+                    [Pre-printed Footer Space: {footerMarginMm}mm ({footerMarginMm / 10} cm)]
                   </div>
-                  <div className="text-right space-y-0.5">
+                  <div className="text-right space-y-0.5 shrink-0">
                     <p className="font-extrabold text-[9.5px] text-gray-900 border-t border-gray-400 pt-0.5 inline-block">
                       {doctorProfile.name || 'Dr. Attending Physician'}
                     </p>
