@@ -50,6 +50,8 @@ import {
   getDrugCatalog, 
   saveDrugCatalog, 
   calculatePediatricDose,
+  calculateBsaDose,
+  calculateBsa,
   Specialty, 
   PrescriptionTemplate, 
   DrugItem 
@@ -1165,13 +1167,13 @@ export default function UserWorkspacePage() {
                   <div className="flex items-center justify-between font-bold text-amber-900">
                     <span className="flex items-center gap-1 text-[10px]">
                       <Calculator className="h-3.5 w-3.5 text-amber-700" />
-                      Pediatric Dose Calc ({vitals.weight} kg Child)
+                      Pediatric Weight Calc ({vitals.weight} kg Child)
                     </span>
                     <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-mono">
                       Target: 15mg/kg
                     </span>
                   </div>
-                  <div className="space-y-1 max-h-24 overflow-y-auto pr-0.5">
+                  <div className="space-y-1 max-h-20 overflow-y-auto pr-0.5">
                     {calculatePediatricDose(parseFloat(vitals.weight)).map((pd, idx) => {
                       const doseLabel = `${pd.drugName} - ${pd.calculatedVolumeMl} (${pd.frequency})`;
                       const isChecked = selectedDrugs.includes(doseLabel);
@@ -1185,6 +1187,46 @@ export default function UserWorkspacePage() {
                         >
                           <span className="truncate">{pd.drugName}: <strong className="text-amber-900">{pd.calculatedVolumeMl}</strong></span>
                           <span className="text-[8px] bg-amber-300 px-1 rounded font-bold shrink-0">{isChecked ? 'Added' : '+ Add'}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* BODY SURFACE AREA (BSA m²) CLINICAL DOSING PANEL */}
+              {parseFloat(vitals.weight) > 0 && (
+                <div className="p-2 rounded-xl bg-blue-50 border border-blue-300 text-[10px] text-blue-950 space-y-1 shrink-0 shadow-sm">
+                  <div className="flex items-center justify-between font-bold text-blue-900">
+                    <span className="flex items-center gap-1 text-[10px]">
+                      <Calculator className="h-3.5 w-3.5 text-blue-700" />
+                      Body Surface Area (BSA) Calc
+                    </span>
+                    <span className="text-[9px] bg-blue-200 text-blue-950 px-1.5 py-0.5 rounded font-mono font-bold">
+                      BSA: {calculateBsa(parseFloat(vitals.height) || 0, parseFloat(vitals.weight)).toFixed(2)} m²
+                    </span>
+                  </div>
+                  <div className="space-y-1 max-h-20 overflow-y-auto pr-0.5">
+                    {calculateBsaDose(
+                      parseFloat(vitals.height) || 0,
+                      parseFloat(vitals.weight),
+                      parseFloat(patient.age) || 5
+                    ).map((bd, idx) => {
+                      const doseLabel = `${bd.drugName} - ${bd.totalCalculatedDose} (${bd.dosePerBsa})`;
+                      const isChecked = selectedDrugs.includes(doseLabel);
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => toggleDrugSelection(doseLabel)}
+                          className={`p-1 rounded border cursor-pointer flex items-center justify-between transition ${
+                            isChecked ? 'bg-blue-200 border-blue-400 font-bold' : 'bg-white border-blue-200 hover:bg-blue-100/60'
+                          }`}
+                        >
+                          <div className="truncate">
+                            <span className="font-semibold block truncate text-[9px]">{bd.drugName}</span>
+                            <span className="text-[8px] text-blue-800 font-mono">{bd.totalCalculatedDose} ({bd.dosePerBsa})</span>
+                          </div>
+                          <span className="text-[8px] bg-blue-300 px-1 rounded font-bold shrink-0">{isChecked ? 'Added' : '+ Add'}</span>
                         </div>
                       );
                     })}
