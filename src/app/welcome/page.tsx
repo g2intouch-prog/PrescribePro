@@ -38,7 +38,9 @@ import {
   Edit2,
   X,
   Check,
-  BookmarkPlus
+  BookmarkPlus,
+  AlertTriangle,
+  Calculator
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { getAdminPresets, AdminPresets } from '@/lib/db/admin-presets';
@@ -47,6 +49,7 @@ import {
   saveSpecialties, 
   getDrugCatalog, 
   saveDrugCatalog, 
+  calculatePediatricDose,
   Specialty, 
   PrescriptionTemplate, 
   DrugItem 
@@ -1156,6 +1159,39 @@ export default function UserWorkspacePage() {
                 <span className="text-[9px] text-slate-500 font-mono font-bold">{drugCatalog.length} Generics</span>
               </div>
 
+              {/* PEDIATRIC WEIGHT-BASED DOSAGE CALCULATOR BOX (FOR CHILDREN <40KG) */}
+              {parseFloat(vitals.weight) > 0 && parseFloat(vitals.weight) < 40 && (
+                <div className="p-2 rounded-xl bg-amber-50 border border-amber-300 text-[10px] text-amber-950 space-y-1 shrink-0 shadow-sm">
+                  <div className="flex items-center justify-between font-bold text-amber-900">
+                    <span className="flex items-center gap-1 text-[10px]">
+                      <Calculator className="h-3.5 w-3.5 text-amber-700" />
+                      Pediatric Dose Calc ({vitals.weight} kg Child)
+                    </span>
+                    <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-mono">
+                      Target: 15mg/kg
+                    </span>
+                  </div>
+                  <div className="space-y-1 max-h-24 overflow-y-auto pr-0.5">
+                    {calculatePediatricDose(parseFloat(vitals.weight)).map((pd, idx) => {
+                      const doseLabel = `${pd.drugName} - ${pd.calculatedVolumeMl} (${pd.frequency})`;
+                      const isChecked = selectedDrugs.includes(doseLabel);
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => toggleDrugSelection(doseLabel)}
+                          className={`p-1 rounded border cursor-pointer flex items-center justify-between transition ${
+                            isChecked ? 'bg-amber-200 border-amber-400 font-bold' : 'bg-white border-amber-200 hover:bg-amber-100/60'
+                          }`}
+                        >
+                          <span className="truncate">{pd.drugName}: <strong className="text-amber-900">{pd.calculatedVolumeMl}</strong></span>
+                          <span className="text-[8px] bg-amber-300 px-1 rounded font-bold shrink-0">{isChecked ? 'Added' : '+ Add'}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* SEARCH & AGE/WEIGHT SMART SUGGESTION STRIP */}
               <div className="space-y-1 shrink-0">
                 <div className="relative">
@@ -1202,7 +1238,7 @@ export default function UserWorkspacePage() {
                 </div>
               </div>
 
-              {/* CHECKLIST OF GENERIC MEDICATIONS */}
+              {/* CHECKLIST OF GENERIC MEDICATIONS WITH CONTRAINDICATION SAFETY GAURDS */}
               <div className="flex-1 overflow-y-auto space-y-1 pr-1">
                 {drugCatalog
                   .filter((d) => {
@@ -1210,31 +1246,48 @@ export default function UserWorkspacePage() {
                     return d.genericName.toLowerCase().includes(q) || d.dosage.toLowerCase().includes(q);
                   })
                   .map((d) => {
+                    const w = parseFloat(vitals.weight) || 0;
+                    const isContraindicated = w > 0 && w < 30 && d.category === 'adult';
                     const label = `${d.genericName} (${d.dosage})`;
                     const isChecked = selectedDrugs.includes(label);
+
                     return (
                       <label
                         key={d.id}
-                        onClick={() => toggleDrugSelection(label)}
+                        onClick={() => {
+                          if (isContraindicated) {
+                            alert(`⚠️ SAFETY CONTRAINDICATION WARNING:\n\nA ${w} kg child cannot take ${d.genericName} (${d.dosage}) adult dose!\n\nPlease select the calculated Pediatric Syrup dosage (${calculatePediatricDose(w)[0]?.calculatedVolumeMl} t.d.s) instead.`);
+                            return;
+                          }
+                          toggleDrugSelection(label);
+                        }}
                         className={`flex items-start gap-2 p-1.5 rounded-lg border text-[10px] cursor-pointer transition ${
-                          isChecked
+                          isContraindicated
+                            ? 'bg-red-50 border-red-300 text-red-900 opacity-60'
+                            : isChecked
                             ? (theme === 'day' ? 'bg-emerald-100 border-emerald-400 text-emerald-950 font-bold' : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300 font-semibold')
                             : (theme === 'day' ? 'bg-white border-slate-200 text-slate-700 hover:border-emerald-300' : 'bg-gray-950/40 border-gray-800/80 text-gray-400')
                         }`}
                       >
-                        <input type="checkbox" checked={isChecked} onChange={() => {}} className="rounded text-emerald-600 mt-0.5" />
+                        <input type="checkbox" checked={isChecked} disabled={isContraindicated} onChange={() => {}} className="rounded text-emerald-600 mt-0.5" />
                         <div className="truncate flex-1">
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-slate-900 truncate">{d.genericName}</span>
+                            <span className="font-bold text-slate-900 truncate flex items-center gap-1">
+                              {isContraindicated && <AlertTriangle className="h-3 w-3 text-red-600 shrink-0" />}
+                              {d.genericName}
+                            </span>
                             <span className={`text-[8px] px-1 py-0.5 rounded font-mono uppercase font-bold ${
+                              isContraindicated ? 'bg-red-100 text-red-800' :
                               d.category === 'adult' ? 'bg-blue-100 text-blue-800' :
                               d.category === 'pediatric' ? 'bg-amber-100 text-amber-800' :
                               d.category === 'infant' ? 'bg-pink-100 text-pink-800' : 'bg-slate-100 text-slate-700'
                             }`}>
-                              {d.category}
+                              {isContraindicated ? 'Unsafe for Weight' : d.category}
                             </span>
                           </div>
-                          <span className="text-[9px] text-slate-500 block truncate">{d.dosage} • {d.duration}</span>
+                          <span className="text-[9px] text-slate-500 block truncate">
+                            {isContraindicated ? `⚠️ Adult dose unsafe for ${w}kg child` : `${d.dosage} • ${d.duration}`}
+                          </span>
                         </div>
                       </label>
                     );
