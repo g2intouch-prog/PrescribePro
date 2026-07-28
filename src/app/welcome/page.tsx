@@ -117,19 +117,21 @@ export default function WelcomePage() {
 
           {/* Quick Action Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-800/80">
-            <button
-              onClick={() => router.push('/admin')}
-              className="group p-5 rounded-2xl glass-card hover:bg-emerald-500/10 border-emerald-500/30 text-left transition flex items-center justify-between"
-            >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-white font-bold text-sm">
-                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                  Admin Invite Console
+            {email.toLowerCase() === 'g2intouch@gmail.com' && (
+              <button
+                onClick={() => router.push('/admin')}
+                className="group p-5 rounded-2xl glass-card hover:bg-emerald-500/10 border-emerald-500/30 text-left transition flex items-center justify-between"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-white font-bold text-sm">
+                    <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                    Admin Invite Console
+                  </div>
+                  <p className="text-xs text-gray-400">Send email invitations & manage invited user access list.</p>
                 </div>
-                <p className="text-xs text-gray-400">Send email invitations & manage invited user access list.</p>
-              </div>
-              <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
-            </button>
+                <ArrowRight className="h-5 w-5 text-gray-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
+              </button>
+            )}
 
             <button
               onClick={() => router.push('/')}

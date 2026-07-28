@@ -42,18 +42,26 @@ export default function AdminDashboardPage() {
     async function loadAdminData() {
       const supabase = createClient();
       const { data } = await supabase.auth.getUser();
+      let activeEmail = 'g2intouch@gmail.com';
+
       if (data?.user?.email) {
-        setCurrentUser(data.user.email);
+        activeEmail = data.user.email;
       } else {
         const local = localStorage.getItem('prescribepro_session_email');
-        if (local) setCurrentUser(local);
+        if (local) activeEmail = local;
       }
 
+      if (activeEmail.toLowerCase() !== 'g2intouch@gmail.com') {
+        router.push('/welcome');
+        return;
+      }
+
+      setCurrentUser(activeEmail);
       const records = await getInvitedUserRecords();
       setUsers(records);
     }
     loadAdminData();
-  }, []);
+  }, [router]);
 
   async function handleSendInvite(e: React.FormEvent) {
     e.preventDefault();
