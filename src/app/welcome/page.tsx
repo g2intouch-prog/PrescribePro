@@ -385,7 +385,7 @@ export default function UserWorkspacePage() {
   };
 
   const handlePrint = () => {
-    const printArea = document.getElementById('isolated-print-area');
+    const printArea = document.getElementById('printable-prescription-pad');
     if (!printArea) {
       window.print();
       return;
@@ -405,6 +405,13 @@ export default function UserWorkspacePage() {
     const paperWidth = isA5 ? '148mm' : '210mm';
     const paperHeight = isA5 ? '210mm' : '297mm';
 
+    // Clone Section 2 live canvas DOM node
+    const clonedPad = printArea.cloneNode(true) as HTMLElement;
+    
+    // Remove UI interactive action buttons from cloned document
+    const hiddenEls = clonedPad.querySelectorAll('.print\\:hidden');
+    hiddenEls.forEach((el) => el.remove());
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -413,17 +420,36 @@ export default function UserWorkspacePage() {
           ${styles}
           <style>
             @page { size: ${pageSize} portrait; margin: 0; }
-            body { background: white !important; color: #0f172a !important; padding: 0 !important; margin: 0 !important; font-family: system-ui, -apple-system, sans-serif !important; }
-            #isolated-print-area { display: flex !important; flex-direction: column !important; justify-content: space-between !important; visibility: visible !important; width: ${paperWidth} !important; min-height: ${paperHeight} !important; margin: 0 auto !important; padding: ${isA5 ? '8mm 10mm' : '12mm 15mm'} !important; box-sizing: border-box !important; }
-            #isolated-print-area * { visibility: visible !important; }
-            .print-grid { display: flex !important; flex-direction: row !important; align-items: flex-start !important; width: 100% !important; gap: ${isA5 ? '10px' : '16px'} !important; }
-            .print-left-pane { width: 33% !important; flex-shrink: 0 !important; border-right: 1px dashed #cbd5e1 !important; padding-right: ${isA5 ? '8px' : '12px'} !important; }
-            .print-right-pane { width: 67% !important; flex-grow: 1 !important; padding-left: ${isA5 ? '6px' : '8px'} !important; }
+            html, body { background: white !important; color: #0f172a !important; padding: 0 !important; margin: 0 !important; font-family: system-ui, -apple-system, sans-serif !important; }
+            .section2-print-container {
+              width: ${paperWidth} !important;
+              min-height: ${paperHeight} !important;
+              max-width: none !important;
+              aspect-ratio: auto !important;
+              margin: 0 auto !important;
+              padding-top: ${headerMarginMm}mm !important;
+              padding-bottom: ${footerMarginMm}mm !important;
+              padding-left: ${isA5 ? '8mm' : '14mm'} !important;
+              padding-right: ${isA5 ? '8mm' : '14mm'} !important;
+              box-sizing: border-box !important;
+              display: flex !important;
+              flex-direction: column !important;
+              justify-content: space-between !important;
+              box-shadow: none !important;
+              border: none !important;
+              background: white !important;
+              color: #0f172a !important;
+              font-size: ${isA5 ? '10px' : '12px'} !important;
+            }
+            .section2-print-container * {
+              visibility: visible !important;
+            }
+            [contenteditable] { outline: none !important; }
           </style>
         </head>
-        <body class="bg-white text-slate-900 font-sans p-4 text-xs min-h-[${paperHeight}]">
-          <div id="isolated-print-area">
-            ${printArea.innerHTML}
+        <body class="bg-white text-slate-900 font-sans">
+          <div class="section2-print-container">
+            ${clonedPad.innerHTML}
           </div>
         </body>
       </html>
@@ -1202,10 +1228,41 @@ export default function UserWorkspacePage() {
           
           {/* Section Header */}
           <div className={`flex items-center justify-between pb-2 border-b shrink-0 mb-2 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800'}`}>
-            <div className={`flex items-center gap-1.5 font-bold text-xs ${theme === 'day' ? 'text-blue-700' : 'text-emerald-400'}`}>
-              <FileSpreadsheet className="h-4 w-4" />
-              Section 2: Live Prescription Preview
+            <div className="flex items-center gap-3">
+              <div className={`flex items-center gap-1.5 font-bold text-xs ${theme === 'day' ? 'text-blue-700' : 'text-emerald-400'}`}>
+                <FileSpreadsheet className="h-4 w-4" />
+                Section 2: Live Prescription Preview
+              </div>
+
+              {/* VIBRANT DUAL A4 / A5 PAPER SIZE TOGGLE SWITCH */}
+              <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => handleSetPageSize('A4')}
+                  className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold transition-all duration-200 flex items-center gap-1 ${
+                    pageSize === 'A4'
+                      ? 'bg-emerald-600 text-white shadow-md scale-105'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                  title="A4 Standard Full Size (210mm x 297mm)"
+                >
+                  📄 A4
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSetPageSize('A5')}
+                  className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold transition-all duration-200 flex items-center gap-1 ${
+                    pageSize === 'A5'
+                      ? 'bg-purple-600 text-white shadow-md scale-105'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                  title="A5 Compact Prescription Pad Size (148mm x 210mm)"
+                >
+                  📃 A5
+                </button>
+              </div>
             </div>
+
             <button
               onClick={handleSaveCurrentAsTemplate}
               className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-pink-600 text-white text-[10px] font-bold shadow hover:bg-pink-700 transition"
@@ -1332,10 +1389,14 @@ export default function UserWorkspacePage() {
             }
           `}</style>
 
-          {/* CENTERED LIVE PRESCRIPTION PAD PREVIEW CARD (A4 PORTRAIT MODE) */}
+          {/* CENTERED LIVE PRESCRIPTION PAD PREVIEW CARD (A4 / A5 DYNAMIC PORTRAIT MODE) */}
           <div
             id="printable-prescription-pad"
-            className="flex-1 bg-white text-gray-900 rounded-xl p-4 shadow-2xl space-y-3 text-[11px] font-sans border border-gray-200 overflow-y-auto flex flex-col justify-between aspect-[210/297] max-w-[440px] w-full mx-auto"
+            className={`flex-1 bg-white text-gray-900 rounded-xl p-4 shadow-2xl space-y-3 font-sans border border-gray-200 overflow-y-auto flex flex-col justify-between w-full mx-auto transition-all duration-300 ${
+              pageSize === 'A5'
+                ? 'aspect-[148/210] max-w-[360px] text-[10px]'
+                : 'aspect-[210/297] max-w-[450px] text-[11px]'
+            }`}
           >
             
             {/* PAD HEADER */}
