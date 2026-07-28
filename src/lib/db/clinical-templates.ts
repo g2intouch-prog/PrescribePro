@@ -107,7 +107,11 @@ export const CLINICAL_SYMPTOM_MAP: Record<string, string[]> = {
   endo: ['metformin', 'glimepiride', 'teneligliptin', 'sitagliptin', 'dapagliflozin', 'voglibose', 'thyroxine', 'carbimazole'],
 
   urology: ['disodium hydrogen citrate', 'potassium citrate', 'tamsulosin', 'flavoxate', 'finasteride', 'darifenacin', 'solifenacin', 'furosemide'],
-  nephrology: ['potassium citrate', 'disodium hydrogen citrate', 'ketoanalogues', 'furosemide', 'erythropoietin'],
+  nephrology: ['ketoanalogues', 'erythropoietin', 'epo', 'sevelamer', 'calcium acetate', 'furosemide', 'lasix', 'torsemide', 'sodium bicarbonate', 'tacrolimus', 'mycophenolate', 'potassium citrate'],
+  renal: ['ketoanalogues', 'erythropoietin', 'epo', 'sevelamer', 'calcium acetate', 'furosemide', 'lasix', 'torsemide', 'sodium bicarbonate', 'tacrolimus', 'mycophenolate', 'potassium citrate'],
+
+  hepatology: ['l-ornithine', 'ornithine', 'ursodeoxycholic', 'udca', 'silymarin', 'lactulose', 'rifaximin', 'tenofovir', 'entecavir', 'vitamin k'],
+  liver: ['l-ornithine', 'ornithine', 'ursodeoxycholic', 'udca', 'silymarin', 'lactulose', 'rifaximin', 'tenofovir', 'entecavir', 'vitamin k'],
 
   gynecology: ['dydrogesterone', 'progesterone', 'tranexamic acid', 'norethisterone', 'ferrous ascorbate', 'folic acid', 'clomiphene', 'cabergoline', 'isoxsuprine', 'candid v', 'clindamycin vaginal', 'miconazole'],
   gynaecology: ['dydrogesterone', 'progesterone', 'tranexamic acid', 'norethisterone', 'ferrous ascorbate', 'folic acid', 'clomiphene', 'cabergoline', 'isoxsuprine', 'candid v', 'clindamycin vaginal', 'miconazole'],
@@ -612,8 +616,13 @@ export function getDrugCatalog(): DrugItem[] {
     const saved = localStorage.getItem(DRUGS_STORAGE_KEY);
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        return Array.from(new Set([...COMPREHENSIVE_GENERIC_DRUGS, ...parsed]));
+        const parsed: DrugItem[] = JSON.parse(saved);
+        const map = new Map<string, DrugItem>();
+        COMPREHENSIVE_GENERIC_DRUGS.forEach((item) => map.set(item.id, item));
+        parsed.forEach((item) => {
+          if (item && item.id) map.set(item.id, item);
+        });
+        return Array.from(map.values());
       } catch (e) {}
     }
   }
