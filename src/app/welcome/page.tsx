@@ -30,7 +30,8 @@ import {
   MessageCircle,
   Mail,
   FileDown,
-  ChevronDown
+  Sun,
+  Moon
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { getAdminPresets, AdminPresets } from '@/lib/db/admin-presets';
@@ -47,10 +48,13 @@ export default function UserWorkspacePage() {
   const [email, setEmail] = useState<string>('user@prescribepro.com');
   const [loading, setLoading] = useState(true);
 
+  // Theme State: 'dark' vs 'day'
+  const [theme, setTheme] = useState<'dark' | 'day'>('day');
+
   // Admin Presets State
   const [presets, setPresets] = useState<AdminPresets>(getAdminPresets());
 
-  // Section 1: Patient Registration Form State
+  // Patient Registration Form State
   const [patient, setPatient] = useState({
     regNo: 'REG-2026-089',
     mobile: '9876543210',
@@ -111,7 +115,7 @@ export default function UserWorkspacePage() {
   const [headerImg, setHeaderImg] = useState<string>('');
   const [footerImg, setFooterImg] = useState<string>('');
 
-  // Active Left Sub-Tab (Inputs vs History vs Vitals)
+  // Active Left Sub-Tab
   const [activeLeftTab, setActiveLeftTab] = useState<'patient' | 'vitals' | 'tests' | 'advice'>('patient');
 
   useEffect(() => {
@@ -132,10 +136,22 @@ export default function UserWorkspacePage() {
       setPadMode(loadedPresets.padType || 'digital');
       setHeaderImg(loadedPresets.headerImage || '');
       setFooterImg(loadedPresets.footerImage || '');
+
+      const savedTheme = localStorage.getItem('prescribepro_theme');
+      if (savedTheme === 'dark' || savedTheme === 'day') {
+        setTheme(savedTheme as 'dark' | 'day');
+      }
+
       setLoading(false);
     }
     checkUser();
   }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'day' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('prescribepro_theme', nextTheme);
+  };
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -203,7 +219,6 @@ export default function UserWorkspacePage() {
     return '--';
   };
 
-  // Export Handlers
   const handlePrint = () => window.print();
 
   const handleWhatsAppSend = () => {
@@ -232,42 +247,85 @@ export default function UserWorkspacePage() {
 
   const isAdmin = email.toLowerCase() === 'g2intouch@gmail.com';
 
+  // Dynamic Theme Container Styling
+  const containerBg = theme === 'day'
+    ? 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-100 via-pink-100 to-emerald-100 text-slate-900'
+    : 'bg-gradient-to-b from-[#0b0f19] via-[#090d16] to-[#05070d] text-gray-100';
+
+  const headerBg = theme === 'day'
+    ? 'bg-white/80 backdrop-blur-md border-b border-pink-200/80'
+    : 'glass-nav border-b border-gray-800/80';
+
+  const cardBg = theme === 'day'
+    ? 'bg-white/75 backdrop-blur-md border border-pink-200/60 shadow-xl shadow-slate-200/50 text-slate-800'
+    : 'glass-card border border-gray-800 text-gray-100';
+
+  const inputBg = theme === 'day'
+    ? 'bg-white border border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500'
+    : 'bg-gray-950 border border-gray-800 text-white placeholder-gray-600 focus:border-emerald-500';
+
   return (
-    <div className="h-screen bg-gradient-to-b from-[#0b0f19] via-[#090d16] to-[#05070d] text-gray-100 flex flex-col overflow-hidden">
+    <div className={`h-screen flex flex-col overflow-hidden transition-colors duration-300 ${containerBg}`}>
       
       {/* 1. ULTRA-COMPACT TOP BANNER (~5PX PADDING / ~38PX HEIGHT) */}
-      <header className="h-[38px] px-3 sm:px-4 py-1 glass-nav flex items-center justify-between border-b border-gray-800/80 shrink-0">
+      <header className={`h-[38px] px-3 sm:px-4 py-1 flex items-center justify-between shrink-0 ${headerBg}`}>
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-md shadow-emerald-500/20">
-            <Layers className="h-3.5 w-3.5 text-gray-950 font-bold" />
+          <div className="h-6 w-6 rounded-lg bg-gradient-to-tr from-blue-600 via-pink-500 to-emerald-500 flex items-center justify-center shadow-md">
+            <Layers className="h-3.5 w-3.5 text-white font-bold" />
           </div>
           <div className="flex items-center gap-2">
-            <h1 className="font-extrabold text-xs tracking-wide bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-transparent">
+            <h1 className={`font-extrabold text-xs tracking-wide ${
+              theme === 'day' ? 'text-slate-900' : 'bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-transparent'
+            }`}>
               PrescribePro
             </h1>
-            <span className="text-[9px] text-emerald-400 font-mono hidden sm:inline">• prescribepro.vercel.app</span>
+            <span className={`text-[9px] font-mono hidden sm:inline ${theme === 'day' ? 'text-emerald-700 font-bold' : 'text-emerald-400'}`}>
+              • Day/Night Workspace
+            </span>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5">
+          {/* DAY / NIGHT MODE TOGGLE BUTTON */}
+          <button
+            onClick={toggleTheme}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold transition shadow ${
+              theme === 'day'
+                ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-slate-950'
+                : 'bg-indigo-950 text-indigo-300 border border-indigo-500/40'
+            }`}
+            title="Toggle Day / Dark Mode"
+          >
+            {theme === 'day' ? <Sun className="h-3 w-3 text-slate-950" /> : <Moon className="h-3 w-3 text-indigo-400" />}
+            <span>{theme === 'day' ? 'Day Mode' : 'Dark Mode'}</span>
+          </button>
+
           {isAdmin && (
             <button
               onClick={() => router.push('/admin')}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-semibold hover:bg-emerald-500/20 transition"
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold transition ${
+                theme === 'day'
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+              }`}
             >
               <ShieldCheck className="h-3 w-3" />
               Admin
             </button>
           )}
 
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg glass-card text-[10px] border-gray-800">
-            <User className="h-3 w-3 text-emerald-400" />
-            <span className="font-mono text-gray-200 truncate max-w-[110px]">{email}</span>
+          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] border ${
+            theme === 'day' ? 'bg-white/90 border-slate-200 text-slate-700' : 'glass-card border-gray-800 text-gray-200'
+          }`}>
+            <User className="h-3 w-3 text-emerald-500" />
+            <span className="font-mono truncate max-w-[110px]">{email}</span>
           </div>
 
           <button
             onClick={() => router.push('/change-password')}
-            className="p-1 rounded-lg glass-card hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition"
+            className={`p-1 rounded-lg transition ${
+              theme === 'day' ? 'bg-white/90 hover:bg-slate-100 text-slate-600' : 'glass-card hover:bg-gray-800 text-gray-400 hover:text-emerald-400'
+            }`}
             title="Change Password"
           >
             <KeyRound className="h-3 w-3" />
@@ -275,7 +333,9 @@ export default function UserWorkspacePage() {
 
           <button
             onClick={handleSignOut}
-            className="p-1 rounded-lg glass-card hover:bg-gray-800 text-gray-400 hover:text-red-400 transition"
+            className={`p-1 rounded-lg transition ${
+              theme === 'day' ? 'bg-white/90 hover:bg-red-50 text-red-600' : 'glass-card hover:bg-gray-800 text-gray-400 hover:text-red-400'
+            }`}
             title="Sign Out"
           >
             <LogOut className="h-3 w-3" />
@@ -283,31 +343,35 @@ export default function UserWorkspacePage() {
         </div>
       </header>
 
-      {/* 2. THREE VERTICAL SECTIONS (MAXIMIZED WORKING AREA CANVAS) */}
+      {/* 2. THREE VERTICAL SECTIONS (MAXIMIZED WORKING CANVAS) */}
       <main className="flex-1 p-2.5 grid grid-cols-1 lg:grid-cols-12 gap-2.5 overflow-hidden h-[calc(100vh-38px)]">
         
         {/* SECTION 1 (LEFT COLUMN - 4 COLS): PATIENT REGISTRATION & INPUT SUB-PANES */}
-        <section className="lg:col-span-4 glass-card rounded-2xl p-3.5 flex flex-col justify-between border-gray-800 overflow-hidden h-full">
+        <section className={`lg:col-span-4 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
           <div className="flex flex-col h-full space-y-3">
             
             {/* Header & Sub-Tabs Switcher */}
-            <div className="flex items-center justify-between border-b border-gray-800/80 pb-2 shrink-0">
-              <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
+            <div className={`flex items-center justify-between border-b pb-2 shrink-0 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800/80'}`}>
+              <div className={`flex items-center gap-1.5 font-bold text-xs ${theme === 'day' ? 'text-blue-700' : 'text-emerald-400'}`}>
                 <UserCheck className="h-4 w-4" />
-                Patient & Clinical Inputs
+                Section 1: Patient Registration & Inputs
               </div>
               {saveStatus && (
-                <span className="text-[10px] text-emerald-300 font-mono animate-pulse">{saveStatus}</span>
+                <span className="text-[10px] text-emerald-600 font-mono font-bold animate-pulse">{saveStatus}</span>
               )}
             </div>
 
             {/* Quick Sub-Tab Selector */}
-            <div className="grid grid-cols-4 p-1 bg-gray-950 rounded-xl border border-gray-800 text-[10px] shrink-0">
+            <div className={`grid grid-cols-4 p-1 rounded-xl text-[10px] shrink-0 border ${
+              theme === 'day' ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-950 border-gray-800'
+            }`}>
               <button
                 type="button"
                 onClick={() => setActiveLeftTab('patient')}
                 className={`py-1 rounded-lg font-semibold transition ${
-                  activeLeftTab === 'patient' ? 'bg-emerald-500 text-gray-950' : 'text-gray-400'
+                  activeLeftTab === 'patient' 
+                    ? (theme === 'day' ? 'bg-blue-600 text-white shadow' : 'bg-emerald-500 text-gray-950')
+                    : (theme === 'day' ? 'text-slate-600' : 'text-gray-400')
                 }`}
               >
                 Patient
@@ -316,7 +380,9 @@ export default function UserWorkspacePage() {
                 type="button"
                 onClick={() => setActiveLeftTab('vitals')}
                 className={`py-1 rounded-lg font-semibold transition ${
-                  activeLeftTab === 'vitals' ? 'bg-emerald-500 text-gray-950' : 'text-gray-400'
+                  activeLeftTab === 'vitals' 
+                    ? (theme === 'day' ? 'bg-blue-600 text-white shadow' : 'bg-emerald-500 text-gray-950')
+                    : (theme === 'day' ? 'text-slate-600' : 'text-gray-400')
                 }`}
               >
                 Vitals
@@ -325,7 +391,9 @@ export default function UserWorkspacePage() {
                 type="button"
                 onClick={() => setActiveLeftTab('tests')}
                 className={`py-1 rounded-lg font-semibold transition ${
-                  activeLeftTab === 'tests' ? 'bg-emerald-500 text-gray-950' : 'text-gray-400'
+                  activeLeftTab === 'tests' 
+                    ? (theme === 'day' ? 'bg-blue-600 text-white shadow' : 'bg-emerald-500 text-gray-950')
+                    : (theme === 'day' ? 'text-slate-600' : 'text-gray-400')
                 }`}
               >
                 Tests
@@ -334,17 +402,19 @@ export default function UserWorkspacePage() {
                 type="button"
                 onClick={() => setActiveLeftTab('advice')}
                 className={`py-1 rounded-lg font-semibold transition ${
-                  activeLeftTab === 'advice' ? 'bg-emerald-500 text-gray-950' : 'text-gray-400'
+                  activeLeftTab === 'advice' 
+                    ? (theme === 'day' ? 'bg-blue-600 text-white shadow' : 'bg-emerald-500 text-gray-950')
+                    : (theme === 'day' ? 'text-slate-600' : 'text-gray-400')
                 }`}
               >
                 Advice
               </button>
             </div>
 
-            {/* TAB CONTENT AREA (SCROLLABLE INSIDE COLUMN ONLY) */}
+            {/* TAB CONTENT AREA */}
             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
               
-              {/* TAB 1: PATIENT REGISTRATION & HISTORY */}
+              {/* TAB 1: PATIENT REGISTRATION */}
               {activeLeftTab === 'patient' && (
                 <div className="space-y-3 text-xs">
                   <div className="flex gap-2">
@@ -353,11 +423,13 @@ export default function UserWorkspacePage() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Lookup Reg No / Mobile..."
-                      className="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500"
+                      className={`flex-1 rounded-xl px-3 py-1.5 text-xs ${inputBg}`}
                     />
                     <button
                       onClick={handleLookupPatient}
-                      className="px-2.5 py-1.5 rounded-xl bg-gray-800 text-xs font-semibold text-gray-200"
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold ${
+                        theme === 'day' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-200'
+                      }`}
                     >
                       Lookup
                     </button>
@@ -365,51 +437,51 @@ export default function UserWorkspacePage() {
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] text-gray-400 block mb-0.5">Reg. No</label>
+                      <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Reg. No</label>
                       <input
                         type="text"
                         value={patient.regNo}
                         onChange={(e) => setPatient({ ...patient, regNo: e.target.value })}
-                        className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2 py-1 text-xs text-emerald-300 font-mono"
+                        className={`w-full rounded-lg px-2 py-1 text-xs font-mono ${inputBg}`}
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-gray-400 block mb-0.5">Mobile</label>
+                      <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Mobile</label>
                       <input
                         type="tel"
                         value={patient.mobile}
                         onChange={(e) => setPatient({ ...patient, mobile: e.target.value })}
-                        className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white"
+                        className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-gray-400 block mb-0.5">Full Name</label>
+                    <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Full Name</label>
                     <input
                       type="text"
                       value={patient.name}
                       onChange={(e) => setPatient({ ...patient, name: e.target.value })}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white"
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] text-gray-400 block mb-0.5">Age</label>
+                      <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Age</label>
                       <input
                         type="text"
                         value={patient.age}
                         onChange={(e) => setPatient({ ...patient, age: e.target.value })}
-                        className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white"
+                        className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-gray-400 block mb-0.5">Gender</label>
+                      <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Gender</label>
                       <select
                         value={patient.gender}
                         onChange={(e) => setPatient({ ...patient, gender: e.target.value })}
-                        className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white"
+                        className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
                       >
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
@@ -419,37 +491,39 @@ export default function UserWorkspacePage() {
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-gray-400 block mb-0.5">C/O (Guardian)</label>
+                    <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>C/O (Guardian)</label>
                     <input
                       type="text"
                       value={patient.careOf}
                       onChange={(e) => setPatient({ ...patient, careOf: e.target.value })}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white"
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
                     />
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-gray-400 block mb-0.5">Address</label>
+                    <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Address</label>
                     <input
                       type="text"
                       value={patient.address}
                       onChange={(e) => setPatient({ ...patient, address: e.target.value })}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white"
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
                     />
                   </div>
 
                   {/* Medical History Cards */}
                   <div className="pt-2 space-y-1.5">
-                    <label className="text-[10px] font-bold text-teal-400 uppercase tracking-wider block">
+                    <label className={`text-[10px] font-bold uppercase tracking-wider block ${theme === 'day' ? 'text-pink-700' : 'text-teal-400'}`}>
                       Previous Consultation History
                     </label>
                     {medicalHistory.map((rec, idx) => (
-                      <div key={idx} className="p-2 rounded-lg glass-card border-gray-800 text-[10px] space-y-0.5">
-                        <div className="flex justify-between font-bold text-emerald-400">
+                      <div key={idx} className={`p-2 rounded-lg text-[10px] space-y-0.5 border ${
+                        theme === 'day' ? 'bg-white/90 border-slate-200 text-slate-800' : 'glass-card border-gray-800 text-gray-300'
+                      }`}>
+                        <div className="flex justify-between font-bold text-blue-600">
                           <span>{rec.diagnosis}</span>
-                          <span className="text-gray-500 font-mono">{rec.date}</span>
+                          <span className="font-mono text-slate-500">{rec.date}</span>
                         </div>
-                        <p className="text-gray-300 font-mono">Rx: {rec.prescription}</p>
+                        <p className="font-mono text-slate-700">Rx: {rec.prescription}</p>
                       </div>
                     ))}
                   </div>
@@ -459,83 +533,82 @@ export default function UserWorkspacePage() {
               {/* TAB 2: VITALS */}
               {activeLeftTab === 'vitals' && (
                 <div className="space-y-3 text-xs">
-                  <div className="flex items-center justify-between text-teal-400 font-bold text-xs">
+                  <div className="flex items-center justify-between font-bold text-xs text-blue-600">
                     <span>Patient Vitals</span>
-                    <span className="text-[10px] text-gray-400 font-mono">BMI: {calcBmi()}</span>
+                    <span className="text-[10px] font-mono text-slate-600">BMI: {calcBmi()}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-[10px]">
                     <div>
-                      <label className="text-gray-400 block mb-0.5">Height (cm)</label>
+                      <label className="block mb-0.5 font-medium text-slate-600">Height (cm)</label>
                       <input
                         type="text"
                         value={vitals.height}
                         onChange={(e) => setVitals({ ...vitals, height: e.target.value })}
-                        className="w-full bg-gray-950 border border-gray-800 rounded px-2 py-1 text-white"
+                        className={`w-full rounded px-2 py-1 ${inputBg}`}
                       />
                     </div>
                     <div>
-                      <label className="text-gray-400 block mb-0.5">Weight (kg)</label>
+                      <label className="block mb-0.5 font-medium text-slate-600">Weight (kg)</label>
                       <input
                         type="text"
                         value={vitals.weight}
                         onChange={(e) => setVitals({ ...vitals, weight: e.target.value })}
-                        className="w-full bg-gray-950 border border-gray-800 rounded px-2 py-1 text-white"
+                        className={`w-full rounded px-2 py-1 ${inputBg}`}
                       />
                     </div>
                     <div>
-                      <label className="text-gray-400 block mb-0.5">BP (mmHg)</label>
+                      <label className="block mb-0.5 font-medium text-slate-600">BP (mmHg)</label>
                       <input
                         type="text"
                         value={vitals.bp}
                         onChange={(e) => setVitals({ ...vitals, bp: e.target.value })}
-                        className="w-full bg-gray-950 border border-gray-800 rounded px-2 py-1 text-white"
+                        className={`w-full rounded px-2 py-1 ${inputBg}`}
                       />
                     </div>
                     <div>
-                      <label className="text-gray-400 block mb-0.5">Pulse (bpm)</label>
+                      <label className="block mb-0.5 font-medium text-slate-600">Pulse (bpm)</label>
                       <input
                         type="text"
                         value={vitals.pulse}
                         onChange={(e) => setVitals({ ...vitals, pulse: e.target.value })}
-                        className="w-full bg-gray-950 border border-gray-800 rounded px-2 py-1 text-white"
+                        className={`w-full rounded px-2 py-1 ${inputBg}`}
                       />
                     </div>
                     <div className="col-span-2">
-                      <label className="text-gray-400 block mb-0.5">Temperature (°F)</label>
+                      <label className="block mb-0.5 font-medium text-slate-600">Temperature (°F)</label>
                       <input
                         type="text"
                         value={vitals.temp}
                         onChange={(e) => setVitals({ ...vitals, temp: e.target.value })}
-                        className="w-full bg-gray-950 border border-gray-800 rounded px-2 py-1 text-white"
+                        className={`w-full rounded px-2 py-1 ${inputBg}`}
                       />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* TAB 3: DIAGNOSTIC TESTS & RESULTS */}
+              {/* TAB 3: DIAGNOSTIC TESTS & SEARCH */}
               {activeLeftTab === 'tests' && (
                 <div className="space-y-2.5 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-teal-400">Recommended Diagnostics</span>
-                    <span className="text-[10px] text-gray-500 font-mono">
-                      {presets.diagnosticTests.length} Tests Available
+                    <span className="text-xs font-bold text-blue-700">Recommended Diagnostics</span>
+                    <span className="text-[10px] text-slate-500 font-mono font-bold">
+                      {presets.diagnosticTests.length} Tests
                     </span>
                   </div>
 
-                  {/* REAL-TIME SEARCH BOX */}
+                  {/* REAL-TIME LAB TEST SEARCH BOX */}
                   <div className="relative">
-                    <Search className="h-3.5 w-3.5 text-gray-500 absolute left-2.5 top-2" />
+                    <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2" />
                     <input
                       type="text"
                       value={testFilterQuery}
                       onChange={(e) => setTestFilterQuery(e.target.value)}
                       placeholder="Search lab tests (e.g. CBC, Lipid, Thyroid, X-Ray)..."
-                      className="w-full bg-gray-950 border border-gray-800 rounded-lg pl-8 pr-2.5 py-1 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-teal-500"
+                      className={`w-full rounded-lg pl-8 pr-2.5 py-1 text-xs ${inputBg}`}
                     />
                   </div>
 
-                  {/* SCROLLABLE CHECKLIST */}
                   <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
                     {presets.diagnosticTests
                       .filter((t) => t.toLowerCase().includes(testFilterQuery.toLowerCase()))
@@ -547,11 +620,11 @@ export default function UserWorkspacePage() {
                             onClick={() => toggleTestSelection(t)}
                             className={`flex items-center gap-2 p-1.5 rounded-lg border text-[11px] cursor-pointer transition ${
                               isChecked
-                                ? 'bg-teal-950/60 border-teal-500/40 text-teal-300 font-semibold'
-                                : 'bg-gray-950/40 border-gray-800/80 text-gray-400 hover:border-gray-700'
+                                ? (theme === 'day' ? 'bg-blue-100 border-blue-400 text-blue-900 font-bold' : 'bg-teal-950/60 border-teal-500/40 text-teal-300 font-semibold')
+                                : (theme === 'day' ? 'bg-white border-slate-200 text-slate-700 hover:border-blue-300' : 'bg-gray-950/40 border-gray-800/80 text-gray-400')
                             }`}
                           >
-                            <input type="checkbox" checked={isChecked} onChange={() => {}} className="rounded text-teal-500" />
+                            <input type="checkbox" checked={isChecked} onChange={() => {}} className="rounded text-blue-600" />
                             <span className="truncate">{t}</span>
                           </label>
                         );
@@ -559,12 +632,12 @@ export default function UserWorkspacePage() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-gray-400 block">Test Results Entry</label>
+                    <label className="text-[10px] font-bold text-slate-600 block">Test Results Entry</label>
                     <textarea
                       rows={3}
                       value={testResultsText}
                       onChange={(e) => setTestResultsText(e.target.value)}
-                      className="w-full bg-gray-950 border border-gray-800 rounded-xl px-2.5 py-1.5 text-xs text-white"
+                      className={`w-full rounded-xl px-2.5 py-1.5 text-xs ${inputBg}`}
                     />
                   </div>
                 </div>
@@ -573,7 +646,7 @@ export default function UserWorkspacePage() {
               {/* TAB 4: ADDITIONAL ADVICE */}
               {activeLeftTab === 'advice' && (
                 <div className="space-y-3 text-xs">
-                  <span className="text-xs font-bold text-emerald-400 block">Additional Advice & Instructions</span>
+                  <span className="text-xs font-bold text-emerald-700 block">Additional Advice & Special Instructions</span>
                   <div className="space-y-1 max-h-44 overflow-y-auto">
                     {presets.additionalAdviceList.map((adv) => {
                       const isChecked = selectedAdvice.includes(adv);
@@ -583,11 +656,11 @@ export default function UserWorkspacePage() {
                           onClick={() => toggleAdviceSelection(adv)}
                           className={`flex items-center gap-2 p-1.5 rounded-lg border text-[11px] cursor-pointer transition ${
                             isChecked
-                              ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
-                              : 'bg-gray-950/40 border-gray-800/80 text-gray-400'
+                              ? (theme === 'day' ? 'bg-emerald-100 border-emerald-400 text-emerald-900 font-bold' : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300')
+                              : (theme === 'day' ? 'bg-white border-slate-200 text-slate-700 hover:border-emerald-300' : 'bg-gray-950/40 border-gray-800/80 text-gray-400')
                           }`}
                         >
-                          <input type="checkbox" checked={isChecked} onChange={() => {}} className="rounded text-emerald-500" />
+                          <input type="checkbox" checked={isChecked} onChange={() => {}} className="rounded text-emerald-600" />
                           <span>{adv}</span>
                         </label>
                       );
@@ -598,7 +671,7 @@ export default function UserWorkspacePage() {
                     value={customAdviceText}
                     onChange={(e) => setCustomAdviceText(e.target.value)}
                     placeholder="Custom advice..."
-                    className="w-full bg-gray-950 border border-gray-800 rounded-xl px-2.5 py-1.5 text-xs text-white"
+                    className={`w-full rounded-xl px-2.5 py-1.5 text-xs ${inputBg}`}
                   />
                 </div>
               )}
@@ -606,16 +679,20 @@ export default function UserWorkspacePage() {
             </div>
 
             {/* ACTION BUTTONS (BOTTOM OF LEFT PANE) */}
-            <div className="flex gap-2 pt-2 border-t border-gray-800 shrink-0">
+            <div className={`flex gap-2 pt-2 border-t shrink-0 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800'}`}>
               <button
                 onClick={handleSavePatient}
-                className="flex-1 py-1.5 rounded-xl bg-emerald-500 text-gray-950 font-bold text-xs flex items-center justify-center gap-1 shadow"
+                className={`flex-1 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow transition ${
+                  theme === 'day' ? 'bg-gradient-to-r from-blue-600 via-pink-600 to-emerald-600 text-white' : 'bg-emerald-500 text-gray-950'
+                }`}
               >
                 <Save className="h-3.5 w-3.5" /> Save
               </button>
               <button
                 onClick={handleClearForm}
-                className="px-3 py-1.5 rounded-xl glass-card text-xs text-gray-400 hover:text-white"
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
+                  theme === 'day' ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'glass-card text-gray-400 hover:text-white'
+                }`}
               >
                 Reset
               </button>
@@ -625,27 +702,35 @@ export default function UserWorkspacePage() {
         </section>
 
         {/* SECTION 2 (CENTER COLUMN - 5 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
-        <section className="lg:col-span-5 glass-card rounded-2xl p-3.5 flex flex-col justify-between border-emerald-500/30 overflow-hidden h-full">
+        <section className={`lg:col-span-5 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
           
           {/* Section Header */}
-          <div className="flex items-center justify-between pb-2 border-b border-gray-800 shrink-0 mb-2">
-            <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
+          <div className={`flex items-center justify-between pb-2 border-b shrink-0 mb-2 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800'}`}>
+            <div className={`flex items-center gap-1.5 font-bold text-xs ${theme === 'day' ? 'text-blue-700' : 'text-emerald-400'}`}>
               <FileSpreadsheet className="h-4 w-4" />
               Section 2: Live Prescription Preview
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30">
+            <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
+              theme === 'day' ? 'bg-blue-100 text-blue-800 border border-blue-300' : 'bg-emerald-950 text-emerald-400 border border-emerald-500/30'
+            }`}>
               Module 2
             </span>
           </div>
 
           {/* TOP ROW WITHIN 5PX: PAD MODE TOGGLE */}
-          <div className="flex items-center justify-between p-2 rounded-xl bg-gray-950 border border-gray-800 text-xs shrink-0 mb-2">
-            <span className="text-gray-300 font-semibold text-[11px]">Clinic Pad Mode:</span>
-            <div className="flex items-center gap-1 bg-gray-900 p-0.5 rounded-lg border border-gray-800 text-[10px]">
+          <div className={`flex items-center justify-between p-2 rounded-xl text-xs shrink-0 mb-2 border ${
+            theme === 'day' ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-950 border-gray-800'
+          }`}>
+            <span className={`font-semibold text-[11px] ${theme === 'day' ? 'text-slate-700' : 'text-gray-300'}`}>Clinic Pad Mode:</span>
+            <div className={`flex items-center gap-1 p-0.5 rounded-lg border text-[10px] ${
+              theme === 'day' ? 'bg-white border-slate-200' : 'bg-gray-900 border-gray-800'
+            }`}>
               <button
                 onClick={() => setPadMode('digital')}
                 className={`px-2.5 py-1 rounded-md font-medium transition ${
-                  padMode === 'digital' ? 'bg-emerald-500 text-gray-950 font-bold' : 'text-gray-400'
+                  padMode === 'digital' 
+                    ? (theme === 'day' ? 'bg-blue-600 text-white font-bold shadow' : 'bg-emerald-500 text-gray-950 font-bold') 
+                    : 'text-gray-500'
                 }`}
               >
                 Digital Pad
@@ -653,7 +738,9 @@ export default function UserWorkspacePage() {
               <button
                 onClick={() => setPadMode('preprinted')}
                 className={`px-2.5 py-1 rounded-md font-medium transition ${
-                  padMode === 'preprinted' ? 'bg-emerald-500 text-gray-950 font-bold' : 'text-gray-400'
+                  padMode === 'preprinted' 
+                    ? (theme === 'day' ? 'bg-blue-600 text-white font-bold shadow' : 'bg-emerald-500 text-gray-950 font-bold') 
+                    : 'text-gray-500'
                 }`}
               >
                 Pre-printed Pad
@@ -692,7 +779,7 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
-            {/* PAD BODY (VITALS, DIAGNOSTICS & ADVICE) */}
+            {/* PAD BODY */}
             <div className="space-y-2.5 flex-1 py-1">
               <div className="text-[9px] bg-emerald-50 p-1.5 rounded border border-emerald-200 text-emerald-950 font-mono flex flex-wrap gap-2">
                 <span><strong>Ht:</strong> {vitals.height}cm</span>
@@ -754,10 +841,10 @@ export default function UserWorkspacePage() {
           </div>
 
           {/* BOTTOM ACTION BAR AT BOTTOM OF CENTER PREVIEW: PRINT, PDF, WHATSAPP, EMAIL */}
-          <div className="grid grid-cols-4 gap-2 pt-2 border-t border-gray-800 shrink-0 mt-2">
+          <div className={`grid grid-cols-4 gap-2 pt-2 border-t shrink-0 mt-2 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800'}`}>
             <button
               onClick={handlePrint}
-              className="py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-[11px] flex items-center justify-center gap-1 shadow transition"
+              className="py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow transition"
               title="Print Prescription"
             >
               <Printer className="h-3.5 w-3.5" /> Print
@@ -765,7 +852,7 @@ export default function UserWorkspacePage() {
 
             <button
               onClick={handlePrint}
-              className="py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-gray-950 font-bold text-[11px] flex items-center justify-center gap-1 shadow transition"
+              className="py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow transition"
               title="Export PDF"
             >
               <FileDown className="h-3.5 w-3.5" /> PDF
@@ -773,7 +860,7 @@ export default function UserWorkspacePage() {
 
             <button
               onClick={handleWhatsAppSend}
-              className="py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow transition"
+              className="py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow transition"
               title="Send via WhatsApp"
             >
               <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
@@ -781,7 +868,7 @@ export default function UserWorkspacePage() {
 
             <button
               onClick={handleEmailSend}
-              className="py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow transition"
+              className="py-2 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow transition"
               title="Send via Email"
             >
               <Mail className="h-3.5 w-3.5" /> Email
@@ -791,36 +878,42 @@ export default function UserWorkspacePage() {
         </section>
 
         {/* SECTION 3 (RIGHT COLUMN - 3 COLS): ACTIVITY LOG & QUICK TOOLS */}
-        <section className="lg:col-span-3 glass-card rounded-2xl p-3.5 flex flex-col justify-between border-gray-800 overflow-hidden h-full">
+        <section className={`lg:col-span-3 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
           <div className="space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-gray-800">
-              <div className="flex items-center gap-1.5 text-cyan-400 font-bold text-xs">
+            <div className={`flex items-center justify-between pb-2 border-b ${theme === 'day' ? 'border-pink-200' : 'border-gray-800'}`}>
+              <div className={`flex items-center gap-1.5 font-bold text-xs ${theme === 'day' ? 'text-blue-700' : 'text-cyan-400'}`}>
                 <Clock className="h-4 w-4" />
-                Activity Log & Tools
+                Section 3: Activity & Tools
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-500/30">
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
+                theme === 'day' ? 'bg-pink-100 text-pink-800 border border-pink-300' : 'bg-cyan-950 text-cyan-400 border border-cyan-500/30'
+              }`}>
                 Module 3
               </span>
             </div>
 
             {/* Quick Actions Stack */}
             <div className="space-y-2 text-xs">
-              <div className="p-2.5 rounded-xl glass-card border-gray-800 space-y-1">
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Session Info</span>
-                <p className="text-[11px] text-gray-300">Logged in: <code className="text-white font-mono">{email}</code></p>
-                <p className="text-[10px] text-gray-500">Storage: SQLite WASM Active</p>
+              <div className={`p-2.5 rounded-xl space-y-1 border ${
+                theme === 'day' ? 'bg-white/90 border-slate-200 text-slate-800' : 'glass-card border-gray-800 text-gray-300'
+              }`}>
+                <span className={`text-[10px] font-bold uppercase tracking-wider block ${theme === 'day' ? 'text-blue-700' : 'text-emerald-400'}`}>Session Info</span>
+                <p className="text-[11px]">Logged in: <code className="font-mono font-bold text-blue-600">{email}</code></p>
+                <p className="text-[10px] text-slate-500">Storage: SQLite WASM Active</p>
               </div>
 
-              <div className="p-2.5 rounded-xl glass-card border-gray-800 space-y-1">
-                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider block">Recent Activity</span>
-                <p className="text-[11px] text-gray-300">• Saved prescription for John Doe</p>
-                <p className="text-[11px] text-gray-300">• Added HbA1c to diagnostic checklist</p>
+              <div className={`p-2.5 rounded-xl space-y-1 border ${
+                theme === 'day' ? 'bg-white/90 border-slate-200 text-slate-800' : 'glass-card border-gray-800 text-gray-300'
+              }`}>
+                <span className={`text-[10px] font-bold uppercase tracking-wider block ${theme === 'day' ? 'text-pink-700' : 'text-teal-400'}`}>Recent Activity</span>
+                <p className="text-[11px]">• Saved prescription for John Doe</p>
+                <p className="text-[11px]">• Added HbA1c to lab test checklist</p>
               </div>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-gray-900 text-center text-[10px] text-gray-500 font-mono">
-            PrescribePro Viewport Mode Active
+          <div className={`pt-2 border-t text-center text-[10px] font-mono ${theme === 'day' ? 'border-pink-200 text-slate-500' : 'border-gray-900 text-gray-500'}`}>
+            Elliptical Blue-Pink-Green Theme Active
           </div>
         </section>
 
