@@ -67,6 +67,116 @@ interface MedicalRecord {
   notes: string;
 }
 
+export interface PatientRecord {
+  regNo: string;
+  mobile: string;
+  name: string;
+  age: string;
+  gender: string;
+  careOf?: string;
+  address?: string;
+  chronicDiseases?: string;
+  vitals?: { height: string; weight: string; bp: string; pulse: string; temp: string };
+  medicalHistory?: MedicalRecord[];
+  lastDrugs?: string[];
+  lastTests?: string[];
+}
+
+const PRESET_PATIENTS: PatientRecord[] = [
+  {
+    regNo: 'REG-2026-089',
+    mobile: '9876543210',
+    name: 'John Doe',
+    age: '34',
+    gender: 'Male',
+    careOf: 'Robert Doe (Father)',
+    address: '123 Health Ave, Cityville',
+    chronicDiseases: 'Type 2 Diabetes Mellitus x 4 yrs, Mild Hypertension, NKDA',
+    vitals: { height: '172', weight: '68', bp: '120/80', pulse: '72', temp: '98.6' },
+    medicalHistory: [
+      {
+        date: '2026-06-14',
+        diagnosis: 'Acute Upper Respiratory Infection',
+        prescription: 'Amoxicillin 500mg, Paracetamol 650mg',
+        notes: 'Advised rest and fluids.',
+      },
+      {
+        date: '2026-03-02',
+        diagnosis: 'Seasonal Allergic Rhinitis',
+        prescription: 'Cetirizine 10mg',
+        notes: 'Avoid outdoor allergens.',
+      },
+    ],
+    lastDrugs: [
+      'Cap Amoxicillin 500mg (1-0-1 after food) x 5 days',
+      'Tab Paracetamol 650mg (1-0-1 S.O.S for fever)',
+      'Tab Pantoprazole 40mg (1-0-0 B/F)',
+    ],
+    lastTests: [
+      'CBC (Complete Blood Count with Differential)',
+      'HbA1c (Glycated Hemoglobin)',
+    ],
+  },
+  {
+    regNo: 'REG-2026-142',
+    mobile: '9812345678',
+    name: 'Ramesh Sharma',
+    age: '58',
+    gender: 'Male',
+    careOf: 'Late S.N. Sharma',
+    address: 'Plot 42, Civil Lines, Bhubaneswar',
+    chronicDiseases: 'Type 2 Diabetes x 8 yrs, Essential HTN, Dyslipidemia. On Tab Metformin 500mg bd & Tab Telmisartan 40mg od.',
+    vitals: { height: '168', weight: '74', bp: '138/86', pulse: '76', temp: '98.4' },
+    medicalHistory: [
+      {
+        date: '2026-05-20',
+        diagnosis: 'Diabetic Health Review & Mild Dyspepsia',
+        prescription: 'Metformin 500mg, Telmisartan 40mg, Rabeprazole 20mg',
+        notes: 'Fasting sugar 118 mg/dL, HbA1c 6.8%.',
+      },
+    ],
+    lastDrugs: [
+      'Tab Metformin 500mg (1-0-1 after food)',
+      'Tab Telmisartan 40mg (1-0-0 morning)',
+      'Tab Rosuvastatin 10mg (0-0-1 at night)',
+    ],
+    lastTests: [
+      'Fasting Blood Sugar (FBS)',
+      'HbA1c (Glycated Hemoglobin)',
+      'KFT (Kidney Function Test Full Panel)',
+      'Lipid Profile (Full Panel)',
+    ],
+  },
+  {
+    regNo: 'REG-2026-305',
+    mobile: '9776543210',
+    name: 'Ananya Das',
+    age: '29',
+    gender: 'Female',
+    careOf: 'Pradeep Das (Husband)',
+    address: 'Sector 5, CDA, Cuttack',
+    chronicDiseases: 'Bronchial Asthma x 3 yrs (uses Salbutamol inhaler S.O.S). No drug allergies.',
+    vitals: { height: '158', weight: '54', bp: '110/70', pulse: '80', temp: '99.1' },
+    medicalHistory: [
+      {
+        date: '2026-07-02',
+        diagnosis: 'Acute Asthma Exacerbation & Viral Fever',
+        prescription: 'Levosalbutamol Inhaler, Tab Montelukast 10mg',
+        notes: 'SPO2 98% on room air.',
+      },
+    ],
+    lastDrugs: [
+      'Tab Montelukast 10mg (0-0-1 at night)',
+      'Levosalbutamol Inhaler (2 puffs S.O.S for dyspnea)',
+    ],
+    lastTests: [
+      'Absolute Eosinophil Count (AEC)',
+      'Serum IgE (Total)',
+      'Chest X-Ray (PA View)',
+    ],
+  },
+];
+
 export default function UserWorkspacePage() {
   const router = useRouter();
   const [email, setEmail] = useState<string>('user@prescribepro.com');
@@ -388,13 +498,51 @@ export default function UserWorkspacePage() {
 
   const handleSavePatient = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaveStatus('Patient registration saved!');
-    setTimeout(() => setSaveStatus(null), 2500);
+    if (!patient.name.trim()) {
+      alert('Please enter patient name before saving.');
+      return;
+    }
+
+    const newRecord: PatientRecord = {
+      regNo: patient.regNo || `REG-${Date.now().toString().slice(-4)}`,
+      mobile: patient.mobile,
+      name: patient.name,
+      age: patient.age,
+      gender: patient.gender,
+      careOf: patient.careOf,
+      address: patient.address,
+      chronicDiseases: clinicalHistory || undefined,
+      vitals,
+      lastDrugs: selectedDrugs,
+      lastTests: selectedTests,
+      medicalHistory: [
+        {
+          date: new Date().toISOString().slice(0, 10),
+          diagnosis: provisionalDiagnosis || 'General Consultation',
+          prescription: selectedDrugs.join(', ') || 'Consultation advice given',
+          notes: specificAdviceText || customAdviceText || 'Follow-up as needed.',
+        },
+        ...medicalHistory,
+      ],
+    };
+
+    try {
+      const saved = localStorage.getItem('prescribepro_patients_db');
+      const customDb: PatientRecord[] = saved ? JSON.parse(saved) : [];
+      const updatedDb = [newRecord, ...customDb.filter((p) => p.regNo !== newRecord.regNo)];
+      localStorage.setItem('prescribepro_patients_db', JSON.stringify(updatedDb));
+    } catch (err) {}
+
+    setSaveStatus(`Saved record for "${patient.name}" to patient database!`);
+    setTimeout(() => setSaveStatus(null), 3000);
   };
 
   const handleClearForm = () => {
+    const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const randNum = Math.floor(1000 + Math.random() * 9000);
+
     setPatient({
-      regNo: `REG-${Date.now().toString().slice(-4)}`,
+      regNo: `REG-${todayStr}-${randNum}`,
       mobile: '',
       name: '',
       age: '',
@@ -402,30 +550,122 @@ export default function UserWorkspacePage() {
       careOf: '',
       address: '',
     });
-    setMedicalHistory([]);
+
+    setVitals({
+      height: '',
+      weight: '',
+      bp: '',
+      pulse: '',
+      temp: '',
+    });
+
+    setChiefComplaints('');
+    setSignsSymptoms('');
+    setClinicalHistory('');
+    setFamilyHistory('');
+    setDrugHistory('');
+    setExaminationFindings('');
+    setProvisionalDiagnosis('');
+    setDifferentialDiagnosis('');
+    setSpecificAdviceText('');
+
     setSelectedProcedures([]);
-    setSelectedAdvice([]);
     setCustomProcedureText('');
-    setCustomAdviceText('');
-    setSelectedDrugs([]);
+
     setSelectedTests([]);
-    setSaveStatus('Form reset cleanly.');
-    setTimeout(() => setSaveStatus(null), 2000);
+    setTestResultsText('');
+    setTestFilterQuery('');
+    setNewCustomTestInput('');
+
+    setSelectedDrugs([]);
+    setSelectedAdvice([]);
+    setCustomAdviceText('');
+
+    setMedicalHistory([]);
+    setSearchQuery('');
+
+    setSaveStatus('Wiped prescription pad & generated new Reg No for consultation.');
+    setTimeout(() => setSaveStatus(null), 3000);
   };
 
   const handleLookupPatient = () => {
-    if (!searchQuery.trim()) return;
-    setPatient({
-      regNo: 'REG-2026-089',
-      mobile: searchQuery.includes('987') ? searchQuery : '9876543210',
-      name: 'John Doe',
-      age: '34',
-      gender: 'Male',
-      careOf: 'Robert Doe (Father)',
-      address: '123 Health Ave, Cityville',
-    });
-    setSaveStatus(`Loaded record for "${searchQuery}"`);
-    setTimeout(() => setSaveStatus(null), 2500);
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return;
+
+    let customDb: PatientRecord[] = [];
+    try {
+      const saved = localStorage.getItem('prescribepro_patients_db');
+      if (saved) customDb = JSON.parse(saved);
+    } catch (e) {}
+
+    const allPatients = [...customDb, ...PRESET_PATIENTS];
+    const found = allPatients.find(
+      (p) =>
+        (p.mobile && p.mobile.includes(q)) ||
+        (p.regNo && p.regNo.toLowerCase().includes(q)) ||
+        (p.name && p.name.toLowerCase().includes(q))
+    );
+
+    if (found) {
+      setPatient({
+        regNo: found.regNo,
+        mobile: found.mobile,
+        name: found.name,
+        age: found.age,
+        gender: found.gender,
+        careOf: found.careOf || '',
+        address: found.address || '',
+      });
+
+      if (found.vitals) {
+        setVitals(found.vitals);
+      }
+
+      if (found.chronicDiseases) {
+        setClinicalHistory(`Chronic / Long-Term Diseases: ${found.chronicDiseases}`);
+        setDrugHistory(`Long-Term Drugs & Allergies: ${found.chronicDiseases}`);
+      } else {
+        setClinicalHistory('No major chronic illnesses reported.');
+        setDrugHistory('NKDA (No Known Drug Allergies).');
+      }
+
+      if (found.medicalHistory) {
+        setMedicalHistory(found.medicalHistory);
+      }
+
+      setSaveStatus(`Auto-filled record & chronic diseases for ${found.name}`);
+      setTimeout(() => setSaveStatus(null), 3000);
+    } else {
+      setSaveStatus(`No record found for "${q}". Enter details for new patient.`);
+      setTimeout(() => setSaveStatus(null), 3000);
+    }
+  };
+
+  const handleLoadLastRx = () => {
+    const q = (patient.mobile || patient.regNo || patient.name).trim().toLowerCase();
+    let customDb: PatientRecord[] = [];
+    try {
+      const saved = localStorage.getItem('prescribepro_patients_db');
+      if (saved) customDb = JSON.parse(saved);
+    } catch (e) {}
+
+    const allPatients = [...customDb, ...PRESET_PATIENTS];
+    const found = allPatients.find(
+      (p) =>
+        (p.mobile && p.mobile.includes(q)) ||
+        (p.regNo && p.regNo.toLowerCase().includes(q)) ||
+        (p.name && p.name.toLowerCase().includes(q))
+    );
+
+    if (found && (found.lastDrugs?.length || found.lastTests?.length)) {
+      if (found.lastDrugs?.length) setSelectedDrugs(found.lastDrugs);
+      if (found.lastTests?.length) setSelectedTests(found.lastTests);
+      setSaveStatus(`Loaded previous Rx medications & tests for ${found.name}!`);
+      setTimeout(() => setSaveStatus(null), 3000);
+    } else {
+      setSaveStatus('No previous prescription medications found for this patient.');
+      setTimeout(() => setSaveStatus(null), 3000);
+    }
   };
 
   const toggleTestSelection = (testName: string) => {
@@ -973,22 +1213,37 @@ export default function UserWorkspacePage() {
                     />
                   </div>
 
-                  {/* Medical History Cards */}
+                  {/* Medical History & Quick Load Previous Rx */}
                   <div className="pt-2 space-y-1.5">
-                    <label className={`text-[10px] font-bold uppercase tracking-wider block ${theme === 'day' ? 'text-pink-700' : 'text-teal-400'}`}>
-                      Previous Consultation History
-                    </label>
-                    {medicalHistory.map((rec, idx) => (
-                      <div key={idx} className={`p-2 rounded-lg text-[10px] space-y-0.5 border ${
-                        theme === 'day' ? 'bg-white/90 border-slate-200 text-slate-800' : 'glass-card border-gray-800 text-gray-300'
-                      }`}>
-                        <div className="flex justify-between font-bold text-blue-600">
-                          <span>{rec.diagnosis}</span>
-                          <span className="font-mono text-slate-500">{rec.date}</span>
+                    <div className="flex items-center justify-between">
+                      <label className={`text-[10px] font-bold uppercase tracking-wider block ${theme === 'day' ? 'text-pink-700' : 'text-teal-400'}`}>
+                        Previous Consultations
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleLoadLastRx}
+                        className="px-2 py-0.5 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-[9.5px] font-bold shadow transition flex items-center gap-1"
+                        title="Load previous prescription drugs and lab tests onto pad"
+                      >
+                        📋 Load Past Rx
+                      </button>
+                    </div>
+
+                    {medicalHistory.length === 0 ? (
+                      <p className="text-[10px] text-slate-400 italic">No past consultation records on file.</p>
+                    ) : (
+                      medicalHistory.map((rec, idx) => (
+                        <div key={idx} className={`p-2 rounded-lg text-[10px] space-y-0.5 border ${
+                          theme === 'day' ? 'bg-white/90 border-slate-200 text-slate-800' : 'glass-card border-gray-800 text-gray-300'
+                        }`}>
+                          <div className="flex justify-between font-bold text-blue-600">
+                            <span>{rec.diagnosis}</span>
+                            <span className="font-mono text-slate-500">{rec.date}</span>
+                          </div>
+                          <p className="font-mono text-slate-700">Rx: {rec.prescription}</p>
                         </div>
-                        <p className="font-mono text-slate-700">Rx: {rec.prescription}</p>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
               )}
