@@ -1247,35 +1247,35 @@ export default function UserWorkspacePage() {
                   />
                 </div>
 
-                <div className="flex items-center gap-1 text-[9px]">
+                <div className="flex items-center gap-1 text-[9px] overflow-x-auto py-0.5">
                   <span className="text-slate-500 font-bold shrink-0">Filter:</span>
                   <button
                     type="button"
                     onClick={() => setDrugSearchQuery('')}
-                    className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
+                    className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200 shrink-0"
                   >
                     All
                   </button>
                   <button
                     type="button"
-                    onClick={() => setDrugSearchQuery('Paracetamol')}
-                    className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 font-bold hover:bg-emerald-200"
+                    onClick={() => setDrugSearchQuery('Injection')}
+                    className="px-1.5 py-0.5 rounded bg-red-100 text-red-900 font-bold hover:bg-red-200 shrink-0"
                   >
-                    Paracetamol
+                    ER / Injectables
                   </button>
                   <button
                     type="button"
-                    onClick={() => setDrugSearchQuery('Amoxicillin')}
-                    className="px-1.5 py-0.5 rounded bg-pink-100 text-pink-900 font-bold hover:bg-pink-200"
+                    onClick={() => setDrugSearchQuery('Anesthetic')}
+                    className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-900 font-bold hover:bg-purple-200 shrink-0"
                   >
-                    Amox
+                    Anesthetics
                   </button>
                   <button
                     type="button"
                     onClick={() => setDrugSearchQuery('Syrup')}
-                    className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold hover:bg-amber-200"
+                    className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold hover:bg-amber-200 shrink-0"
                   >
-                    Syrups
+                    Syrups / Drops
                   </button>
                 </div>
               </div>
