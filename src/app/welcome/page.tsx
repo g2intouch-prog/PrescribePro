@@ -234,56 +234,56 @@ export default function UserWorkspacePage() {
   return (
     <div className="h-screen bg-gradient-to-b from-[#0b0f19] via-[#090d16] to-[#05070d] text-gray-100 flex flex-col overflow-hidden">
       
-      {/* 1. TOP BANNER (FIXED HEIGHT ~60PX) */}
-      <header className="h-[60px] glass-nav px-4 sm:px-6 flex items-center justify-between border-b border-gray-800/80 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-            <Layers className="h-5 w-5 text-gray-950 font-bold" />
+      {/* 1. ULTRA-COMPACT TOP BANNER (~5PX PADDING / ~38PX HEIGHT) */}
+      <header className="h-[38px] px-3 sm:px-4 py-1 glass-nav flex items-center justify-between border-b border-gray-800/80 shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="h-6 w-6 rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-md shadow-emerald-500/20">
+            <Layers className="h-3.5 w-3.5 text-gray-950 font-bold" />
           </div>
-          <div>
-            <h1 className="font-extrabold text-base leading-tight tracking-wide bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-transparent">
+          <div className="flex items-center gap-2">
+            <h1 className="font-extrabold text-xs tracking-wide bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-transparent">
               PrescribePro
             </h1>
-            <p className="text-[10px] text-emerald-400 font-mono">prescribepro.vercel.app</p>
+            <span className="text-[9px] text-emerald-400 font-mono hidden sm:inline">• prescribepro.vercel.app</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-1.5">
           {isAdmin && (
             <button
               onClick={() => router.push('/admin')}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition"
+              className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-semibold hover:bg-emerald-500/20 transition"
             >
-              <ShieldCheck className="h-3.5 w-3.5" />
+              <ShieldCheck className="h-3 w-3" />
               Admin
             </button>
           )}
 
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl glass-card text-xs border-gray-800">
-            <User className="h-3.5 w-3.5 text-emerald-400" />
-            <span className="font-mono text-gray-200 text-[11px] truncate max-w-[120px]">{email}</span>
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg glass-card text-[10px] border-gray-800">
+            <User className="h-3 w-3 text-emerald-400" />
+            <span className="font-mono text-gray-200 truncate max-w-[110px]">{email}</span>
           </div>
 
           <button
             onClick={() => router.push('/change-password')}
-            className="p-1.5 rounded-xl glass-card hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition"
+            className="p-1 rounded-lg glass-card hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition"
             title="Change Password"
           >
-            <KeyRound className="h-3.5 w-3.5" />
+            <KeyRound className="h-3 w-3" />
           </button>
 
           <button
             onClick={handleSignOut}
-            className="p-1.5 rounded-xl glass-card hover:bg-gray-800 text-gray-400 hover:text-red-400 transition"
+            className="p-1 rounded-lg glass-card hover:bg-gray-800 text-gray-400 hover:text-red-400 transition"
             title="Sign Out"
           >
-            <LogOut className="h-3.5 w-3.5" />
+            <LogOut className="h-3 w-3" />
           </button>
         </div>
       </header>
 
-      {/* 2. THREE VERTICAL SECTIONS (COMPACT VIEWPORT HEIGHT LAYOUT) */}
-      <main className="flex-1 p-3 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden h-[calc(100vh-60px)]">
+      {/* 2. THREE VERTICAL SECTIONS (MAXIMIZED WORKING AREA CANVAS) */}
+      <main className="flex-1 p-2.5 grid grid-cols-1 lg:grid-cols-12 gap-2.5 overflow-hidden h-[calc(100vh-38px)]">
         
         {/* SECTION 1 (LEFT COLUMN - 4 COLS): PATIENT REGISTRATION & INPUT SUB-PANES */}
         <section className="lg:col-span-4 glass-card rounded-2xl p-3.5 flex flex-col justify-between border-gray-800 overflow-hidden h-full">
