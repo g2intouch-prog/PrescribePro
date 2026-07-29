@@ -3751,6 +3751,168 @@ export default function UserWorkspacePage() {
         </div>
       </div>
     </div>
+
+      {/* PEDIATRIC & BSA DOSING ASSISTANT MODAL POPUP */}
+      {isPediatricModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-amber-500/40 max-w-2xl w-full rounded-2xl p-5 shadow-2xl space-y-4 text-xs max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-2.5 shrink-0">
+              <div className="flex items-center gap-2 text-amber-400 font-extrabold text-sm">
+                <Calculator className="h-5 w-5 text-amber-400 shrink-0" />
+                <span>👶 Pediatric Weight & Body Surface Area (BSA m²) Dosing Assistant</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPediatricModalOpen(false)}
+                className="text-gray-400 hover:text-white font-bold text-sm px-2"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* INPUTS ROW */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-950/80 p-3 rounded-xl border border-gray-800 shrink-0">
+              <div>
+                <label className="text-[10px] text-gray-400 font-bold block mb-1">Child Weight (kg)</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="1"
+                  max="60"
+                  value={vitals.weight || '10'}
+                  onChange={(e) => setVitals({ ...vitals, weight: e.target.value })}
+                  className="w-full bg-slate-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] text-gray-400 font-bold block mb-1">Child Height (cm) (Optional)</label>
+                <input
+                  type="number"
+                  step="1"
+                  min="30"
+                  max="180"
+                  value={vitals.height || ''}
+                  onChange={(e) => setVitals({ ...vitals, height: e.target.value })}
+                  placeholder="Height in cm..."
+                  className="w-full bg-slate-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col justify-center bg-amber-950/40 p-2 rounded-lg border border-amber-500/30 text-amber-300">
+                <span className="text-[9.5px] uppercase font-bold text-amber-400">Calculated BSA (m²)</span>
+                <span className="font-mono font-extrabold text-sm text-white">
+                  {calculateBsa(parseFloat(vitals.height) || 0, parseFloat(vitals.weight) || 10).toFixed(2)} m²
+                </span>
+                <span className="text-[8.5px] text-gray-400 italic">
+                  {parseFloat(vitals.height) > 0 ? 'Mosteller Formula' : 'Weight-Estimated BSA'}
+                </span>
+              </div>
+            </div>
+
+            {/* SCROLLABLE DOSAGE CARDS */}
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+              {/* SECTION 1: WEIGHT-BASED DOSES */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-amber-400 text-xs flex items-center justify-between border-b border-gray-800 pb-1">
+                  <span>⚖️ Weight-Based Pediatric Formulations & Immunoglobulins ({vitals.weight || 10} kg)</span>
+                  <span className="text-[9.5px] text-gray-400 font-mono">1-Tap Add to Prescription</span>
+                </h4>
+
+                <div className="space-y-1.5">
+                  {calculatePediatricDose(parseFloat(vitals.weight) || 10).map((pd, idx) => {
+                    const doseLabel = `${pd.drugName} - ${pd.calculatedVolumeMl} (${pd.frequency})`;
+                    const isChecked = selectedDrugs.includes(doseLabel);
+                    return (
+                      <div
+                        key={idx}
+                        className="bg-slate-950 p-2.5 rounded-xl border border-gray-800 flex items-center justify-between gap-2 hover:border-amber-500/40 transition"
+                      >
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="font-bold text-white text-xs truncate">{pd.drugName}</div>
+                          <div className="text-amber-300 font-mono text-[11px]">
+                            Dose: <strong>{pd.calculatedVolumeMl}</strong> ({pd.frequency})
+                          </div>
+                          <div className="text-gray-400 text-[10px] italic">{pd.notes}</div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => toggleDrugSelection(doseLabel)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition shrink-0 ${
+                            isChecked
+                              ? 'bg-amber-500 text-slate-950 shadow-md'
+                              : 'bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30'
+                          }`}
+                        >
+                          {isChecked ? '✓ Added' : '+ Add Dose'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* SECTION 2: BSA-BASED DOSES */}
+              <div className="space-y-2 pt-2">
+                <h4 className="font-bold text-blue-400 text-xs flex items-center justify-between border-b border-gray-800 pb-1">
+                  <span>📐 Body Surface Area (BSA m²) Specialized Dosing</span>
+                  <span className="text-[9.5px] text-gray-400 font-mono">
+                    BSA: {calculateBsa(parseFloat(vitals.height) || 0, parseFloat(vitals.weight) || 10).toFixed(2)} m²
+                  </span>
+                </h4>
+
+                <div className="space-y-1.5">
+                  {calculateBsaDose(
+                    parseFloat(vitals.height) || 0,
+                    parseFloat(vitals.weight) || 10,
+                    parseFloat(patient.age) || 5
+                  ).map((bd, idx) => {
+                    const doseLabel = `${bd.drugName} - ${bd.totalCalculatedDose} (${bd.dosePerBsa})`;
+                    const isChecked = selectedDrugs.includes(doseLabel);
+                    return (
+                      <div
+                        key={idx}
+                        className="bg-slate-950 p-2.5 rounded-xl border border-gray-800 flex items-center justify-between gap-2 hover:border-blue-500/40 transition"
+                      >
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="font-bold text-white text-xs truncate">{bd.drugName}</div>
+                          <div className="text-blue-300 font-mono text-[11px]">
+                            Calculated Total: <strong>{bd.totalCalculatedDose}</strong> ({bd.dosePerBsa})
+                          </div>
+                          <div className="text-gray-400 text-[10px] italic">Indication: {bd.clinicalIndication} | {bd.frequency}</div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => toggleDrugSelection(doseLabel)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition shrink-0 ${
+                            isChecked
+                              ? 'bg-blue-500 text-white shadow-md'
+                              : 'bg-slate-800 hover:bg-slate-700 text-blue-400 border border-blue-500/30'
+                          }`}
+                        >
+                          {isChecked ? '✓ Added' : '+ Add Dose'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-gray-800 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsPediatricModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs"
+              >
+                Close Assistant
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
   </div>
 );
 }

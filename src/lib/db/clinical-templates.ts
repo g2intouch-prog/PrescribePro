@@ -315,7 +315,39 @@ export function calculatePediatricDose(weightKg: number): CalculatedPediatricDos
   const dompDoseMg = (weightKg * 0.25).toFixed(1);
   const dompMl = (parseFloat(dompDoseMg) / 1).toFixed(1);
 
+  // 10. Equine Rabies Immunoglobulin (ERIG - Equirab: 40 IU/kg; 1000 IU/5ml = 200 IU/ml)
+  const erigTotalIu = Math.round(weightKg * 40);
+  const erigMl = (erigTotalIu / 200).toFixed(1);
+
+  // 11. Human Rabies Immunoglobulin (HRIG - Rabigard: 20 IU/kg; 300 IU/2ml = 150 IU/ml)
+  const hrigTotalIu = Math.round(weightKg * 20);
+  const hrigMl = (hrigTotalIu / 150).toFixed(1);
+
   return [
+    {
+      drugName: 'Equine Rabies Immunoglobulin (ERIG / Equirab 40 IU/kg)',
+      recommendedDoseMg: erigTotalIu,
+      formulation: 'Injectable 200 IU/ml (1000 IU/5ml)',
+      calculatedVolumeMl: `${erigMl} ml (${erigTotalIu} IU)`,
+      frequency: 'Stat Category III Rabies Bite Infiltration on Day 0',
+      notes: `Target: 40 IU/kg (${erigTotalIu} IU). Infiltrate thoroughly into/around wound; rest deep IM after sensitivity test.`,
+    },
+    {
+      drugName: 'Human Rabies Immunoglobulin (HRIG / Rabigard 20 IU/kg)',
+      recommendedDoseMg: hrigTotalIu,
+      formulation: 'Injectable 150 IU/ml (300 IU/2ml)',
+      calculatedVolumeMl: `${hrigMl} ml (${hrigTotalIu} IU)`,
+      frequency: 'Stat Category III Rabies Bite Infiltration on Day 0',
+      notes: `Target: 20 IU/kg (${hrigTotalIu} IU). Infiltrate thoroughly into/around wound; rest deep IM.`,
+    },
+    {
+      drugName: 'Purified Chick Embryo Rabies Vaccine (Rabipur / Abhayrab)',
+      recommendedDoseMg: 0.5,
+      formulation: 'Reconstituted 0.5ml Vial',
+      calculatedVolumeMl: '0.5 ml IM (or 0.1 ml ID 2-site)',
+      frequency: 'Days 0, 3, 7, 14, 28 (Essen IM) or Days 0, 3, 7, 28 (WHO ID)',
+      notes: 'Intramuscular deltoid/anterolateral thigh (Never gluteal!)',
+    },
     {
       drugName: 'Cefixime 50mg/5ml Dry Syrup',
       recommendedDoseMg: cefixDoseMg,
@@ -620,6 +652,20 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'vac19', genericName: 'HPV Vaccine (Human Papillomavirus - Cervavac / Gardasil-9)', category: 'all', dosage: '0.5ml IM 2 doses (0, 6 months) for girls 9-14 years; 3 doses for >15 yrs', duration: 'Primary Series', keywords: 'hpv cervavac gardasil cervical cancer vaccine' },
   { id: 'vac20', genericName: 'Influenza Vaccine Quadrivalent (Fluarix / Vaxigrip Tetra)', category: 'all', dosage: '0.5ml IM annually before monsoon/winter', duration: 'Annual Booster', keywords: 'influenza flu fluarix vaxigrip tetra vaccine' },
   { id: 'vac21', genericName: 'Polyvalent Snake Venom Antiserum (ASV Lyophilized 10ml Vials)', category: 'all', dosage: '10 vials (100ml) reconstituted in 200ml Normal Saline IV infusion over 1 hour stat', duration: 'Emergency Envenomation Stat', keywords: 'asv anti snake venom antiserum snake bite' },
+
+  // ==========================================
+  // 1.8 OBSTETRIC, EMERGENCY & CLINICAL SPECIALTY REGIMENS
+  // ==========================================
+  { id: 'reg1', genericName: 'Magnesium Sulfate Pritchard Eclampsia Regimen (4g IV + 10g IM stat)', category: 'all', dosage: 'Loading 4g IV (20% 20ml over 10m) + 10g IM (5g 50% in each buttock with 1ml 2% Lignocaine); Maint 5g IM Q4H', duration: 'Eclampsia / Severe Preeclampsia Protocol', keywords: 'magnesium sulfate mgso4 pritchard eclampsia preeclampsia seizure pritchard' },
+  { id: 'reg2', genericName: 'Magnesium Sulfate Zuspan Eclampsia Regimen (4g IV over 20m)', category: 'all', dosage: 'Loading 4g IV in 100ml NS over 20m; Maint 1g/hr to 2g/hr continuous IV infusion for 24h', duration: 'Eclampsia IV Protocol', keywords: 'magnesium sulfate mgso4 zuspan eclampsia preeclampsia' },
+  { id: 'reg3', genericName: 'Mennon Lytic Cocktail Regimen (Chlorpromazine + Promethazine + Pethidine)', category: 'all', dosage: 'Chlorpromazine 50mg + Promethazine 50mg + Pethidine 100mg in 500ml 5% Dextrose IV drip', duration: 'Eclampsia Alternative Protocol', keywords: 'lytic cocktail mennon chlorpromazine promethazine pethidine eclampsia' },
+  { id: 'reg4', genericName: 'Postpartum Hemorrhage (PPH) Step-Wise Protocol', category: 'all', dosage: 'Oxytocin 10U IM/IV -> Methergine 0.2mg IM -> Carboprost 250mcg IM -> Misoprostol 800mcg SL -> TXA 1g IV', duration: 'Acute PPH Emergency', keywords: 'pph postpartum hemorrhage oxytocin methergine carboprost misoprostol tranexamic acid' },
+  { id: 'reg5', genericName: 'Organophosphate (OP) Poisoning Atropinization Protocol', category: 'all', dosage: 'Atropine 2mg IV Q5-10M (double dose up to 16mg if needed until atropinized: dry skin, HR>100, clear lungs) + Pralidoxime 2g IV', duration: 'OP Poisoning Protocol', keywords: 'atropine op poisoning organophosphate pralidoxime 2-pam atropinization' },
+  { id: 'reg6', genericName: 'Snake Envenomation ASV National Protocol (10 Vials IV)', category: 'all', dosage: 'Polyvalent ASV 10 vials (100ml) reconstituted in 200ml NS IV over 1h stat; repeat 10 vials after 2h if 20WBCT delayed', duration: 'Emergency Snake Bite', keywords: 'asv snake bite anti snake venom polyvalent envenomation 20wbct' },
+  { id: 'reg7', genericName: 'Paracetamol Poisoning NAC 21-Hour IV Protocol', category: 'all', dosage: 'NAC 150mg/kg in 200ml D5W over 1h -> 50mg/kg over 4h -> 100mg/kg over 16h', duration: '21-Hour Infusion Protocol', keywords: 'nac n-acetylcysteine paracetamol acetaminophen toxicity antidote 21 hour' },
+  { id: 'reg8', genericName: 'Status Epilepticus 3-Step Emergency Protocol', category: 'all', dosage: 'Step 1 (0-5m): Lorazepam 4mg IV -> Step 2 (5-20m): Levetiracetam 60mg/kg IV or Fosphenytoin 20mg PE/kg IV -> Step 3: Propofol Infusion', duration: 'Status Epilepticus Protocol', keywords: 'status epilepticus seizure lorazepam levetiracetam fosphenytoin propofol' },
+  { id: 'reg9', genericName: 'GIK Hyperkalemia Resuscitation Protocol', category: 'all', dosage: 'Calcium Gluconate 10ml 10% IV over 10m + 10U Regular Insulin in 50ml D50W IV over 20m + Salbutamol Nebulization', duration: 'Hyperkalemia Resuscitation', keywords: 'gik hyperkalemia insulin dextrose calcium gluconate potassium shift' },
+  { id: 'reg10', genericName: 'NTEP Tuberculosis 2HRZE / 4HRE Fixed-Dose Combination Regimen', category: 'all', dosage: 'Intensive Phase: 2HRZE daily FDC for 2 months -> Continuation Phase: 4HRE daily FDC for 4 months', duration: '6 Months Anti-TB Protocol', keywords: 'tb tuberculosis ntep 2hrze 4hre isoniazid rifampicin pyrazinamide ethambutol' },
 
   // ==========================================
   // 2. EMERGENCY ROOM (ER), RESUSCITATION & ICU IV INJECTABLES
