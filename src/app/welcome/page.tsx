@@ -2330,9 +2330,7 @@ export default function UserWorkspacePage() {
         </section>
 
         {/* SECTION 2 (CENTER COLUMN - 6 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
-        <section className={`lg:col-span-6 rounded-none lg:rounded-2xl p-2 sm:p-3.5 flex flex-col justify-between overflow-hidden h-full w-full ${cardBg} ${
-          mobileDrawer === 'none' ? 'flex' : 'hidden lg:flex'
-        }`}>
+        <section className={`lg:col-span-6 rounded-none lg:rounded-2xl p-2 sm:p-3.5 flex flex-col justify-between overflow-hidden h-full w-full ${cardBg}`}>
           
           {/* LIVE DRUG SAFETY & INTERACTION ALERT BANNER (VERY TOP OF SECTION 2) */}
           {detectedSafetyWarnings.length > 0 && (
@@ -2401,37 +2399,6 @@ export default function UserWorkspacePage() {
               </div>
             </div>
           )}
-
-          {/* MOBILE FULL SCREEN SECTION SWITCHER BAR (MOBILE ONLY) */}
-          <div className="lg:hidden flex items-center justify-between gap-1 p-1 bg-slate-900/90 backdrop-blur-md rounded-xl border border-slate-800 text-[10.5px] mb-2 shrink-0 shadow-lg">
-            <button
-              type="button"
-              onClick={() => setMobileDrawer('left')}
-              className={`flex-1 py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1 transition ${
-                mobileDrawer === 'left' ? 'bg-blue-600 text-white font-extrabold shadow-md shadow-blue-600/40' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-              }`}
-            >
-              👤 Section 1 (Inputs)
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileDrawer('none')}
-              className={`flex-1 py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1 transition ${
-                mobileDrawer === 'none' ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/40' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-              }`}
-            >
-              📄 Section 2 (Pad)
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileDrawer('right')}
-              className={`flex-1 py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1 transition ${
-                mobileDrawer === 'right' ? 'bg-purple-600 text-white font-extrabold shadow-md shadow-purple-600/40' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-              }`}
-            >
-              💊 Section 3 (Drugs)
-            </button>
-          </div>
 
           {/* ULTRA-COMPACT ADAPTIVE TOP CONTROL STRIP (NO HORIZONTAL SCROLL) */}
           <div className={`px-2 py-1 rounded-xl text-[10px] shrink-0 mb-1.5 border flex flex-wrap items-center justify-between gap-1.5 ${
