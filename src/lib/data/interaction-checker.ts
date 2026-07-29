@@ -113,9 +113,16 @@ export function checkPrescriptionSafety(
   // 1.5 DYNAMIC DUPLICATE GENERIC ACTIVE INGREDIENT & SUB-CLASS CHECK
   // (Detects when the exact same generic salt e.g. "cefixime", "paracetamol", "amoxicillin" is prescribed twice in different doses or forms)
   const NON_GENERIC_STOP_WORDS = new Set([
-    'tablet', 'tablets', 'tab', 'capsule', 'capsules', 'cap', 'syrup', 'syp', 'suspension',
-    'injection', 'inj', 'ointment', 'gel', 'drop', 'drops', 'eye', 'ear', 'cream', 'lotion',
-    'mg', 'gm', 'mcg', 'ml', 'iu', '1-0-1', '1-0-0', '0-0-1', '1-1-1', 's.o.s', 'sos', 'bd', 'tds', 'od', 'stat'
+    'tablet', 'tablets', 'tab', 'tabs', 'capsule', 'capsules', 'cap', 'caps', 'syrup', 'syp', 'syrups',
+    'suspension', 'injection', 'inj', 'injections', 'ointment', 'gel', 'drop', 'drops', 'eye', 'ear',
+    'cream', 'lotion', 'solution', 'soln', 'inhaler', 'puffs', 'respules', 'patch', 'suppository',
+    'mg', 'gm', 'g', 'mcg', 'ml', 'iu', 'meq', '1-0-1', '1-0-0', '0-0-1', '1-1-1', 's.o.s', 'sos',
+    'bd', 'tds', 'od', 'hs', 'stat', 'q6h', 'q8h', 'q12h',
+    'once', 'twice', 'thrice', 'daily', 'day', 'days', 'week', 'weeks', 'month', 'months',
+    'before', 'after', 'food', 'meals', 'meal', 'night', 'morning', 'afternoon', 'evening',
+    'water', 'milk', 'bedtime', 'oral', 'intravenous', 'intramuscular', 'subcutaneous', 'topical',
+    'take', 'with', 'dose', 'doses', 'dosing', 'prescribed', 'standard', 'clinical', 'regimen', 'target',
+    'unit', 'units', 'vial', 'vials', 'ampoule', 'amp', 'bottle', 'strip'
   ]);
 
   for (let i = 0; i < parsedDrugs.length; i++) {

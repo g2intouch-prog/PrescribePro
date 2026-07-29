@@ -186,7 +186,7 @@ const PRESET_PATIENTS: PatientRecord[] = [
   },
 ];
 
-export interface BrandSuggestionItem {
+interface BrandSuggestionItem {
   brandName: string;
   formulation: string;
   calculatedDose: string;
@@ -194,7 +194,7 @@ export interface BrandSuggestionItem {
   isPediatric: boolean;
 }
 
-export function getClinicalBrandSuggestions(
+function getClinicalBrandSuggestions(
   genericFullName: string,
   weightKg: number,
   ageYears: number,
@@ -1681,7 +1681,7 @@ export default function UserWorkspacePage() {
         </button>
 
         {/* SECTION 1 (LEFT COLUMN - 3 COLS): PATIENT REGISTRATION & INPUT SUB-PANES */}
-        <section className={`fixed lg:static inset-y-0 left-0 z-50 w-[88vw] max-w-[360px] lg:w-auto lg:col-span-3 rounded-r-2xl lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full shadow-2xl lg:shadow-none transition-transform duration-300 ${cardBg} ${mobileDrawer === 'left' ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <section className={`fixed lg:static inset-0 z-50 w-full max-w-full lg:w-auto lg:col-span-3 rounded-none lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full shadow-2xl lg:shadow-none transition-transform duration-300 ${cardBg} ${mobileDrawer === 'left' ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
           <div className="flex flex-col h-full space-y-3">
             
             <div className={`flex items-center justify-between border-b pb-2 shrink-0 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800/80'}`}>
@@ -2670,7 +2670,6 @@ export default function UserWorkspacePage() {
                       </ul>
                     )}
                     <div className="bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px]">
-                    <div className="bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px]">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-teal-950 block">Results:</span>
                         <button
@@ -3186,7 +3185,7 @@ export default function UserWorkspacePage() {
         </section>
 
         {/* SECTION 3 (RIGHT COLUMN - 3 COLS): SPECIALTIES, TEMPLATES & DRUGS CATALOG */}
-        <section className={`fixed lg:static inset-y-0 right-0 z-50 w-[88vw] max-w-[360px] lg:w-auto lg:col-span-3 rounded-l-2xl lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full shadow-2xl lg:shadow-none transition-transform duration-300 ${cardBg} ${mobileDrawer === 'right' ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
+        <section className={`fixed lg:static inset-0 z-50 w-full max-w-full lg:w-auto lg:col-span-3 rounded-none lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full shadow-2xl lg:shadow-none transition-transform duration-300 ${cardBg} ${mobileDrawer === 'right' ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
             
             {/* Header */}
@@ -3344,16 +3343,35 @@ export default function UserWorkspacePage() {
               <div className="flex-1 overflow-y-auto space-y-3 pr-1">
                 {(() => {
                   const matched = searchClinicalDrugs(drugSearchQuery, drugCatalog);
-                  
+
+                  const w = parseFloat(vitals.weight) || 0;
+                  const ageNum = parseFloat(patient.age) || 30;
+                  const isAdultPatient = (w >= 35) || (ageNum >= 12 && w === 0);
+                  const isPediatricPatient = (w > 0 && w < 35) || (ageNum > 0 && ageNum < 12);
+
+                  // Demographically Filter Drug List per Weight, Age & BSA
+                  const filteredMatched = matched.filter((d) => {
+                    const lower = d.genericName.toLowerCase();
+                    if (isAdultPatient) {
+                      if (lower.includes('azithromycin') && lower.includes('250mg')) return false;
+                      if (lower.includes('syrup') || lower.includes('suspension') || lower.includes('drops') || lower.includes('dry syrup')) return false;
+                      if (d.category === 'pediatric' || d.category === 'infant') return false;
+                    }
+                    if (isPediatricPatient) {
+                      if (d.category === 'adult' && (lower.includes('500mg') || lower.includes('625mg') || lower.includes('650mg') || lower.includes('40mg'))) return false;
+                    }
+                    return true;
+                  });
+
                   // Tier 1: Most Prescribed Common Specialty Drugs (Sorted A-Z)
-                  const commonTier = matched
+                  const commonTier = filteredMatched
                     .slice(0, 12)
                     .sort((a, b) => a.genericName.localeCompare(b.genericName));
                   
                   const commonIds = new Set(commonTier.map((d) => d.id));
 
                   // Tier 2: All Other Specialty & Pharmacopeia Drugs (Sorted A-Z)
-                  const otherTier = matched
+                  const otherTier = filteredMatched
                     .filter((d) => !commonIds.has(d.id))
                     .sort((a, b) => a.genericName.localeCompare(b.genericName));
 
