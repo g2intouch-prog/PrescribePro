@@ -18,7 +18,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { isEmailInvited } from '@/lib/supabase/auth-guard';
 
-function SplitAuthLayout() {
+export function SplitAuthLayout() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
