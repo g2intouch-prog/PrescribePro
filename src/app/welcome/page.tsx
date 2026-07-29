@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   User, 
@@ -10,6 +10,7 @@ import {
   DatabaseZap, 
   KeyRound,
   ShieldCheck,
+  ShieldAlert,
   Activity,
   FileText,
   Clock,
@@ -41,10 +42,13 @@ import {
   BookmarkPlus,
   AlertTriangle,
   Calculator,
-  Download
+  Download,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { getAdminPresets, saveAdminPresets, AdminPresets } from '@/lib/db/admin-presets';
+import { checkPrescriptionSafety, DetectedInteraction } from '@/lib/data/interaction-checker';
 import { 
   savePrescriptionToSqlite, 
   getPatientPrescriptionsFromSqlite, 
@@ -284,6 +288,24 @@ export default function UserWorkspacePage() {
   // Surgical Procedures, Maneuvers & Non-Drug Care State
   const [selectedProcedures, setSelectedProcedures] = useState<string[]>([]);
   const [customProcedureText, setCustomProcedureText] = useState('');
+
+  // Offline Drug Safety Warnings & Physician Override State
+  const [ignoredWarningIds, setIgnoredWarningIds] = useState<string[]>([]);
+
+  const detectedSafetyWarnings = useMemo(() => {
+    return checkPrescriptionSafety(selectedDrugs, patient.allergies, '', ignoredWarningIds);
+  }, [selectedDrugs, patient.allergies, ignoredWarningIds]);
+
+  const handleDismissWarning = (warningId: string) => {
+    setIgnoredWarningIds((prev) => [...prev, warningId]);
+  };
+
+  const handleRemoveConflictingDrug = (drugName: string) => {
+    setSelectedDrugs((prev) => prev.filter((d) => d !== drugName));
+  };
+
+  // Mobile View Slide-Over Drawer State ('none' | 'left' | 'right')
+  const [mobileDrawer, setMobileDrawer] = useState<'none' | 'left' | 'right'>('none');
 
   // Pad Config & Millimeter Spacing Calibration
   const [padMode, setPadMode] = useState<'digital' | 'preprinted'>('digital');
@@ -850,17 +872,29 @@ export default function UserWorkspacePage() {
           ${styles}
           <style>
             @page { size: ${pageSize} portrait; margin: 0; }
-            html, body { background: white !important; color: #0f172a !important; padding: 0 !important; margin: 0 !important; font-family: system-ui, -apple-system, sans-serif !important; }
+            html, body {
+              width: ${paperWidth} !important;
+              height: ${paperHeight} !important;
+              min-height: ${paperHeight} !important;
+              background: white !important;
+              color: #0f172a !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              font-family: system-ui, -apple-system, sans-serif !important;
+              overflow: hidden !important;
+              box-sizing: border-box !important;
+            }
             .section2-print-container {
               width: ${paperWidth} !important;
+              height: ${paperHeight} !important;
               min-height: ${paperHeight} !important;
               max-width: none !important;
               aspect-ratio: auto !important;
               margin: 0 auto !important;
               padding-top: ${headerMarginMm}mm !important;
               padding-bottom: ${footerMarginMm}mm !important;
-              padding-left: ${isA5 ? '8mm' : '14mm'} !important;
-              padding-right: ${isA5 ? '8mm' : '14mm'} !important;
+              padding-left: ${isA5 ? '5mm' : '7mm'} !important;
+              padding-right: ${isA5 ? '5mm' : '7mm'} !important;
               box-sizing: border-box !important;
               display: flex !important;
               flex-direction: column !important;
@@ -869,7 +903,7 @@ export default function UserWorkspacePage() {
               border: none !important;
               background: white !important;
               color: #0f172a !important;
-              font-size: ${isA5 ? '10px' : '12px'} !important;
+              font-size: ${isA5 ? '11.5px' : '13.5px'} !important;
             }
             .section2-print-container * {
               visibility: visible !important;
@@ -1137,11 +1171,53 @@ export default function UserWorkspacePage() {
         </div>
       </header>
 
-      {/* 2. THREE VERTICAL SECTIONS */}
-      <main className="flex-1 p-2.5 grid grid-cols-1 lg:grid-cols-12 gap-2.5 overflow-hidden h-[calc(100vh-38px)]">
+      {/* 2. THREE VERTICAL SECTIONS (WITH RESPONSIVE MOBILE DRAWERS) */}
+      <main className="flex-1 p-2.5 grid grid-cols-1 lg:grid-cols-12 gap-2.5 overflow-hidden h-[calc(100vh-38px)] relative">
         
+        {/* MOBILE BACKDROP OVERLAY FOR SLIDE-OVER DRAWERS */}
+        {mobileDrawer !== 'none' && (
+          <div 
+            onClick={() => setMobileDrawer('none')} 
+            className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-40 lg:hidden transition-opacity" 
+          />
+        )}
+
+        {/* LEFT FLOATING EDGE TOGGLE BUTTON (MOBILE ONLY) */}
+        <button
+          type="button"
+          onClick={() => setMobileDrawer(mobileDrawer === 'left' ? 'none' : 'left')}
+          className={`fixed left-0 top-1/2 -translate-y-1/2 z-40 lg:hidden font-extrabold text-[10px] py-3.5 px-1.5 rounded-r-2xl shadow-2xl flex flex-col items-center gap-1 border-r border-y transition-all transform active:scale-95 ${
+            mobileDrawer === 'left'
+              ? 'bg-emerald-600 border-emerald-400 text-white shadow-emerald-600/50'
+              : 'bg-blue-600 hover:bg-blue-700 border-blue-400 text-white shadow-blue-600/40'
+          }`}
+          title="Toggle Section 1 (Patient Details & Inputs)"
+        >
+          <ChevronRight className={`h-4 w-4 transition-transform ${mobileDrawer === 'left' ? 'rotate-180' : 'animate-pulse'}`} />
+          <span className="[writing-mode:vertical-lr] tracking-widest uppercase font-mono text-[9px] font-bold">
+            {mobileDrawer === 'left' ? 'Close' : 'Inputs'}
+          </span>
+        </button>
+
+        {/* RIGHT FLOATING EDGE TOGGLE BUTTON (MOBILE ONLY) */}
+        <button
+          type="button"
+          onClick={() => setMobileDrawer(mobileDrawer === 'right' ? 'none' : 'right')}
+          className={`fixed right-0 top-1/2 -translate-y-1/2 z-40 lg:hidden font-extrabold text-[10px] py-3.5 px-1.5 rounded-l-2xl shadow-2xl flex flex-col items-center gap-1 border-l border-y transition-all transform active:scale-95 ${
+            mobileDrawer === 'right'
+              ? 'bg-emerald-600 border-emerald-400 text-white shadow-emerald-600/50'
+              : 'bg-purple-600 hover:bg-purple-700 border-purple-400 text-white shadow-purple-600/40'
+          }`}
+          title="Toggle Section 3 (Templates & Drug Catalog)"
+        >
+          <ChevronLeft className={`h-4 w-4 transition-transform ${mobileDrawer === 'right' ? 'rotate-180' : 'animate-pulse'}`} />
+          <span className="[writing-mode:vertical-lr] tracking-widest uppercase font-mono text-[9px] font-bold">
+            {mobileDrawer === 'right' ? 'Close' : 'Drugs'}
+          </span>
+        </button>
+
         {/* SECTION 1 (LEFT COLUMN - 3 COLS): PATIENT REGISTRATION & INPUT SUB-PANES */}
-        <section className={`lg:col-span-3 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
+        <section className={`fixed lg:static inset-y-0 left-0 z-50 w-[88vw] max-w-[360px] lg:w-auto lg:col-span-3 rounded-r-2xl lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full shadow-2xl lg:shadow-none transition-transform duration-300 ${cardBg} ${mobileDrawer === 'left' ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
           <div className="flex flex-col h-full space-y-3">
             
             <div className={`flex items-center justify-between border-b pb-2 shrink-0 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800/80'}`}>
@@ -1771,6 +1847,37 @@ export default function UserWorkspacePage() {
         {/* SECTION 2 (CENTER COLUMN - 6 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
         <section className={`lg:col-span-6 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
           
+          {/* MOBILE TOP SECTION SWITCHER BAR (MOBILE ONLY) */}
+          <div className="lg:hidden flex items-center justify-between gap-1 p-1 bg-slate-900/90 rounded-xl border border-slate-800 text-[10px] mb-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setMobileDrawer('left')}
+              className={`flex-1 py-1 px-2 rounded-lg font-bold flex items-center justify-center gap-1 shadow transition ${
+                mobileDrawer === 'left' ? 'bg-blue-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+              }`}
+            >
+              <ChevronLeft className="h-3 w-3" /> Section 1 (Inputs)
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileDrawer('none')}
+              className={`py-1 px-3 rounded-lg font-extrabold flex items-center justify-center gap-1 transition ${
+                mobileDrawer === 'none' ? 'bg-emerald-600 text-white shadow' : 'bg-slate-800 text-slate-400'
+              }`}
+            >
+              📄 Pad
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileDrawer('right')}
+              className={`flex-1 py-1 px-2 rounded-lg font-bold flex items-center justify-center gap-1 shadow transition ${
+                mobileDrawer === 'right' ? 'bg-purple-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+              }`}
+            >
+              Section 3 (Drugs) <ChevronRight className="h-3 w-3" />
+            </button>
+          </div>
+
           {/* ULTRA-COMPACT SINGLE-LINE CONTROL STRIP */}
           <div className={`px-2.5 py-1 rounded-xl text-[10px] shrink-0 mb-1.5 border flex items-center justify-between gap-2 overflow-x-auto ${
             theme === 'day' ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-950 border-gray-800'
@@ -2162,6 +2269,64 @@ export default function UserWorkspacePage() {
                     </span>
                   </div>
 
+                  {/* LIVE DRUG SAFETY & INTERACTION WARNING BANNER (PRINT-HIDDEN) */}
+                  {detectedSafetyWarnings.length > 0 && (
+                    <div className="bg-red-50 border-2 border-red-500 rounded-lg p-2 space-y-1.5 shadow-md print:hidden my-1">
+                      <div className="flex items-center justify-between border-b border-red-200 pb-1">
+                        <div className="flex items-center gap-1.5 text-red-900 font-extrabold text-[9.5px]">
+                          <ShieldAlert className="h-4 w-4 text-red-600 shrink-0" />
+                          <span>🚨 DRUG SAFETY & INTERACTION ALERT ({detectedSafetyWarnings.length})</span>
+                        </div>
+                        <span className="text-[7.5px] bg-red-600 text-white font-mono px-1.5 py-0.5 rounded font-bold uppercase">
+                          Physician Judgment Mode
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
+                        {detectedSafetyWarnings.map((warning) => (
+                          <div key={warning.rule.id} className="bg-white p-1.5 rounded border border-red-300 text-[8.5px] space-y-0.5 shadow-sm">
+                            <div className="flex items-start justify-between gap-1">
+                              <span className="font-extrabold text-red-900 text-[9px] flex items-center gap-1">
+                                ⚠️ {warning.rule.title}
+                              </span>
+                              <span className="text-[7.5px] bg-amber-100 text-amber-900 font-mono px-1 rounded font-bold border border-amber-300 shrink-0">
+                                🏛️ Source: {warning.rule.source}
+                              </span>
+                            </div>
+
+                            <p className="text-gray-800 leading-tight">
+                              <strong>Conflict:</strong> <span className="text-red-700 font-semibold">{warning.foundDrugA}</span> ↔ <span className="text-red-700 font-semibold">{warning.foundDrugB}</span>
+                            </p>
+                            <p className="text-gray-700 text-[8px] italic">{warning.rule.description}</p>
+                            <div className="bg-emerald-50 p-1 rounded border border-emerald-200 text-emerald-950 text-[8px]">
+                              <strong>Recommendation:</strong> {warning.rule.recommendation}
+                            </div>
+
+                            <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-gray-100">
+                              {warning.foundDrugB !== 'Patient Safety Alert' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveConflictingDrug(warning.foundDrugB)}
+                                  className="px-1.5 py-0.5 bg-red-600 hover:bg-red-700 text-white font-bold text-[8px] rounded transition"
+                                >
+                                  🗑️ Remove Medication
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleDismissWarning(warning.rule.id)}
+                                className="px-1.5 py-0.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-[8px] rounded transition"
+                                title="Acknowledge clinical judgment and dismiss warning"
+                              >
+                                👁️‍🗨️ Dismiss / Override Warning
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* 9. PRESCRIPTION DRUGS (Rx) - FULLY EDITABLE PER ITEM */}
                   <div className="bg-blue-50/80 p-1.5 rounded border border-blue-200 space-y-0.5 mt-1">
                     <div className="flex items-center justify-between border-b border-blue-200 pb-0.5 mb-1">
@@ -2373,7 +2538,7 @@ export default function UserWorkspacePage() {
         </section>
 
         {/* SECTION 3 (RIGHT COLUMN - 3 COLS): SPECIALTIES, TEMPLATES & DRUGS CATALOG */}
-        <section className={`lg:col-span-3 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
+        <section className={`fixed lg:static inset-y-0 right-0 z-50 w-[88vw] max-w-[360px] lg:w-auto lg:col-span-3 rounded-l-2xl lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full shadow-2xl lg:shadow-none transition-transform duration-300 ${cardBg} ${mobileDrawer === 'right' ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
             
             {/* Header */}

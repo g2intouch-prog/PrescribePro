@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ShieldCheck, 
+  ShieldAlert,
   UserPlus, 
   Mail, 
   Trash2, 
@@ -22,6 +23,9 @@ import {
   Edit2,
   TestTube,
   HelpCircle,
+  Upload,
+  RotateCcw,
+  Search,
   Image as ImageIcon
 } from 'lucide-react';
 import { 
@@ -33,6 +37,13 @@ import {
 } from '@/lib/supabase/auth-guard';
 import { createClient } from '@/lib/supabase/client';
 import { getAdminPresets, saveAdminPresets, AdminPresets } from '@/lib/db/admin-presets';
+import { 
+  getInteractionRules, 
+  addCustomInteractionRule, 
+  resetRulesToDefault, 
+  importRulesFromCSVText, 
+  DrugInteractionRule 
+} from '@/lib/data/drug-interactions-db';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -46,6 +57,76 @@ export default function AdminDashboardPage() {
   const [presets, setPresets] = useState<AdminPresets>(getAdminPresets());
   const [newTestItem, setNewTestItem] = useState('');
   const [newAdviceItem, setNewAdviceItem] = useState('');
+
+  // Offline Drug Safety Rules State
+  const [rulesList, setRulesList] = useState<DrugInteractionRule[]>([]);
+  const [searchRuleQuery, setSearchRuleQuery] = useState('');
+  const [newRuleA, setNewRuleA] = useState('');
+  const [newRuleB, setNewRuleB] = useState('');
+  const [newRuleTitle, setNewRuleTitle] = useState('');
+  const [newRuleDesc, setNewRuleDesc] = useState('');
+  const [newRuleRec, setNewRuleRec] = useState('');
+  const [newRuleSource, setNewRuleSource] = useState('CDSCO / NLEM India');
+  const [newRuleSeverity, setNewRuleSeverity] = useState<'high' | 'moderate'>('high');
+
+  const refreshRules = () => {
+    setRulesList(getInteractionRules());
+  };
+
+  useEffect(() => {
+    refreshRules();
+  }, []);
+
+  const handleAddCustomRule = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRuleA || !newRuleB || !newRuleTitle) return;
+
+    addCustomInteractionRule({
+      drugA: newRuleA.split(',').map((s) => s.trim().toLowerCase()),
+      drugB: newRuleB.split(',').map((s) => s.trim().toLowerCase()),
+      title: newRuleTitle.trim(),
+      description: newRuleDesc.trim() || 'Custom drug interaction warning.',
+      recommendation: newRuleRec.trim() || 'Exercise clinical judgment.',
+      severity: newRuleSeverity,
+      source: newRuleSource.trim() || 'Custom Physician Rule',
+      category: 'CDSCO Alert'
+    });
+
+    setNewRuleA('');
+    setNewRuleB('');
+    setNewRuleTitle('');
+    setNewRuleDesc('');
+    setNewRuleRec('');
+    refreshRules();
+    setStatusMsg({ type: 'success', text: 'Custom interaction rule added successfully!' });
+  };
+
+  const handleCsvFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (text) {
+        const result = importRulesFromCSVText(text);
+        refreshRules();
+        setStatusMsg({
+          type: 'success',
+          text: `Imported ${result.successCount} custom rules from CSV! (${result.errorCount} skipped/failed)`
+        });
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleResetDefaultRules = () => {
+    if (confirm('Are you sure you want to reset all custom rules back to the default open dataset?')) {
+      resetRulesToDefault();
+      refreshRules();
+      setStatusMsg({ type: 'success', text: 'Rules reset to default open dataset.' });
+    }
+  };
 
   useEffect(() => {
     async function loadAdminData() {
@@ -539,6 +620,178 @@ export default function AdminDashboardPage() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* DRUG SAFETY & OFFLINE RULES MANAGEMENT */}
+        <div className="glass-card rounded-2xl p-6 space-y-6 border-red-900/40">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-800 gap-3">
+            <div>
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <ShieldAlert className="h-5 w-5 text-red-400" />
+                Drug Safety & Offline Interaction Rules ({rulesList.length} Active Rules)
+              </h3>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Pre-bundled open public medical database (CDSCO / NLEM India, IPC / PvPI, NIH RxNorm, WHO). Add custom physician rules or import open dataset CSVs.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow transition">
+                <Upload className="h-4 w-4" /> Import CSV Dataset
+                <input type="file" accept=".csv,.json" onChange={handleCsvFileUpload} className="hidden" />
+              </label>
+              <button
+                onClick={handleResetDefaultRules}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-300 font-semibold text-xs flex items-center gap-1.5 border border-slate-700 transition"
+                title="Restore default pre-bundled open dataset"
+              >
+                <RotateCcw className="h-3.5 w-3.5" /> Restore Default Dataset
+              </button>
+            </div>
+          </div>
+
+          {/* ADD CUSTOM INTERACTION RULE FORM */}
+          <form onSubmit={handleAddCustomRule} className="bg-gray-900/60 p-4 rounded-xl border border-gray-800 space-y-3">
+            <h4 className="text-sm font-bold text-emerald-400 flex items-center gap-1.5">
+              <Plus className="h-4 w-4" /> Add Custom Interaction / Safety Alert Rule
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-semibold text-gray-400 block mb-1">Drug A Keywords (Comma Separated)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. aspirin, ecospirin, ibuprofen"
+                  value={newRuleA}
+                  onChange={(e) => setNewRuleA(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-white text-xs"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-gray-400 block mb-1">Drug B Keywords / 'all' for single alert</label>
+                <input
+                  type="text"
+                  placeholder="e.g. warfarin, acitrom, heparin"
+                  value={newRuleB}
+                  onChange={(e) => setNewRuleB(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-white text-xs"
+                  required
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="text-[11px] font-semibold text-gray-400 block mb-1">Warning Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Gastrointestinal Bleeding Risk"
+                  value={newRuleTitle}
+                  onChange={(e) => setNewRuleTitle(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-white text-xs"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-gray-400 block mb-1">Medical Authority Source</label>
+                <input
+                  type="text"
+                  placeholder="e.g. CDSCO / NLEM India, IPC Safety Alert"
+                  value={newRuleSource}
+                  onChange={(e) => setNewRuleSource(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-white text-xs"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-gray-400 block mb-1">Severity Level</label>
+                <select
+                  value={newRuleSeverity}
+                  onChange={(e) => setNewRuleSeverity(e.target.value as 'high' | 'moderate')}
+                  className="w-full px-3 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-white text-xs"
+                >
+                  <option value="high">🔴 High Severity</option>
+                  <option value="moderate">🟡 Moderate Severity</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-semibold text-gray-400 block mb-1">Clinical Conflict Explanation</label>
+                <input
+                  type="text"
+                  placeholder="Detailed conflict mechanism explanation..."
+                  value={newRuleDesc}
+                  onChange={(e) => setNewRuleDesc(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-white text-xs"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-gray-400 block mb-1">Clinical Action Recommendation</label>
+                <input
+                  type="text"
+                  placeholder="Recommended action for prescribing physician..."
+                  value={newRuleRec}
+                  onChange={(e) => setNewRuleRec(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-white text-xs"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-xs shadow flex items-center gap-1 transition"
+              >
+                <Plus className="h-4 w-4" /> Add Rule to Database
+              </button>
+            </div>
+          </form>
+
+          {/* SEARCHABLE RULES TABLE */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-gray-400">Active Rules Database Table</span>
+              <div className="relative w-64">
+                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Search rules, drugs or sources..."
+                  value={searchRuleQuery}
+                  onChange={(e) => setSearchRuleQuery(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1 rounded-lg bg-gray-950 border border-gray-800 text-white text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="max-h-[300px] overflow-y-auto rounded-xl border border-gray-800 bg-gray-950/60 p-2 space-y-2">
+              {rulesList
+                .filter(
+                  (r) =>
+                    !searchRuleQuery ||
+                    r.title.toLowerCase().includes(searchRuleQuery.toLowerCase()) ||
+                    r.drugA.some((d) => d.includes(searchRuleQuery.toLowerCase())) ||
+                    r.drugB.some((d) => d.includes(searchRuleQuery.toLowerCase())) ||
+                    r.source.toLowerCase().includes(searchRuleQuery.toLowerCase())
+                )
+                .map((r) => (
+                  <div key={r.id} className="p-2.5 rounded-lg bg-gray-900 border border-gray-800 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white flex items-center gap-1.5">
+                        {r.severity === 'high' ? '🔴' : '🟡'} {r.title}
+                        {r.isCustom && <span className="text-[9px] bg-purple-950 text-purple-300 px-1.5 py-0.2 rounded border border-purple-800">Custom</span>}
+                      </span>
+                      <span className="text-[10px] bg-amber-950/80 text-amber-300 font-mono px-2 py-0.5 rounded border border-amber-800">
+                        🏛️ {r.source}
+                      </span>
+                    </div>
+                    <p className="text-gray-400 text-[11px]">
+                      <strong className="text-gray-300">Conflict:</strong> [{r.drugA.join(', ')}] ↔ [{r.drugB.join(', ')}]
+                    </p>
+                    <p className="text-gray-400 text-[10.5px] italic">{r.description}</p>
+                    <p className="text-emerald-400 text-[10.5px]">
+                      <strong>Action:</strong> {r.recommendation}
+                    </p>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
 

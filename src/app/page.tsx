@@ -28,6 +28,10 @@ function SplitAuthLayout() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isResetMode, setIsResetMode] = useState(false);
 
+  const [isDisclaimerModalOpen, setIsDisclaimerModalOpen] = useState(false);
+  const [disclaimerChecked, setDisclaimerChecked] = useState(false);
+  const [pendingAuthAction, setPendingAuthAction] = useState<'signin' | 'google' | null>(null);
+
   useEffect(() => {
     async function checkExistingSession() {
       const supabase = createClient();
@@ -52,23 +56,50 @@ function SplitAuthLayout() {
     checkExistingSession();
   }, [router]);
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const initiateSignInFlow = (action: 'signin' | 'google', e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    if (!email.trim()) {
+    if (action === 'signin' && !email.trim()) {
       setErrorMsg('Please enter your email address.');
       return;
     }
 
+    const accepted = localStorage.getItem('prescribepro_disclaimer_accepted');
+    if (accepted === 'true') {
+      executeAuthAction(action);
+    } else {
+      setPendingAuthAction(action);
+      setIsDisclaimerModalOpen(true);
+    }
+  };
+
+  const executeAuthAction = async (action: 'signin' | 'google') => {
     setLoading(true);
+
+    if (action === 'google') {
+      const supabase = createClient();
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (error) throw error;
+      } catch (err: any) {
+        setErrorMsg(err.message || 'Failed to initialize Google Auth.');
+        setLoading(false);
+      }
+      return;
+    }
 
     // Verify Invite Status
     const invited = await isEmailInvited(email);
     if (!invited) {
       setLoading(false);
-      setErrorMsg(`Access Denied: "${email}" has not been invited.`);
+      setErrorMsg(`Access Denied: "${email}" has not been invited by system admin.`);
       return;
     }
 
@@ -103,8 +134,17 @@ function SplitAuthLayout() {
       } else {
         router.push('/welcome');
       }
-    } flex: {
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAcceptDisclaimer = () => {
+    if (!disclaimerChecked) return;
+    localStorage.setItem('prescribepro_disclaimer_accepted', 'true');
+    setIsDisclaimerModalOpen(false);
+    if (pendingAuthAction) {
+      executeAuthAction(pendingAuthAction);
     }
   };
 
@@ -139,34 +179,79 @@ function SplitAuthLayout() {
     setLoading(false);
   };
 
-  const handleGoogleAuth = async () => {
-    setErrorMsg(null);
-    setLoading(true);
-    const supabase = createClient();
-
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) throw error;
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to initialize Google Auth.');
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-[#090d16] text-gray-100 flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-[#090d16] text-gray-100 flex flex-col lg:flex-row relative">
       
-      {/* LEFT SIDE PANE: App Info & Branding */}
-      <div className="lg:w-1/2 p-8 lg:p-16 bg-gradient-to-br from-[#0e1626] via-[#0a101d] to-[#060a12] flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-gray-800/80 relative overflow-hidden">
+      {/* MANDATORY MEDICAL RESPONSIBILITY DISCLAIMER MODAL */}
+      {isDisclaimerModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0f172a] border border-red-500/40 max-w-lg w-full rounded-2xl p-6 shadow-2xl space-y-4 text-xs">
+            <div className="flex items-center gap-2 text-red-400 font-extrabold text-base border-b border-gray-800 pb-3">
+              <ShieldAlert className="h-6 w-6 shrink-0 text-red-500 animate-pulse" />
+              <span>Medical Responsibility & Liability Disclaimer</span>
+            </div>
+
+            <div className="space-y-2.5 text-gray-300 leading-relaxed bg-gray-950/80 p-3.5 rounded-xl border border-gray-800 max-h-[220px] overflow-y-auto font-sans">
+              <p className="font-bold text-white text-xs uppercase tracking-wide border-b border-gray-800 pb-1">
+                Notice to Registered Medical Practitioners:
+              </p>
+              <p>
+                PrescribePro is an offline-first Clinical Decision Support System (CDSS) and Digital Prescription Pad designed to assist qualified healthcare professionals.
+              </p>
+              <ol className="list-decimal pl-4 space-y-1.5 text-gray-300">
+                <li>
+                  <strong className="text-white">Sole Clinical Responsibility:</strong> The prescribing medical practitioner is <strong>solely and exclusively responsible</strong> for evaluating patient condition, verifying drug dosages, checking indications/contraindications, and issuing prescriptions.
+                </li>
+                <li>
+                  <strong className="text-white">No Creator or App Liability:</strong> The application, its creators, developers, contributors, and hosting providers assume <strong>no legal liability, warranty, or financial responsibility</strong> for any clinical decisions, drug choices, diagnostic accuracy, or patient treatment outcomes.
+                </li>
+                <li>
+                  <strong className="text-white">Decision Support Aid Only:</strong> Automated drug interaction warnings and template suggestions are reference aids only and do not replace professional medical judgment.
+                </li>
+              </ol>
+            </div>
+
+            <div className="p-3 bg-red-950/30 border border-red-500/30 rounded-xl space-y-2">
+              <label className="flex items-start gap-2.5 cursor-pointer text-white font-medium">
+                <input
+                  type="checkbox"
+                  checked={disclaimerChecked}
+                  onChange={(e) => setDisclaimerChecked(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded bg-gray-950 border-red-500 text-emerald-500 focus:ring-emerald-500 shrink-0"
+                />
+                <span className="text-[11.5px] leading-tight">
+                  I certify that I am a registered medical practitioner. I have read, understood, and accept that I am <strong>solely responsible</strong> for all prescriptions and clinical decisions made using this application.
+                </span>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-800">
+              <button
+                type="button"
+                onClick={() => setIsDisclaimerModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold transition text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!disclaimerChecked}
+                onClick={handleAcceptDisclaimer}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-gray-950 font-extrabold shadow-md hover:brightness-110 transition text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                I Agree & Proceed to Sign In
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LEFT SIDE PANE: App Features & First-Time User Walkthrough */}
+      <div className="lg:w-1/2 p-8 lg:p-12 bg-gradient-to-br from-[#0e1626] via-[#0a101d] to-[#060a12] flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-gray-800/80 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="space-y-8 relative z-10">
+        <div className="space-y-6 relative z-10">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-xl shadow-emerald-500/20">
               <Layers className="h-6 w-6 text-gray-950 font-bold" />
@@ -179,49 +264,85 @@ function SplitAuthLayout() {
             </div>
           </div>
 
-          <div className="space-y-4 max-w-lg">
+          <div className="space-y-3 max-w-lg">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Invite-Only Medical PWA System
+              Invite-Only Medical Workspace
             </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight">
-              High-Performance Offline & Cloud Healthcare Platform
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+              Intelligent Clinical Prescription Pad & Decision Support System
             </h2>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              PrescribePro combines WebAssembly SQLite for 100% offline local storage with Supabase Auth and Vercel Postgres cloud synchronization.
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Designed specifically for medical practitioners to generate precision prescriptions, manage patient timelines, and run safety checks 100% offline.
             </p>
           </div>
 
-          <div className="space-y-3.5 max-w-md pt-2">
-            <div className="flex items-start gap-3 p-3 rounded-xl glass-card">
-              <DatabaseZap className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-xs font-bold text-white">SQLite WebAssembly Offline DB</h4>
-                <p className="text-[11px] text-gray-400">Full relational SQL queries executing client-side without network latency.</p>
+          {/* APP FEATURE DETAILS */}
+          <div className="space-y-2.5 max-w-lg pt-1">
+            <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider font-mono">⚡ Core Features</h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div className="p-2.5 rounded-xl glass-card border-gray-800 space-y-1">
+                <div className="font-bold text-white flex items-center gap-1.5">
+                  <span>📄</span> Calibrated Print Engine
+                </div>
+                <p className="text-[11px] text-gray-400">Millimeter-accurate A4 & A5 printing for pre-printed letterheads or digital logos.</p>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-xl glass-card">
-              <ShieldCheck className="h-5 w-5 text-teal-400 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-xs font-bold text-white">Invite-Only Access Security</h4>
-                <p className="text-[11px] text-gray-400">Only authorized email IDs on the verified invite list can authenticate.</p>
+              <div className="p-2.5 rounded-xl glass-card border-gray-800 space-y-1">
+                <div className="font-bold text-white flex items-center gap-1.5">
+                  <span>🛡️</span> Offline Drug Safety Check
+                </div>
+                <p className="text-[11px] text-gray-400">Real-time Drug-Drug Interaction, patient allergy, & CDSCO/IPC advisories with source tags.</p>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-xl glass-card">
-              <Wifi className="h-5 w-5 text-cyan-400 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-xs font-bold text-white">Vercel & Supabase Cloud Sync</h4>
-                <p className="text-[11px] text-gray-400">Instant multi-device database sync when connection is restored.</p>
+              <div className="p-2.5 rounded-xl glass-card border-gray-800 space-y-1">
+                <div className="font-bold text-white flex items-center gap-1.5">
+                  <span>📋</span> Clinical Specialties & Rx
+                </div>
+                <p className="text-[11px] text-gray-400">Pre-loaded templates (Cardiology, Diabetology, Pediatrics, GP) with 1-tap dosage insertion.</p>
+              </div>
+
+              <div className="p-2.5 rounded-xl glass-card border-gray-800 space-y-1">
+                <div className="font-bold text-white flex items-center gap-1.5">
+                  <span>🔒</span> Private & 100% Offline
+                </div>
+                <p className="text-[11px] text-gray-400">All patient records and clinical calculations remain 100% local on your browser device.</p>
               </div>
             </div>
           </div>
+
+          {/* FIRST-TIME USER WALKTHROUGH */}
+          <div className="p-3.5 rounded-xl bg-gray-900/80 border border-gray-800 space-y-2.5 max-w-lg">
+            <h3 className="text-xs font-bold text-teal-400 uppercase tracking-wider font-mono flex items-center gap-1.5">
+              <span>🚀</span> First-Time User Walkthrough Guide
+            </h3>
+            <ol className="space-y-2 text-xs text-gray-300">
+              <li className="flex items-start gap-2">
+                <span className="h-4 w-4 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                <div>
+                  <strong className="text-white">Receive Email Invitation:</strong> Contact your system admin (`g2intouch@gmail.com`) to get your email ID authorized.
+                </div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="h-4 w-4 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                <div>
+                  <strong className="text-white">Accept Practitioner Disclaimer:</strong> Review & accept the Medical Responsibility Disclaimer acknowledging sole clinical responsibility.
+                </div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="h-4 w-4 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                <div>
+                  <strong className="text-white">Start Prescribing:</strong> Access your clinic pad preview, customize your letterhead margins, and generate prescriptions.
+                </div>
+              </li>
+            </ol>
+          </div>
         </div>
 
-        <div className="pt-8 text-xs text-gray-500 relative z-10 flex items-center justify-between border-t border-gray-800/60 mt-8">
-          <span>© 2026 PrescribePro</span>
-          <span className="font-mono text-emerald-400/80">SQLite WASM • PWA</span>
+        <div className="pt-4 text-xs text-gray-500 relative z-10 flex items-center justify-between border-t border-gray-800/60 mt-4">
+          <span>© 2026 PrescribePro • Medical Workspace</span>
+          <span className="font-mono text-emerald-400/80">Ver. 2.4 Clinical Edition</span>
         </div>
       </div>
 
@@ -298,7 +419,7 @@ function SplitAuthLayout() {
                 </div>
               </form>
             ) : (
-              <form onSubmit={handleSignIn} className="space-y-3">
+              <form onSubmit={(e) => initiateSignInFlow('signin', e)} className="space-y-3">
                 <div>
                   <label className="text-xs text-gray-300 font-medium block mb-1">Email Address (User ID)</label>
                   <input
@@ -361,7 +482,7 @@ function SplitAuthLayout() {
 
                 <button
                   type="button"
-                  onClick={handleGoogleAuth}
+                  onClick={() => initiateSignInFlow('google')}
                   disabled={loading}
                   className="w-full py-2.5 px-4 rounded-xl glass-card hover:bg-gray-800/80 border-gray-800 text-xs font-semibold text-gray-200 hover:text-white flex items-center justify-center gap-2 transition"
                 >

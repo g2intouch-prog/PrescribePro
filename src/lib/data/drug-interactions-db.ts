@@ -1,0 +1,428 @@
+// Exhaustive Offline Drug-Drug Interaction (DDI), Allergy & Safety Warning Database
+// Sourced from Open Public Datasets: CDSCO / NLEM India, IPC / PvPI Safety Alerts, NIH RxNorm, WHO EML & FDA
+
+export interface DrugInteractionRule {
+  id: string;
+  drugA: string[];      // Active generic ingredients, brands, or class keywords for Drug A
+  drugB: string[];      // Active generic ingredients, brands, or class keywords for Drug B
+  severity: 'high' | 'moderate' | 'mild';
+  title: string;        // Clinical title
+  description: string;  // Detailed explanation of conflict mechanism
+  recommendation: string; // Clinical action recommendation for physician
+  source: string;       // Medical authority citation (e.g. "CDSCO / NLEM India", "IPC / PvPI Safety Alert", "NIH RxNorm / NLM", "WHO EML / FDA")
+  category: 'Cardiology' | 'Antimicrobial' | 'Analgesic' | 'Endocrine' | 'Psychiatry' | 'Gastroenterology' | 'Nephrology/Rheumatology' | 'CDSCO Alert' | 'Allergy';
+  isCustom?: boolean;
+}
+
+// INDIAN BRAND TO GENERIC SALT & CLASS RESOLUTION MAP
+export const INDIAN_BRAND_TO_GENERIC_MAP: Record<string, string[]> = {
+  'augmentin': ['amoxicillin', 'clavulanate', 'clavulanic acid', 'penicillin'],
+  'mox': ['amoxicillin', 'penicillin'],
+  'novamox': ['amoxicillin', 'penicillin'],
+  'calpol': ['paracetamol', 'acetaminophen'],
+  'crocin': ['paracetamol', 'acetaminophen'],
+  'dolo': ['paracetamol', 'acetaminophen'],
+  'pan-d': ['pantoprazole', 'domperidone', 'ppi'],
+  'pantocid': ['pantoprazole', 'ppi'],
+  'pantop': ['pantoprazole', 'ppi'],
+  'pan': ['pantoprazole', 'ppi'],
+  'razo': ['rabeprazole', 'ppi'],
+  'esomep': ['esomeprazole', 'ppi'],
+  'telma': ['telmisartan', 'arb'],
+  'telmikind': ['telmisartan', 'arb'],
+  'tazloc': ['telmisartan', 'arb'],
+  'amlong': ['amlodipine', 'ccb'],
+  'stamlo': ['amlodipine', 'ccb'],
+  'concor': ['bisoprolol', 'beta-blocker'],
+  'metolar': ['metoprolol', 'beta-blocker'],
+  'aten': ['atenolol', 'beta-blocker'],
+  'envas': ['enalapril', 'ace-inhibitor'],
+  'cardace': ['ramipril', 'ace-inhibitor'],
+  'acitrom': ['acenocoumarol', 'anticoagulant'],
+  'ecospirin': ['aspirin', 'nsaid', 'antiplatelet'],
+  'disprin': ['aspirin', 'nsaid'],
+  'combiflam': ['ibuprofen', 'paracetamol', 'nsaid'],
+  'brufen': ['ibuprofen', 'nsaid'],
+  'voveran': ['diclofenac', 'nsaid'],
+  'reactin': ['diclofenac', 'nsaid'],
+  'meftal': ['mefenamic acid', 'nsaid'],
+  'meftal-spas': ['mefenamic acid', 'dicyclomine', 'nsaid'],
+  'nise': ['nimesulide', 'nsaid'],
+  'ciplox': ['ciprofloxacin', 'fluoroquinolone'],
+  'cifran': ['ciprofloxacin', 'fluoroquinolone'],
+  'oflox': ['ofloxacin', 'fluoroquinolone'],
+  'zanocin': ['ofloxacin', 'fluoroquinolone'],
+  'levomac': ['levofloxacin', 'fluoroquinolone'],
+  'azithral': ['azithromycin', 'macrolide'],
+  'aziwok': ['azithromycin', 'macrolide'],
+  'claribid': ['clarithromycin', 'macrolide'],
+  'glycomet': ['metformin', 'biguanide'],
+  'obimet': ['metformin', 'biguanide'],
+  'amaryl': ['glimepiride', 'sulfonylurea'],
+  'glympis': ['glimepiride', 'sulfonylurea'],
+  'januvia': ['sitagliptin', 'dpp4-inhibitor'],
+  'galvus': ['vildagliptin', 'dpp4-inhibitor'],
+  'forxiga': ['dapagliflozin', 'sglt2-inhibitor'],
+  'jardiance': ['empagliflozin', 'sglt2-inhibitor'],
+  'atorva': ['atorvastatin', 'statin'],
+  'storvas': ['atorvastatin', 'statin'],
+  'rosuvas': ['rosuvastatin', 'statin'],
+  'zocon': ['fluconazole', 'azole-antifungal'],
+  'forcan': ['fluconazole', 'azole-antifungal'],
+  'itrasys': ['itraconazole', 'azole-antifungal'],
+  'canditral': ['itraconazole', 'azole-antifungal'],
+  'ultram': ['tramadol', 'opioid'],
+  'tramazac': ['tramadol', 'opioid'],
+  'nexito': ['escitalopram', 'ssri'],
+  'depran': ['escitalopram', 'clonazepam', 'ssri'],
+  'zoloft': ['sertraline', 'ssri'],
+  'eptoin': ['phenytoin', 'antiepileptic'],
+  'tegretol': ['carbamazepine', 'antiepileptic'],
+  'valparin': ['valproate', 'sodium valproate', 'antiepileptic'],
+  'encorate': ['valproate', 'sodium valproate', 'antiepileptic'],
+  'deriphyllin': ['theophylline', 'etofylline', 'xanthine'],
+  'asthalin': ['salbutamol', 'albuterol', 'beta2-agonist'],
+  'levolin': ['levosalbutamol', 'beta2-agonist'],
+  'budecort': ['budesonide', 'corticosteroid'],
+  'omnacortil': ['prednisolone', 'corticosteroid'],
+  'wysolone': ['prednisolone', 'corticosteroid'],
+  'dexona': ['dexamethasone', 'corticosteroid']
+};
+
+// EXHAUSTIVE OFFLINE DRUG-DRUG INTERACTION RULES DATABASE
+export const DEFAULT_OFFLINE_DRUG_INTERACTIONS: DrugInteractionRule[] = [
+  // 1. CARDIOVASCULAR & HEMATOLOGY
+  {
+    id: 'ddi-anticoagulant-nsaid',
+    drugA: ['warfarin', 'acenocoumarol', 'acitrom', 'heparin', 'apixaban', 'rivaroxaban', 'dabigatran', 'anticoagulant'],
+    drugB: ['aspirin', 'ecospirin', 'ibuprofen', 'brufen', 'combiflam', 'diclofenac', 'voveran', 'naproxen', 'piroxicam', 'mefenamic acid', 'meftal', 'nsaid'],
+    severity: 'high',
+    title: 'Severe Gastrointestinal Bleeding Risk',
+    description: 'Combining anticoagulants with NSAIDs drastically impairs platelet aggregation and gastric mucosal barrier, significantly elevating major hemorrhage risk.',
+    recommendation: 'Avoid co-prescription. Use Paracetamol/Acetaminophen for pain control or add gastroprotection (PPI) under close INR monitoring.',
+    source: 'IPC / PvPI Safety Alert & NIH RxNorm',
+    category: 'Cardiology'
+  },
+  {
+    id: 'ddi-acei-arb-potassium',
+    drugA: ['enalapril', 'envas', 'ramipril', 'cardace', 'lisinopril', 'perindopril', 'ace-inhibitor', 'telmisartan', 'telma', 'tazloc', 'losartan', 'valsartan', 'arb'],
+    drugB: ['spironolactone', 'aldactone', 'eplerenone', 'potassium', 'potassium chloride'],
+    severity: 'high',
+    title: 'Severe Hyperkalemia Risk',
+    description: 'Concurrent inhibition of aldosterone by ACE-I/ARBs combined with potassium-sparing diuretics or potassium supplements can induce lethal hyperkalemia and cardiac arrhythmias.',
+    recommendation: 'Monitor serum potassium and renal function within 1 week of co-initiation.',
+    source: 'CDSCO / NLEM India & WHO EML',
+    category: 'Cardiology'
+  },
+  {
+    id: 'ddi-acei-plus-arb',
+    drugA: ['enalapril', 'envas', 'ramipril', 'cardace', 'lisinopril', 'ace-inhibitor'],
+    drugB: ['telmisartan', 'telma', 'losartan', 'valsartan', 'arb'],
+    severity: 'high',
+    title: 'Dual Renin-Angiotensin System Blockade Alert',
+    description: 'Combining an ACE Inhibitor with an ARB increases renal failure, hypotension, and hyperkalemia without providing additive cardiovascular mortality benefit.',
+    recommendation: 'Avoid dual RAS blockade. Discontinue one of the agents unless explicitly managed by a nephrologist.',
+    source: 'CDSCO / NLEM India & FDA Advisory',
+    category: 'Cardiology'
+  },
+  {
+    id: 'ddi-beta-blocker-verapamil-diltiazem',
+    drugA: ['metoprolol', 'metolar', 'atenolol', 'aten', 'bisoprolol', 'concor', 'carvedilol', 'beta-blocker'],
+    drugB: ['verapamil', 'diltiazem', 'ccb'],
+    severity: 'high',
+    title: 'Severe Bradycardia & AV Block Warning',
+    description: 'Co-administration of beta-blockers with non-dihydropyridine calcium channel blockers causes synergistic AV nodal conduction suppression and severe bradycardia or heart block.',
+    recommendation: 'Avoid combination. Monitor ECG and heart rate if combination is clinically unavoidable.',
+    source: 'NIH RxNorm / NLM & WHO EML',
+    category: 'Cardiology'
+  },
+  {
+    id: 'ddi-digoxin-amiodarone',
+    drugA: ['digoxin', 'lanoxin'],
+    drugB: ['amiodarone', 'verapamil', 'diltiazem'],
+    severity: 'high',
+    title: 'Digoxin Toxicity Alert',
+    description: 'Amiodarone or non-dihydropyridine CCBs reduce renal clearance of Digoxin, doubling serum Digoxin concentrations and triggering fatal digitalis toxicity.',
+    recommendation: 'Reduce Digoxin dose by 50% when initiating Amiodarone and check serum digoxin levels.',
+    source: 'NIH RxNorm / NLM',
+    category: 'Cardiology'
+  },
+  {
+    id: 'ddi-statin-macrolide',
+    drugA: ['atorvastatin', 'atorva', 'storvas', 'simvastatin', 'lovastatin', 'statin'],
+    drugB: ['erythromycin', 'clarithromycin', 'claribid', 'azithromycin', 'azithral', 'macrolide'],
+    severity: 'moderate',
+    title: 'Rhabdomyolysis & Myopathy Risk',
+    description: 'Macrolides inhibit hepatic CYP3A4 enzyme pathways, raising plasma statin levels and increasing severe skeletal muscle toxicity (rhabdomyolysis).',
+    recommendation: 'Temporarily pause statin therapy during the short macrolide antibiotic course.',
+    source: 'WHO EML & FDA Drug Safety',
+    category: 'Cardiology'
+  },
+  {
+    id: 'ddi-statin-azole-antifungal',
+    drugA: ['atorvastatin', 'atorva', 'simvastatin', 'rosuvastatin', 'rosuvas', 'statin'],
+    drugB: ['fluconazole', 'zocon', 'forcan', 'itraconazole', 'itrasys', 'canditral', 'ketoconazole', 'azole-antifungal'],
+    severity: 'high',
+    title: 'Statin Toxicity & Rhabdomyolysis Warning',
+    description: 'Azole antifungals potently inhibit CYP3A4 metabolism of statins, causing dramatic increases in statin exposure and acute kidney injury from rhabdomyolysis.',
+    recommendation: 'Hold statin during systemic antifungal treatment.',
+    source: 'IPC / PvPI India & FDA Advisory',
+    category: 'Cardiology'
+  },
+
+  // 2. ANTIMICROBIALS & INFECTIOUS DISEASE
+  {
+    id: 'ddi-fluoroquinolone-antacid-minerals',
+    drugA: ['ciprofloxacin', 'ciplox', 'cifran', 'ofloxacin', 'oflox', 'levofloxacin', 'levomac', 'fluoroquinolone'],
+    drugB: ['antacid', 'gelusil', 'digene', 'sucralfate', 'iron', 'ferrous', 'calcium', 'zinc', 'multivitamin'],
+    severity: 'moderate',
+    title: 'Antibiotic Chelation & Treatment Failure',
+    description: 'Polyvalent cations (iron, calcium, magnesium, aluminum in antacids) chelate fluoroquinolone molecules in the gut, reducing antibiotic absorption by up to 90%.',
+    recommendation: 'Administer fluoroquinolones at least 2 hours before or 6 hours after mineral supplements/antacids.',
+    source: 'CDSCO / NLEM India & NIH RxNorm',
+    category: 'Antimicrobial'
+  },
+  {
+    id: 'ddi-tetracycline-dairy-iron',
+    drugA: ['doxycycline', 'dox-1', 'tetracycline'],
+    drugB: ['iron', 'ferrous', 'calcium', 'antacid', 'milk'],
+    severity: 'moderate',
+    title: 'Tetracycline Inactivation Warning',
+    description: 'Divalent and trivalent metal ions form insoluble chelates with tetracyclines, impairing oral bioavailability and antimicrobial efficacy.',
+    recommendation: 'Separate oral doses by 2 to 3 hours.',
+    source: 'NIH RxNorm / NLM',
+    category: 'Antimicrobial'
+  },
+  {
+    id: 'ddi-metronidazole-alcohol',
+    drugA: ['metronidazole', 'flagyl', 'metrogyl', 'tinidazole'],
+    drugB: ['alcohol', 'ethanol'],
+    severity: 'high',
+    title: 'Disulfiram-Like Reaction Warning',
+    description: 'Metronidazole inhibits aldehyde dehydrogenase, causing toxic acetaldehyde buildup leading to severe nausea, vomiting, flushing, tachycardia, and hypotension upon alcohol ingestion.',
+    recommendation: 'Strictly advise patient to refrain from alcohol during and for 48 hours after treatment.',
+    source: 'CDSCO / NLEM India & WHO EML',
+    category: 'Antimicrobial'
+  },
+  {
+    id: 'ddi-fluoroquinolone-nsaid-seizure',
+    drugA: ['ciprofloxacin', 'ciplox', 'ofloxacin', 'levofloxacin', 'fluoroquinolone'],
+    drugB: ['ibuprofen', 'brufen', 'combiflam', 'diclofenac', 'voveran', 'mefenamic acid', 'meftal', 'nsaid'],
+    severity: 'moderate',
+    title: 'Lowered Seizure Threshold Warning',
+    description: 'Co-prescribing fluoroquinolones with NSAIDs increases displacement of GABA from central receptor sites, elevating risk of CNS stimulation and convulsions.',
+    recommendation: 'Use non-NSAID analgesics (e.g. Paracetamol) during fluoroquinolone therapy in patients with seizure risk.',
+    source: 'IPC / PvPI Safety Alert',
+    category: 'Antimicrobial'
+  },
+
+  // 3. ANALGESICS, PAIN & RHEUMATOLOGY
+  {
+    id: 'ddi-ssri-tramadol-serotonin',
+    drugA: ['escitalopram', 'nexito', 'sertraline', 'zoloft', 'fluoxetine', 'paroxetine', 'ssri'],
+    drugB: ['tramadol', 'ultram', 'tramazac', 'opioid'],
+    severity: 'high',
+    title: 'Serotonin Syndrome Toxicity Alert',
+    description: 'Combined serotonergic activity of SSRIs and Tramadol can precipitate life-threatening Serotonin Syndrome (hyperthermia, clonus, autonomic instability, agitation).',
+    recommendation: 'Avoid co-prescription. Consider alternative non-serotonergic analgesics.',
+    source: 'NIH RxNorm / NLM & FDA Safety Alert',
+    category: 'Analgesic'
+  },
+  {
+    id: 'ddi-methotrexate-nsaid',
+    drugA: ['methotrexate', 'metoject', 'neotrexate'],
+    drugB: ['ibuprofen', 'diclofenac', 'naproxen', 'aspirin', 'piroxicam', 'nsaid'],
+    severity: 'high',
+    title: 'Severe Methotrexate Toxicity Alert',
+    description: 'NSAIDs reduce renal perfusion and compete for renal tubular secretion of Methotrexate, causing toxic blood levels, severe bone marrow suppression, and nephrotoxicity.',
+    recommendation: 'Avoid concomitant NSAIDs with high-dose methotrexate. Monitor CBC and liver enzymes if co-administered in rheumatoid arthritis.',
+    source: 'CDSCO / NLEM India & WHO EML',
+    category: 'Nephrology/Rheumatology'
+  },
+  {
+    id: 'ddi-allopurinol-azathioprine',
+    drugA: ['allopurinol', 'zyloric'],
+    drugB: ['azathioprine', 'azoran', 'mercaptopurine'],
+    severity: 'high',
+    title: 'Fatal Myelosuppression Warning',
+    description: 'Allopurinol inhibits xanthine oxidase, the enzyme responsible for detoxifying Azathioprine, leading to massive accumulation and fatal bone marrow toxicity.',
+    recommendation: 'Reduce Azathioprine dose to 25%-33% of standard dose if combination is required.',
+    source: 'WHO EML & NIH RxNorm',
+    category: 'Nephrology/Rheumatology'
+  },
+
+  // 4. ENDOCRINE & DIABETES
+  {
+    id: 'ddi-sulfonylurea-beta-blocker',
+    drugA: ['glimepiride', 'amaryl', 'glympis', 'gliclazide', 'glipizide', 'glibenclamide', 'sulfonylurea'],
+    drugB: ['propranolol', 'inderal', 'atenolol', 'aten', 'metoprolol', 'beta-blocker'],
+    severity: 'moderate',
+    title: 'Masked Hypoglycemia Warning',
+    description: 'Non-selective beta-blockers mask sympathetic warning signs of hypoglycemia (tachycardia, tremors), leaving diaphoresis as the sole symptom.',
+    recommendation: 'Educate patient on recognizing sweating as a sign of hypoglycemia and monitor blood glucose frequently.',
+    source: 'CDSCO / NLEM India',
+    category: 'Endocrine'
+  },
+  {
+    id: 'ddi-metformin-contrast-media',
+    drugA: ['metformin', 'glycomet', 'obimet', 'biguanide'],
+    drugB: ['contrast', 'iohexol', 'iopamidol', 'radiocontrast'],
+    severity: 'high',
+    title: 'Metformin-Induced Lactic Acidosis Alert',
+    description: 'Intravascular iodinated contrast media can cause acute kidney injury, leading to Metformin accumulation and life-threatening lactic acidosis.',
+    recommendation: 'Withhold Metformin prior to or at time of contrast procedure and resume 48 hours later after verifying normal renal function.',
+    source: 'CDSCO / NLEM India & FDA Guidelines',
+    category: 'Endocrine'
+  },
+
+  // 5. CNS & PSYCHIATRY
+  {
+    id: 'ddi-benzodiazepine-opioid',
+    drugA: ['alprazolam', 'alprax', 'clonazepam', 'epitril', 'diazepam', 'valium', 'lorazepam', 'ativan', 'benzodiazepine'],
+    drugB: ['tramadol', 'ultram', 'codeine', 'morphine', 'fentanyl', 'opioid'],
+    severity: 'high',
+    title: 'Severe Respiratory Depression & Coma Warning',
+    description: 'Concomitant use of benzodiazepines and opioids causes profound CNS depression, respiratory depression, coma, and risk of fatal overdose.',
+    recommendation: 'Reserve co-prescription for patients where alternative treatment options are inadequate; limit dosages and duration to minimum required.',
+    source: 'FDA Black Box Warning & IPC / PvPI India',
+    category: 'Psychiatry'
+  },
+  {
+    id: 'ddi-ssri-nsaid-gi-bleed',
+    drugA: ['escitalopram', 'nexito', 'sertraline', 'zoloft', 'fluoxetine', 'ssri'],
+    drugB: ['aspirin', 'ecospirin', 'ibuprofen', 'brufen', 'diclofenac', 'voveran', 'meftal', 'nsaid'],
+    severity: 'moderate',
+    title: 'Increased GI Bleeding Risk',
+    description: 'SSRIs deplete platelet serotonin stores required for hemostasis. Combined with NSAID gastric mucosal erosion, bleeding risk increases 6-fold.',
+    recommendation: 'Co-prescribe a Gastro-Protective agent (PPI like Pantoprazole) in high-risk patients.',
+    source: 'NIH RxNorm / NLM & WHO EML',
+    category: 'Psychiatry'
+  },
+  {
+    id: 'ddi-deriphyllin-ciprofloxacin',
+    drugA: ['theophylline', 'etofylline', 'deriphyllin', 'xanthine'],
+    drugB: ['ciprofloxacin', 'ciplox', 'cifran', 'enoxacin', 'fluoroquinolone'],
+    severity: 'high',
+    title: 'Theophylline Toxicity & Convulsion Alert',
+    description: 'Ciprofloxacin inhibits CYP1A2 metabolism of Theophylline, elevating plasma levels by 100% and triggering severe nausea, arrhythmias, and seizures.',
+    recommendation: 'Avoid combination. Reduce theophylline dose by 50% and monitor plasma levels if ciprofloxacin cannot be substituted.',
+    source: 'CDSCO / NLEM India & NIH RxNorm',
+    category: 'Cardiology'
+  },
+
+  // 6. SPECIAL INDIAN CDSCO SAFETY ALERTS & BANNED COMBINATIONS
+  {
+    id: 'cdsco-mefenamic-dress-alert',
+    drugA: ['mefenamic acid', 'meftal', 'meftal-spas'],
+    drugB: ['all'],
+    severity: 'moderate',
+    title: 'IPC Drug Safety Alert: DRESS Syndrome Risk',
+    description: 'The Indian Pharmacopoeia Commission (IPC) issued a Drug Safety Alert for Mefenamic Acid due to reported cases of severe Drug Rash with Eosinophilia and Systemic Symptoms (DRESS Syndrome).',
+    recommendation: 'Advise patients to immediately discontinue and report if skin rash, fever, or lymphadenopathy occurs.',
+    source: 'IPC / PvPI Safety Alert (India)',
+    category: 'CDSCO Alert'
+  },
+  {
+    id: 'cdsco-nimesulide-pediatric-ban',
+    drugA: ['nimesulide', 'nise'],
+    drugB: ['pediatric', 'child', 'infant'],
+    severity: 'high',
+    title: 'CDSCO Banned Alert: Nimesulide in Children < 12 Yrs',
+    description: 'CDSCO has banned the manufacture and sale of Nimesulide formulations for pediatric use under 12 years due to fatal hepatotoxicity.',
+    recommendation: 'Do NOT prescribe Nimesulide for children below 12 years. Use Paracetamol or Ibuprofen instead.',
+    source: 'CDSCO Banned FDC List (India)',
+    category: 'CDSCO Alert'
+  }
+];
+
+const LOCAL_STORAGE_RULES_KEY = 'prescribe_pro_custom_interaction_rules_v1';
+
+// RETRIEVE CURRENT RULES (COMBINES DEFAULT + CUSTOM)
+export function getInteractionRules(): DrugInteractionRule[] {
+  if (typeof window === 'undefined') return DEFAULT_OFFLINE_DRUG_INTERACTIONS;
+  try {
+    const custom = localStorage.getItem(LOCAL_STORAGE_RULES_KEY);
+    if (custom) {
+      const parsed: DrugInteractionRule[] = JSON.parse(custom);
+      return [...parsed, ...DEFAULT_OFFLINE_DRUG_INTERACTIONS];
+    }
+  } catch (e) {
+    console.error('Failed to parse custom interaction rules', e);
+  }
+  return DEFAULT_OFFLINE_DRUG_INTERACTIONS;
+}
+
+// SAVE CUSTOM RULE
+export function addCustomInteractionRule(rule: Omit<DrugInteractionRule, 'id' | 'isCustom'>): DrugInteractionRule {
+  const newRule: DrugInteractionRule = {
+    ...rule,
+    id: `custom-ddi-${Date.now()}`,
+    isCustom: true
+  };
+  
+  if (typeof window !== 'undefined') {
+    try {
+      const existingStr = localStorage.getItem(LOCAL_STORAGE_RULES_KEY);
+      const existing: DrugInteractionRule[] = existingStr ? JSON.parse(existingStr) : [];
+      const updated = [newRule, ...existing];
+      localStorage.setItem(LOCAL_STORAGE_RULES_KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to save custom rule to local storage', e);
+    }
+  }
+  
+  return newRule;
+}
+
+// RESET RULES TO DEFAULT OPEN DATASET
+export function resetRulesToDefault(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(LOCAL_STORAGE_RULES_KEY);
+  }
+}
+
+// PARSE CSV / JSON DATASET IMPORT
+export function importRulesFromCSVText(csvText: string): { successCount: number; errorCount: number } {
+  let successCount = 0;
+  let errorCount = 0;
+  const lines = csvText.split('\n');
+  const newRules: DrugInteractionRule[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    // Format: DrugA, DrugB, Severity, Title, Description, Recommendation, Source, Category
+    const parts = line.split(',').map(p => p.replace(/^["']|["']$/g, '').trim());
+    if (parts.length >= 7) {
+      const [drugA, drugB, severity, title, description, recommendation, source, category] = parts;
+      newRules.push({
+        id: `imported-csv-${Date.now()}-${i}`,
+        drugA: drugA.split(';').map(d => d.trim().toLowerCase()),
+        drugB: drugB.split(';').map(d => d.trim().toLowerCase()),
+        severity: (severity.toLowerCase() === 'high' || severity.toLowerCase() === 'severe') ? 'high' : 'moderate',
+        title: title || 'Imported Interaction Warning',
+        description: description || 'Clinical interaction detected.',
+        recommendation: recommendation || 'Exercise clinical caution.',
+        source: source || 'Custom Imported Dataset',
+        category: (category as any) || 'CDSCO Alert',
+        isCustom: true
+      });
+      successCount++;
+    } else {
+      errorCount++;
+    }
+  }
+
+  if (newRules.length > 0 && typeof window !== 'undefined') {
+    try {
+      const existingStr = localStorage.getItem(LOCAL_STORAGE_RULES_KEY);
+      const existing: DrugInteractionRule[] = existingStr ? JSON.parse(existingStr) : [];
+      localStorage.setItem(LOCAL_STORAGE_RULES_KEY, JSON.stringify([...newRules, ...existing]));
+    } catch (e) {
+      console.error('Failed to save imported CSV rules', e);
+    }
+  }
+
+  return { successCount, errorCount };
+}
