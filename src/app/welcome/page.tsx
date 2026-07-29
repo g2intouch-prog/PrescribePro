@@ -1160,6 +1160,23 @@ export default function UserWorkspacePage() {
             <span>Install App</span>
           </button>
 
+          {/* GLOBAL STICKY SAFETY WARNING ALERT BADGE */}
+          {detectedSafetyWarnings.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setMobileDrawer('none');
+                const el = document.getElementById('top-safety-warning-banner');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-extrabold bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/50 animate-pulse border border-red-300 transition shrink-0 cursor-pointer"
+              title="Click to view live Drug Safety Alerts"
+            >
+              <ShieldAlert className="h-4 w-4 text-white shrink-0 animate-bounce" />
+              <span>🚨 {detectedSafetyWarnings.length} SAFETY ALERTS</span>
+            </button>
+          )}
+
           <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-white/80 border border-white/70 text-slate-700 shadow-sm">
             <User className="h-3 w-3 text-emerald-600" />
             <span className="font-mono font-bold truncate max-w-[110px]">{email}</span>
@@ -1198,16 +1215,16 @@ export default function UserWorkspacePage() {
         <button
           type="button"
           onClick={() => setMobileDrawer(mobileDrawer === 'left' ? 'none' : 'left')}
-          className={`fixed left-0 top-1/2 -translate-y-1/2 z-40 lg:hidden font-extrabold text-[10px] py-3.5 px-1.5 rounded-r-2xl shadow-2xl flex flex-col items-center gap-1 border-r border-y transition-all transform active:scale-95 ${
+          className={`fixed left-0 top-1/2 -translate-y-1/2 z-50 lg:hidden font-extrabold text-[11px] py-4 px-2 rounded-r-2xl shadow-2xl flex flex-col items-center gap-1.5 border-r-2 border-y-2 transition-all transform active:scale-95 cursor-pointer ${
             mobileDrawer === 'left'
-              ? 'bg-emerald-600 border-emerald-400 text-white shadow-emerald-600/50'
-              : 'bg-blue-600 hover:bg-blue-700 border-blue-400 text-white shadow-blue-600/40'
+              ? 'bg-emerald-600 border-emerald-300 text-white shadow-emerald-600/60'
+              : 'bg-blue-600 hover:bg-blue-700 border-blue-300 text-white shadow-blue-600/60 animate-pulse'
           }`}
-          title="Toggle Section 1 (Patient Details & Inputs)"
+          title="Slide Open Section 1 (Patient Details & Inputs)"
         >
-          <ChevronRight className={`h-4 w-4 transition-transform ${mobileDrawer === 'left' ? 'rotate-180' : 'animate-pulse'}`} />
-          <span className="[writing-mode:vertical-lr] tracking-widest uppercase font-mono text-[9px] font-bold">
-            {mobileDrawer === 'left' ? 'Close' : 'Inputs'}
+          <ChevronRight className={`h-5 w-5 transition-transform ${mobileDrawer === 'left' ? 'rotate-180' : ''}`} />
+          <span className="[writing-mode:vertical-lr] tracking-widest uppercase font-mono text-[10px] font-extrabold">
+            {mobileDrawer === 'left' ? '✕ Close' : '◀ Inputs'}
           </span>
         </button>
 
@@ -1215,16 +1232,16 @@ export default function UserWorkspacePage() {
         <button
           type="button"
           onClick={() => setMobileDrawer(mobileDrawer === 'right' ? 'none' : 'right')}
-          className={`fixed right-0 top-1/2 -translate-y-1/2 z-40 lg:hidden font-extrabold text-[10px] py-3.5 px-1.5 rounded-l-2xl shadow-2xl flex flex-col items-center gap-1 border-l border-y transition-all transform active:scale-95 ${
+          className={`fixed right-0 top-1/2 -translate-y-1/2 z-50 lg:hidden font-extrabold text-[11px] py-4 px-2 rounded-l-2xl shadow-2xl flex flex-col items-center gap-1.5 border-l-2 border-y-2 transition-all transform active:scale-95 cursor-pointer ${
             mobileDrawer === 'right'
-              ? 'bg-emerald-600 border-emerald-400 text-white shadow-emerald-600/50'
-              : 'bg-purple-600 hover:bg-purple-700 border-purple-400 text-white shadow-purple-600/40'
+              ? 'bg-emerald-600 border-emerald-300 text-white shadow-emerald-600/60'
+              : 'bg-purple-600 hover:bg-purple-700 border-purple-300 text-white shadow-purple-600/60 animate-pulse'
           }`}
-          title="Toggle Section 3 (Templates & Drug Catalog)"
+          title="Slide Open Section 3 (Clinical Templates & Drug Catalog)"
         >
-          <ChevronLeft className={`h-4 w-4 transition-transform ${mobileDrawer === 'right' ? 'rotate-180' : 'animate-pulse'}`} />
-          <span className="[writing-mode:vertical-lr] tracking-widest uppercase font-mono text-[9px] font-bold">
-            {mobileDrawer === 'right' ? 'Close' : 'Drugs'}
+          <ChevronLeft className={`h-5 w-5 transition-transform ${mobileDrawer === 'right' ? 'rotate-180' : ''}`} />
+          <span className="[writing-mode:vertical-lr] tracking-widest uppercase font-mono text-[10px] font-extrabold">
+            {mobileDrawer === 'right' ? '✕ Close' : 'Drugs ▶'}
           </span>
         </button>
 
@@ -1237,9 +1254,19 @@ export default function UserWorkspacePage() {
                 <UserCheck className="h-4 w-4" />
                 Section 1: Patient Details & Inputs
               </div>
-              {saveStatus && (
-                <span className="text-[10px] text-emerald-600 font-mono font-bold animate-pulse">{saveStatus}</span>
-              )}
+              <div className="flex items-center gap-2">
+                {saveStatus && (
+                  <span className="text-[10px] text-emerald-600 font-mono font-bold animate-pulse">{saveStatus}</span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setMobileDrawer('none')}
+                  className="lg:hidden text-xs bg-slate-800 text-white hover:bg-slate-700 px-2 py-0.5 rounded-lg font-extrabold transition"
+                  title="Close Drawer"
+                >
+                  ✕ Close
+                </button>
+              </div>
             </div>
 
             {/* Quick Sub-Tab Selector */}
@@ -1859,6 +1886,74 @@ export default function UserWorkspacePage() {
         {/* SECTION 2 (CENTER COLUMN - 6 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
         <section className={`lg:col-span-6 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
           
+          {/* LIVE DRUG SAFETY & INTERACTION ALERT BANNER (VERY TOP OF SECTION 2) */}
+          {detectedSafetyWarnings.length > 0 && (
+            <div id="top-safety-warning-banner" className="bg-red-950/95 border-2 border-red-500 rounded-2xl p-3 space-y-2 shadow-2xl shrink-0 mb-2">
+              <div className="flex items-center justify-between border-b border-red-500/40 pb-1.5 flex-wrap gap-1">
+                <div className="flex items-center gap-2 text-red-300 font-extrabold text-xs">
+                  <ShieldAlert className="h-5 w-5 text-red-400 shrink-0 animate-bounce" />
+                  <span>🚨 DRUG SAFETY & INTERACTION ALERT ({detectedSafetyWarnings.length})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleAutoDeduplicateAllRx}
+                    className="text-[10.5px] bg-gradient-to-r from-amber-500 to-yellow-400 hover:brightness-110 text-gray-950 font-extrabold px-3 py-1 rounded-xl shadow-lg transition flex items-center gap-1.5 transform active:scale-95 border border-amber-300 cursor-pointer"
+                    title="Automatically remove redundant duplicate drug line items in 1 tap"
+                  >
+                    ⚡ 1-Tap Auto-Deduplicate Rx
+                  </button>
+                  <span className="text-[10px] bg-red-600 text-white font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider hidden sm:inline-block">
+                    Physician Judgment Mode
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                {detectedSafetyWarnings.map((warning) => (
+                  <div key={warning.rule.id} className="bg-slate-900/90 p-2.5 rounded-xl border border-red-500/40 text-xs space-y-1 shadow">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-extrabold text-red-400 text-xs flex items-center gap-1.5">
+                        ⚠️ {warning.rule.title}
+                      </span>
+                      <span className="text-[9px] bg-amber-950 text-amber-300 font-mono px-2 py-0.5 rounded font-bold border border-amber-500/40 shrink-0">
+                        🏛️ Source: {warning.rule.source}
+                      </span>
+                    </div>
+
+                    <p className="text-gray-200 leading-snug">
+                      <strong className="text-white">Conflict:</strong> <span className="text-red-300 font-bold">{warning.foundDrugA}</span> ↔ <span className="text-red-300 font-bold">{warning.foundDrugB}</span>
+                    </p>
+                    <p className="text-gray-400 text-[11px] italic">{warning.rule.description}</p>
+                    <div className="bg-emerald-950/60 p-1.5 rounded-lg border border-emerald-500/30 text-emerald-300 text-[11px]">
+                      <strong>Recommendation:</strong> {warning.rule.recommendation}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-800">
+                      {warning.foundDrugB !== 'Patient Safety Alert' && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveConflictingDrug(warning.foundDrugB)}
+                          className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white font-bold text-[10px] rounded-lg transition flex items-center gap-1 cursor-pointer"
+                        >
+                          🗑️ Remove Medication
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDismissWarning(warning.rule.id)}
+                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] rounded-lg transition cursor-pointer"
+                        title="Acknowledge clinical judgment and dismiss warning"
+                      >
+                        🛡️ Dismiss / Override Warning
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* MOBILE TOP SECTION SWITCHER BAR (MOBILE ONLY) */}
           <div className="lg:hidden flex items-center justify-between gap-1 p-1 bg-slate-900/90 rounded-xl border border-slate-800 text-[10px] mb-1.5 shrink-0">
             <button
@@ -2019,74 +2114,6 @@ export default function UserWorkspacePage() {
               </button>
             </div>
           </div>
-
-          {/* LIVE DRUG SAFETY & INTERACTION WARNING BANNER (TOP PROMINENT ALERT PANEL) */}
-          {detectedSafetyWarnings.length > 0 && (
-            <div className="bg-red-950/90 border-2 border-red-500 rounded-2xl p-3 space-y-2 shadow-2xl shrink-0 my-1">
-              <div className="flex items-center justify-between border-b border-red-500/40 pb-1.5 flex-wrap gap-1">
-                <div className="flex items-center gap-2 text-red-300 font-extrabold text-xs">
-                  <ShieldAlert className="h-5 w-5 text-red-400 shrink-0 animate-bounce" />
-                  <span>🚨 DRUG SAFETY & INTERACTION ALERT ({detectedSafetyWarnings.length})</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleAutoDeduplicateAllRx}
-                    className="text-[10.5px] bg-gradient-to-r from-amber-500 to-yellow-400 hover:brightness-110 text-gray-950 font-extrabold px-3 py-1 rounded-xl shadow-lg transition flex items-center gap-1.5 transform active:scale-95 border border-amber-300"
-                    title="Automatically remove redundant duplicate drug line items in 1 tap"
-                  >
-                    ⚡ 1-Tap Auto-Deduplicate Rx
-                  </button>
-                  <span className="text-[10px] bg-red-600 text-white font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider hidden sm:inline-block">
-                    Physician Judgment Mode
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                {detectedSafetyWarnings.map((warning) => (
-                  <div key={warning.rule.id} className="bg-slate-900/90 p-2.5 rounded-xl border border-red-500/40 text-xs space-y-1 shadow">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="font-extrabold text-red-400 text-xs flex items-center gap-1.5">
-                        ⚠️ {warning.rule.title}
-                      </span>
-                      <span className="text-[9px] bg-amber-950 text-amber-300 font-mono px-2 py-0.5 rounded font-bold border border-amber-500/40 shrink-0">
-                        🏛️ Source: {warning.rule.source}
-                      </span>
-                    </div>
-
-                    <p className="text-gray-200 leading-snug">
-                      <strong className="text-white">Conflict:</strong> <span className="text-red-300 font-bold">{warning.foundDrugA}</span> ↔ <span className="text-red-300 font-bold">{warning.foundDrugB}</span>
-                    </p>
-                    <p className="text-gray-400 text-[11px] italic">{warning.rule.description}</p>
-                    <div className="bg-emerald-950/60 p-1.5 rounded-lg border border-emerald-500/30 text-emerald-300 text-[11px]">
-                      <strong>Recommendation:</strong> {warning.rule.recommendation}
-                    </div>
-
-                    <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-800">
-                      {warning.foundDrugB !== 'Patient Safety Alert' && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveConflictingDrug(warning.foundDrugB)}
-                          className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white font-bold text-[10px] rounded-lg transition flex items-center gap-1"
-                        >
-                          🗑️ Remove Medication
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleDismissWarning(warning.rule.id)}
-                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] rounded-lg transition"
-                        title="Acknowledge clinical judgment and dismiss warning"
-                      >
-                        🛡️ Dismiss / Override Warning
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* DYNAMIC PRINT CSS FOR CALIBRATED MILLIMETER MARGINS */}
           <style jsx global>{`
@@ -2627,11 +2654,21 @@ export default function UserWorkspacePage() {
                 <Clock className="h-4 w-4" />
                 Section 3: Clinical Templates & Drugs
               </div>
-              <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
-                theme === 'day' ? 'bg-pink-100 text-pink-800 border border-pink-300' : 'bg-cyan-950 text-cyan-400 border border-cyan-500/30'
-              }`}>
-                Module 3
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
+                  theme === 'day' ? 'bg-pink-100 text-pink-800 border border-pink-300' : 'bg-cyan-950 text-cyan-400 border border-cyan-500/30'
+                }`}>
+                  Module 3
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMobileDrawer('none')}
+                  className="lg:hidden text-xs bg-slate-800 text-white hover:bg-slate-700 px-2 py-0.5 rounded-lg font-extrabold transition"
+                  title="Close Drawer"
+                >
+                  ✕ Close
+                </button>
+              </div>
             </div>
 
             {/* MODAL POPUP LAUNCHER BUTTONS */}
