@@ -305,6 +305,17 @@ export default function UserWorkspacePage() {
     setSelectedDrugs((prev) => prev.filter((d) => d !== drugName));
   };
 
+  const handleAutoDeduplicateAllRx = () => {
+    if (detectedSafetyWarnings.length === 0) return;
+    const drugsToRemove = new Set<string>();
+    detectedSafetyWarnings.forEach((w) => {
+      if (w.foundDrugB && w.foundDrugB !== 'Patient Safety Alert') {
+        drugsToRemove.add(w.foundDrugB);
+      }
+    });
+    setSelectedDrugs((prev) => prev.filter((d) => !drugsToRemove.has(d)));
+  };
+
   // Mobile View Slide-Over Drawer State ('none' | 'left' | 'right')
   const [mobileDrawer, setMobileDrawer] = useState<'none' | 'left' | 'right'>('none');
 
@@ -2012,14 +2023,24 @@ export default function UserWorkspacePage() {
           {/* LIVE DRUG SAFETY & INTERACTION WARNING BANNER (TOP PROMINENT ALERT PANEL) */}
           {detectedSafetyWarnings.length > 0 && (
             <div className="bg-red-950/90 border-2 border-red-500 rounded-2xl p-3 space-y-2 shadow-2xl shrink-0 my-1">
-              <div className="flex items-center justify-between border-b border-red-500/40 pb-1.5">
+              <div className="flex items-center justify-between border-b border-red-500/40 pb-1.5 flex-wrap gap-1">
                 <div className="flex items-center gap-2 text-red-300 font-extrabold text-xs">
                   <ShieldAlert className="h-5 w-5 text-red-400 shrink-0 animate-bounce" />
                   <span>🚨 DRUG SAFETY & INTERACTION ALERT ({detectedSafetyWarnings.length})</span>
                 </div>
-                <span className="text-[10px] bg-red-600 text-white font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                  Physician Judgment Mode
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleAutoDeduplicateAllRx}
+                    className="text-[10.5px] bg-gradient-to-r from-amber-500 to-yellow-400 hover:brightness-110 text-gray-950 font-extrabold px-3 py-1 rounded-xl shadow-lg transition flex items-center gap-1.5 transform active:scale-95 border border-amber-300"
+                    title="Automatically remove redundant duplicate drug line items in 1 tap"
+                  >
+                    ⚡ 1-Tap Auto-Deduplicate Rx
+                  </button>
+                  <span className="text-[10px] bg-red-600 text-white font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider hidden sm:inline-block">
+                    Physician Judgment Mode
+                  </span>
+                </div>
               </div>
 
               <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">

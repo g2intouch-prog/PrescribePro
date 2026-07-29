@@ -291,6 +291,72 @@ export const DEFAULT_OFFLINE_DRUG_INTERACTIONS: DrugInteractionRule[] = [
     source: 'CDSCO / NLEM India & WHO EML',
     category: 'Analgesic'
   },
+  {
+    id: 'ddi-duplicate-nitroimidazole',
+    drugA: ['metronidazole', 'metrogyl', 'flagyl', 'ornidazole', 'oflox-oz', 'tinidazole', 'secnidazole', 'nitroimidazole'],
+    drugB: ['metronidazole', 'metrogyl', 'flagyl', 'ornidazole', 'oflox-oz', 'tinidazole', 'secnidazole', 'nitroimidazole'],
+    severity: 'high',
+    title: 'Duplicate Nitroimidazole Therapy & Peripheral Neuropathy Warning',
+    description: 'Co-prescribing multiple Nitroimidazole anti-amoebics (e.g. Metronidazole with Ornidazole or Tinidazole) is clinically redundant as both share the exact same mechanism. Combined use causes cumulative neurotoxicity, peripheral neuropathy, and severe nausea.',
+    recommendation: 'Discontinue duplicate Nitroimidazole formulations. Select a single agent (Metronidazole OR Ornidazole) for the infection.',
+    source: 'CDSCO / NLEM India & WHO EML',
+    category: 'Antimicrobial'
+  },
+  {
+    id: 'ddi-duplicate-d2-prokinetic-levo-domp',
+    drugA: ['domperidone', 'pan-d', 'pantocid-d', 'razo-d', 'prokinetic'],
+    drugB: ['levosulpiride', 'levazeo', 'metoclopramide', 'perinorm', 'itopride', 'ganaton', 'cinitapride', 'prokinetic'],
+    severity: 'high',
+    title: 'Redundant D2-Receptor Prokinetic & Extrapyramidal Warning',
+    description: 'Co-prescribing Domperidone with Levosulpiride, Metoclopramide, or Itopride causes dual D2-receptor antagonism. Combined use significantly escalates risk of Extrapyramidal Symptoms (EPS), acute dystonia, hyperprolactinemia, and severe QT prolongation.',
+    recommendation: 'Select a single prokinetic agent (Domperidone OR Levosulpiride) and discontinue redundant D2 antagonists.',
+    source: 'IPC / PvPI Drug Safety Advisory & CDSCO India',
+    category: 'Gastroenterology'
+  },
+  {
+    id: 'ddi-duplicate-ccb-therapy',
+    drugA: ['amlodipine', 'amlong', 'stamlo', 'ccb'],
+    drugB: ['cilnidipine', 'cilacar', 'nifedipine', 'depin', 'felodipine', 'ccb'],
+    severity: 'high',
+    title: 'Duplicate Dihydropyridine CCB & Severe Pedal Edema Warning',
+    description: 'Co-prescribing multiple Dihydropyridine Calcium Channel Blockers (e.g. Amlodipine + Cilnidipine) causes excessive arteriolodilation, profound hypotension, reflex tachycardia, and severe peripheral pedal edema.',
+    recommendation: 'Prescribe a single Calcium Channel Blocker formulation.',
+    source: 'CDSCO / NLEM India',
+    category: 'Cardiology'
+  },
+  {
+    id: 'ddi-duplicate-statin-myopathy',
+    drugA: ['atorvastatin', 'atorva', 'storvas', 'statin'],
+    drugB: ['rosuvastatin', 'rosuvas', 'rozavel', 'simvastatin', 'statin'],
+    severity: 'high',
+    title: 'Duplicate Statin Therapy & Rhabdomyolysis Hazard',
+    description: 'Co-prescribing multiple HMG-CoA Reductase Inhibitors (Atorvastatin + Rosuvastatin) provides no extra lipid benefit while exponentially increasing risks of severe myopathy, elevated creatine kinase, and fatal rhabdomyolysis.',
+    recommendation: 'Discontinue duplicate statins. Use a single potent statin at appropriate dose.',
+    source: 'USFDA & CDSCO India',
+    category: 'Cardiology'
+  },
+  {
+    id: 'ddi-duplicate-macrolide-qt',
+    drugA: ['azithromycin', 'azee', 'azithral', 'macrolide'],
+    drugB: ['clarithromycin', 'claribid', 'erythromycin', 'macrolide'],
+    severity: 'high',
+    title: 'Duplicate Macrolide Antibiotic & QT Prolongation Hazard',
+    description: 'Co-prescribing multiple Macrolide antibiotics causes redundant antibacterial coverage and severe inhibition of cardiac repolarization, escalating risk of Torsades de Pointes.',
+    recommendation: 'Use a single macrolide formulation.',
+    source: 'USFDA & CDSCO India',
+    category: 'Antimicrobial'
+  },
+  {
+    id: 'ddi-duplicate-antihistamine',
+    drugA: ['cetirizine', 'cetzine', 'okacet', 'levocetirizine', 'levocet', 'xyzal', 'antihistamine'],
+    drugB: ['fexofenadine', 'allegra', 'loratadine', 'antihistamine'],
+    severity: 'moderate',
+    title: 'Duplicate H1-Antihistamine Therapy Warning',
+    description: 'Co-prescribing multiple H1-antihistamines causes excessive psychomotor impairment, sedation, and anticholinergic side effects.',
+    recommendation: 'Use a single H1-antihistamine formulation.',
+    source: 'CDSCO / NLEM India',
+    category: 'Allergy'
+  },
 
   // 3. PSYCHIATRY & BENZODIAZEPINES
   {
