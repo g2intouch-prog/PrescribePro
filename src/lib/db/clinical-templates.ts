@@ -274,24 +274,64 @@ export function calculateBsaDose(heightCm: number, weightKg: number, ageYrs: num
 export function calculatePediatricDose(weightKg: number): CalculatedPediatricDose[] {
   if (weightKg <= 0) return [];
 
+  // 1. Paracetamol (15 mg/kg/dose Q6H)
   const pcmDoseMg = Math.round(weightKg * 15);
   const pcmMl250 = (pcmDoseMg / 50).toFixed(1);
   const pcmMl120 = (pcmDoseMg / 24).toFixed(1);
   const pcmDrops = (pcmDoseMg / 100).toFixed(1);
 
-  const amoxDoseMg = Math.round(weightKg * 15);
-  const amoxMl125 = (amoxDoseMg / 25).toFixed(1);
+  // 2. Cefixime (8 mg/kg/day divided BD = 4 mg/kg/dose BD)
+  const cefixDoseMg = Math.round(weightKg * 4);
+  const cefixMl50 = (cefixDoseMg / 10).toFixed(1);
+  const cefixMl100 = (cefixDoseMg / 20).toFixed(1);
 
+  // 3. Amoxicillin + Clavulanate (30 mg/kg/day divided BD = 15 mg/kg/dose BD)
+  const amoxClavDoseMg = Math.round(weightKg * 15);
+  const amoxClavMl228 = (amoxClavDoseMg / 45.7).toFixed(1);
+  const amoxClavMl457 = (amoxClavDoseMg / 91.4).toFixed(1);
+
+  // 4. Mefenamic Acid (Meftal-P: 6.5 mg/kg/dose BD/TDS)
+  const meftalDoseMg = Math.round(weightKg * 6.5);
+  const meftalMl100 = (meftalDoseMg / 20).toFixed(1);
+
+  // 5. Ibuprofen (10 mg/kg/dose TDS)
   const ibuDoseMg = Math.round(weightKg * 10);
   const ibuMl100 = (ibuDoseMg / 20).toFixed(1);
 
+  // 6. Azithromycin (10 mg/kg/day OD)
+  const aziDoseMg = Math.round(weightKg * 10);
+  const aziMl200 = (aziDoseMg / 40).toFixed(1);
+  const aziMl100 = (aziDoseMg / 20).toFixed(1);
+
+  // 7. Ondansetron (0.15 mg/kg/dose S.O.S)
   const ondDoseMg = (weightKg * 0.15).toFixed(1);
   const ondMl = (parseFloat(ondDoseMg) / 0.4).toFixed(1);
 
-  const aziDoseMg = Math.round(weightKg * 10);
-  const aziMl200 = (aziDoseMg / 40).toFixed(1);
+  // 8. Cetirizine (0.25 mg/kg/day HS)
+  const cetDoseMg = (weightKg * 0.25).toFixed(1);
+  const cetMl = (parseFloat(cetDoseMg) / 1).toFixed(1);
+
+  // 9. Domperidone (0.25 mg/kg/dose TDS)
+  const dompDoseMg = (weightKg * 0.25).toFixed(1);
+  const dompMl = (parseFloat(dompDoseMg) / 1).toFixed(1);
 
   return [
+    {
+      drugName: 'Cefixime 50mg/5ml Dry Syrup',
+      recommendedDoseMg: cefixDoseMg,
+      formulation: 'Syrup 50mg/5ml',
+      calculatedVolumeMl: `${cefixMl50} ml`,
+      frequency: 'Twice daily (1-0-1 for 5 days)',
+      notes: `Target: 8mg/kg/day divided BD (${cefixDoseMg}mg per dose)`,
+    },
+    {
+      drugName: 'Cefixime 100mg/5ml Dry Syrup',
+      recommendedDoseMg: cefixDoseMg,
+      formulation: 'Syrup 100mg/5ml',
+      calculatedVolumeMl: `${cefixMl100} ml`,
+      frequency: 'Twice daily (1-0-1 for 5 days)',
+      notes: `Target: 8mg/kg/day divided BD (${cefixDoseMg}mg per dose)`,
+    },
     {
       drugName: 'Paracetamol Syrup (250mg/5ml)',
       recommendedDoseMg: pcmDoseMg,
@@ -317,12 +357,28 @@ export function calculatePediatricDose(weightKg: number): CalculatedPediatricDos
       notes: `Target: 15mg/kg (${pcmDoseMg}mg per dose)`,
     },
     {
-      drugName: 'Amoxicillin Dry Syrup (125mg/5ml)',
-      recommendedDoseMg: amoxDoseMg,
-      formulation: 'Syrup 125mg/5ml',
-      calculatedVolumeMl: `${amoxMl125} ml`,
-      frequency: 'Twice daily (b.d. for 5 days)',
-      notes: `Target: 15mg/kg (${amoxDoseMg}mg per dose)`,
+      drugName: 'Amoxiclav (Augmentin) Dry Syrup 228.5mg/5ml',
+      recommendedDoseMg: amoxClavDoseMg,
+      formulation: 'Syrup 228.5mg/5ml',
+      calculatedVolumeMl: `${amoxClavMl228} ml`,
+      frequency: 'Twice daily (1-0-1 for 5-7 days)',
+      notes: `Target: 30mg/kg/day divided BD (${amoxClavDoseMg}mg per dose)`,
+    },
+    {
+      drugName: 'Amoxiclav (Augmentin Duo) Dry Syrup 457mg/5ml',
+      recommendedDoseMg: amoxClavDoseMg,
+      formulation: 'Syrup 457mg/5ml',
+      calculatedVolumeMl: `${amoxClavMl457} ml`,
+      frequency: 'Twice daily (1-0-1 for 5-7 days)',
+      notes: `Target: 30mg/kg/day divided BD (${amoxClavDoseMg}mg per dose)`,
+    },
+    {
+      drugName: 'Mefenamic Acid (Meftal-P) Syrup 100mg/5ml',
+      recommendedDoseMg: meftalDoseMg,
+      formulation: 'Syrup 100mg/5ml',
+      calculatedVolumeMl: `${meftalMl100} ml`,
+      frequency: 'Twice daily (1-0-1 after food)',
+      notes: `Target: 6.5mg/kg (${meftalDoseMg}mg per dose)`,
     },
     {
       drugName: 'Ibuprofen Syrup (100mg/5ml)',
@@ -341,12 +397,36 @@ export function calculatePediatricDose(weightKg: number): CalculatedPediatricDos
       notes: `Target: 10mg/kg (${aziDoseMg}mg per dose)`,
     },
     {
+      drugName: 'Azithromycin Suspension (100mg/5ml)',
+      recommendedDoseMg: aziDoseMg,
+      formulation: 'Suspension 100mg/5ml',
+      calculatedVolumeMl: `${aziMl100} ml`,
+      frequency: 'Once daily (1-0-0 for 3 days)',
+      notes: `Target: 10mg/kg (${aziDoseMg}mg per dose)`,
+    },
+    {
       drugName: 'Ondansetron Syrup (2mg/5ml)',
       recommendedDoseMg: parseFloat(ondDoseMg),
       formulation: 'Syrup 2mg/5ml',
       calculatedVolumeMl: `${ondMl} ml`,
       frequency: 'As needed for vomiting (S.O.S)',
       notes: `Target: 0.15mg/kg (${ondDoseMg}mg)`,
+    },
+    {
+      drugName: 'Cetirizine Syrup (5mg/5ml)',
+      recommendedDoseMg: parseFloat(cetDoseMg),
+      formulation: 'Syrup 5mg/5ml',
+      calculatedVolumeMl: `${cetMl} ml`,
+      frequency: 'Once daily at bedtime (0-0-1)',
+      notes: `Target: 0.25mg/kg (${cetDoseMg}mg per day)`,
+    },
+    {
+      drugName: 'Domperidone Syrup (5mg/5ml)',
+      recommendedDoseMg: parseFloat(dompDoseMg),
+      formulation: 'Syrup 5mg/5ml',
+      calculatedVolumeMl: `${dompMl} ml`,
+      frequency: '3 times daily 15 mins before meals',
+      notes: `Target: 0.25mg/kg (${dompDoseMg}mg per dose)`,
     },
   ];
 }
@@ -515,6 +595,31 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'fdc48', genericName: 'Metformin + Dapagliflozin', category: 'adult', dosage: '500mg/10mg (1-0-0 morning)', duration: '30 days', minAge: 18 },
   { id: 'fdc49', genericName: 'Pregabalin + Methylcobalamin', category: 'adult', dosage: '75mg/1500mcg (0-0-1 at night)', duration: '30 days', minAge: 18 },
   { id: 'fdc50', genericName: 'Gabapentin + Methylcobalamin', category: 'adult', dosage: '300mg/500mcg (0-0-1 at night)', duration: '30 days', minAge: 18 },
+
+  // ==========================================
+  // 1.5 VACCINES, IMMUNOGLOBULINS & BIOLOGICALS
+  // ==========================================
+  { id: 'vac1', genericName: 'Purified Chick Embryo Cell Rabies Vaccine (PCECV / Rabipur / Abhayrab)', category: 'all', dosage: '0.5ml IM deltoid (Days 0, 3, 7, 14, 28 Essen) or 0.1ml ID (WHO 2-site Days 0, 3, 7, 28)', duration: 'Post-Exposure Prophylaxis', keywords: 'rabies anti rabies vaccine arv rabipur abhayrab indirab dog bite wound PEP' },
+  { id: 'vac2', genericName: 'Human Rabies Immunoglobulin (HRIG 150 IU/ml - Rabigard / Berirab)', category: 'all', dosage: '20 IU/kg infiltrated thoroughly into and around Category III bite wounds on Day 0', duration: 'Stat Category III Rabies Exposure', keywords: 'hrig human rabies immunoglobulin rabigard berirab category III dog bite' },
+  { id: 'vac3', genericName: 'Equine Rabies Immunoglobulin (ERIG 1000 IU/5ml - Equirab)', category: 'all', dosage: '40 IU/kg infiltrated thoroughly into and around Category III bite wounds (after skin test)', duration: 'Stat Category III Rabies Exposure', keywords: 'erig equine rabies immunoglobulin equirab category III bite wound' },
+  { id: 'vac4', genericName: 'Tetanus Toxoid (TT) / Td Vaccine (0.5ml IM)', category: 'all', dosage: '0.5ml IM deltoid stat for dirty/contaminated wound prophylaxis', duration: 'Stat Wound Prophylaxis', keywords: 'tetanus toxoid tt td vaccine wound injury' },
+  { id: 'vac5', genericName: 'Human Tetanus Immunoglobulin (HTIG 250 IU / 500 IU)', category: 'all', dosage: '250 IU (or 500 IU if >24h or heavy contamination) IM stat', duration: 'High-risk Tetanus Wound Prophylaxis', keywords: 'htig human tetanus immunoglobulin wound tetanus' },
+  { id: 'vac6', genericName: 'Hepatitis B Vaccine (GeneVac-B / Engerix-B 20mcg/ml Adult)', category: 'adult', dosage: '1ml (20mcg) IM deltoid at 0, 1, and 6 months', duration: '3-Dose Schedule', keywords: 'hepatitis b vaccine engerix genevac b hbv', minAge: 18 },
+  { id: 'vac7', genericName: 'Hepatitis B Vaccine Pediatric (10mcg/0.5ml)', category: 'pediatric', dosage: '0.5ml (10mcg) IM at birth, 1, and 6 months', duration: '3-Dose Schedule', keywords: 'hepatitis b pediatric vaccine hbv birth dose', maxAge: 18 },
+  { id: 'vac8', genericName: 'Hepatitis B Immunoglobulin (HBIG 100 IU / 0.5ml)', category: 'all', dosage: '0.5ml IM stat within 12 hours of needle-stick or birth to HBsAg+ mother', duration: 'Post-Exposure Prophylaxis', keywords: 'hbig hepatitis b immunoglobulin needle stick perinatal' },
+  { id: 'vac9', genericName: 'BCG Vaccine (Tuberculosis 0.05ml Intradermal)', category: 'pediatric', dosage: '0.05ml Intradermal left upper arm at birth', duration: 'Birth Dose', keywords: 'bcg vaccine tuberculosis birth intradermal', maxAge: 1 },
+  { id: 'vac10', genericName: 'Bivalent Oral Polio Vaccine (bOPV Drops)', category: 'pediatric', dosage: '2 drops orally at birth, 6, 10, 14 weeks', duration: 'Routine Immunization', keywords: 'opv polio oral drops', maxAge: 5 },
+  { id: 'vac11', genericName: 'Inactivated Polio Vaccine (Fractional IPV 0.1ml)', category: 'pediatric', dosage: '0.1ml Intradermal right upper arm at 6 and 14 weeks', duration: 'Routine Immunization', keywords: 'ipv inactivated polio vaccine fractional intradermal', maxAge: 5 },
+  { id: 'vac12', genericName: 'Pentavalent Vaccine (DPT + Hep B + Hib)', category: 'pediatric', dosage: '0.5ml IM anterolateral thigh at 6, 10, 14 weeks', duration: 'Primary 3-Dose Series', keywords: 'pentavalent dpt hep b hib pediatric', maxAge: 5 },
+  { id: 'vac13', genericName: 'Rotavirus Oral Vaccine (Rotasiil / Rotavac)', category: 'pediatric', dosage: '5 drops / 2.5ml orally at 6, 10, 14 weeks', duration: 'Primary Series', keywords: 'rotavirus rotasiil rotavac diarrhea oral vaccine', maxAge: 2 },
+  { id: 'vac14', genericName: 'Pneumococcal Conjugate Vaccine (PCV14 / Prevenar-13 / Synflorix)', category: 'all', dosage: '0.5ml IM at 6, 14 weeks + booster at 9 months', duration: 'Primary + Booster', keywords: 'pcv pneumococcal prevenar synflorix pneumonia', maxAge: 5 },
+  { id: 'vac15', genericName: 'Measles-Rubella (MR) / MMR Vaccine (Tresivac)', category: 'all', dosage: '0.5ml Subcutaneous at 9 months and 16-24 months', duration: '2-Dose Series', keywords: 'mr mmr tresivac measles mumps rubella', maxAge: 18 },
+  { id: 'vac16', genericName: 'Typhoid Conjugate Vaccine (TCV - Typbar-TCV)', category: 'all', dosage: '0.5ml IM single dose at 6 months or older', duration: 'Single Dose', keywords: 'typhoid tcv typbar conjugate fever' },
+  { id: 'vac17', genericName: 'Varicella Vaccine (Chickenpox - Variped)', category: 'all', dosage: '0.5ml Subcutaneous 2 doses 4-8 weeks apart (from 12 months)', duration: '2-Dose Series', keywords: 'varicella chickenpox variped vaccine' },
+  { id: 'vac18', genericName: 'Hepatitis A Vaccine (Havrix / Avaxim 0.5ml)', category: 'all', dosage: '0.5ml IM 2 doses 6-12 months apart (from 12 months)', duration: '2-Dose Series', keywords: 'hepatitis a havrix avaxim vaccine' },
+  { id: 'vac19', genericName: 'HPV Vaccine (Human Papillomavirus - Cervavac / Gardasil-9)', category: 'all', dosage: '0.5ml IM 2 doses (0, 6 months) for girls 9-14 years; 3 doses for >15 yrs', duration: 'Primary Series', keywords: 'hpv cervavac gardasil cervical cancer vaccine' },
+  { id: 'vac20', genericName: 'Influenza Vaccine Quadrivalent (Fluarix / Vaxigrip Tetra)', category: 'all', dosage: '0.5ml IM annually before monsoon/winter', duration: 'Annual Booster', keywords: 'influenza flu fluarix vaxigrip tetra vaccine' },
+  { id: 'vac21', genericName: 'Polyvalent Snake Venom Antiserum (ASV Lyophilized 10ml Vials)', category: 'all', dosage: '10 vials (100ml) reconstituted in 200ml Normal Saline IV infusion over 1 hour stat', duration: 'Emergency Envenomation Stat', keywords: 'asv anti snake venom antiserum snake bite' },
 
   // ==========================================
   // 2. EMERGENCY ROOM (ER), RESUSCITATION & ICU IV INJECTABLES

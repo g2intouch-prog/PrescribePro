@@ -134,7 +134,21 @@ export const INDIAN_BRAND_TO_GENERIC_MAP: Record<string, string[]> = {
   'budecort': ['budesonide', 'corticosteroid'],
   'omnacortil': ['prednisolone', 'corticosteroid'],
   'wysolone': ['prednisolone', 'corticosteroid'],
-  'dexona': ['dexamethasone', 'corticosteroid']
+  'dexona': ['dexamethasone', 'corticosteroid'],
+  'rabipur': ['rabies-vaccine', 'arv', 'vaccine'],
+  'abhayrab': ['rabies-vaccine', 'arv', 'vaccine'],
+  'indirab': ['rabies-vaccine', 'arv', 'vaccine'],
+  'rabigard': ['hrig', 'rabies-immunoglobulin'],
+  'berirab': ['hrig', 'rabies-immunoglobulin'],
+  'equirab': ['erig', 'rabies-immunoglobulin'],
+  'equirab-sd': ['erig', 'rabies-immunoglobulin'],
+  'typbar': ['typhoid-vaccine', 'tcv', 'vaccine'],
+  'tresivac': ['mmr-vaccine', 'mr-vaccine', 'vaccine'],
+  'cervavac': ['hpv-vaccine', 'vaccine'],
+  'gardasil': ['hpv-vaccine', 'vaccine'],
+  'fluarix': ['influenza-vaccine', 'flu-vaccine'],
+  'vaxigrip': ['influenza-vaccine', 'flu-vaccine'],
+  'asv': ['snake-venom-antiserum', 'antiserums']
 };
 
 // EXHAUSTIVE OFFLINE DRUG-DRUG INTERACTION RULES DATABASE

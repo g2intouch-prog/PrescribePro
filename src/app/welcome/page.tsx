@@ -205,6 +205,7 @@ export default function UserWorkspacePage() {
   // Modals State
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isDrugModalOpen, setIsDrugModalOpen] = useState(false);
+  const [isPediatricModalOpen, setIsPediatricModalOpen] = useState(false);
 
   // Modal Editing Forms
   const [newSpecialtyName, setNewSpecialtyName] = useState('');
@@ -1553,6 +1554,17 @@ export default function UserWorkspacePage() {
                     <span>Patient Vitals</span>
                     <span className="text-[10px] font-mono text-slate-600">BMI: {calcBmi()}</span>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsPediatricModalOpen(true)}
+                    className="w-full py-1.5 px-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 hover:brightness-110 text-gray-950 font-extrabold text-[11px] shadow flex items-center justify-center gap-1.5 transition transform active:scale-95 border border-amber-300"
+                    title="Open Pediatric Weight & BSA m² Dosage Calculator"
+                  >
+                    <Calculator className="h-4 w-4 shrink-0" />
+                    <span>👶 Pediatric & BSA m² Dosing Assistant</span>
+                  </button>
+
                   <div className="grid grid-cols-2 gap-2 text-[10px]">
                     <div>
                       <label className="block mb-0.5 font-medium text-slate-600">Height (cm)</label>
