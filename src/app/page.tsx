@@ -42,16 +42,16 @@ export function SplitAuthLayout() {
         } else {
           router.push('/welcome');
         }
-      } else {
         const localSession = localStorage.getItem('prescribepro_session_email');
-        if (localSession) {
+        if (localSession && localSession !== 'user@prescribepro.com') {
           if (localSession.toLowerCase() === 'g2intouch@gmail.com') {
             router.push('/admin');
           } else {
             router.push('/welcome');
           }
+        } else if (localSession === 'user@prescribepro.com') {
+          localStorage.removeItem('prescribepro_session_email');
         }
-      }
     }
     checkExistingSession();
   }, [router]);

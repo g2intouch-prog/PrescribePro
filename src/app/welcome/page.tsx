@@ -188,7 +188,7 @@ const PRESET_PATIENTS: PatientRecord[] = [
 
 export default function UserWorkspacePage() {
   const router = useRouter();
-  const [email, setEmail] = useState<string>('user@prescribepro.com');
+  const [email, setEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   // Theme State: 'dark' vs 'day'
@@ -467,13 +467,12 @@ export default function UserWorkspacePage() {
       const supabase = createClient();
       const { data } = await supabase.auth.getUser();
 
-      if (data?.user?.email) {
-        setEmail(data.user.email);
+      const userEmail = data?.user?.email || localStorage.getItem('prescribepro_session_email');
+      if (userEmail) {
+        setEmail(userEmail);
       } else {
-        const localEmail = localStorage.getItem('prescribepro_session_email');
-        if (localEmail) {
-          setEmail(localEmail);
-        }
+        router.push('/');
+        return;
       }
       const loadedPresets = getAdminPresets();
       setPresets(loadedPresets);
