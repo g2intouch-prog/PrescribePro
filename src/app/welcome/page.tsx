@@ -3811,41 +3811,77 @@ export default function UserWorkspacePage() {
             </div>
 
             {/* SCROLLABLE DOSAGE CARDS */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+            <div className="flex-1 overflow-y-auto space-y-5 pr-1">
               {/* SECTION 1: WEIGHT-BASED DOSES */}
-              <div className="space-y-2">
-                <h4 className="font-bold text-amber-400 text-xs flex items-center justify-between border-b border-gray-800 pb-1">
-                  <span>⚖️ Weight-Based Pediatric Formulations & Immunoglobulins ({vitals.weight || 10} kg)</span>
-                  <span className="text-[9.5px] text-gray-400 font-mono">1-Tap Add to Prescription</span>
-                </h4>
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between border-b border-gray-800 pb-1.5">
+                  <h4 className="font-extrabold text-amber-400 text-xs flex items-center gap-1.5">
+                    <span>⚖️ Weight-Based Pediatric & Immunoglobulin Dosage ({vitals.weight || 10} kg Child)</span>
+                  </h4>
+                  <span className="text-[10px] text-gray-400 font-mono font-bold bg-slate-800 px-2 py-0.5 rounded-full border border-gray-700">
+                    1-Tap Add to Rx Pad
+                  </span>
+                </div>
 
-                <div className="space-y-1.5">
+                <div className="grid grid-cols-1 gap-2">
                   {calculatePediatricDose(parseFloat(vitals.weight) || 10).map((pd, idx) => {
                     const doseLabel = `${pd.drugName} - ${pd.calculatedVolumeMl} (${pd.frequency})`;
                     const isChecked = selectedDrugs.includes(doseLabel);
+                    
+                    // Categorize badge colors for instant recognition
+                    const isRabies = pd.drugName.toLowerCase().includes('rabies') || pd.drugName.toLowerCase().includes('erig') || pd.drugName.toLowerCase().includes('hrig');
+                    const isAntibiotic = pd.drugName.toLowerCase().includes('cefixime') || pd.drugName.toLowerCase().includes('amoxiclav') || pd.drugName.toLowerCase().includes('azithromycin');
+                    const isFever = pd.drugName.toLowerCase().includes('paracetamol') || pd.drugName.toLowerCase().includes('meftal') || pd.drugName.toLowerCase().includes('ibuprofen');
+
+                    const categoryBadge = isRabies
+                      ? 'bg-purple-900/80 text-purple-200 border-purple-500/50'
+                      : isAntibiotic
+                      ? 'bg-cyan-900/80 text-cyan-200 border-cyan-500/50'
+                      : isFever
+                      ? 'bg-amber-900/80 text-amber-200 border-amber-500/50'
+                      : 'bg-emerald-900/80 text-emerald-200 border-emerald-500/50';
+
                     return (
                       <div
                         key={idx}
-                        className="bg-slate-950 p-2.5 rounded-xl border border-gray-800 flex items-center justify-between gap-2 hover:border-amber-500/40 transition"
+                        className={`p-3 rounded-2xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                          isChecked
+                            ? 'bg-slate-900 border-amber-400 shadow-md ring-1 ring-amber-400/50'
+                            : 'bg-slate-950/90 border-gray-800 hover:border-gray-700'
+                        }`}
                       >
-                        <div className="space-y-0.5 min-w-0">
-                          <div className="font-bold text-white text-xs truncate">{pd.drugName}</div>
-                          <div className="text-amber-300 font-mono text-[11px]">
-                            Dose: <strong>{pd.calculatedVolumeMl}</strong> ({pd.frequency})
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-extrabold text-white text-xs tracking-wide">{pd.drugName}</span>
+                            <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase border ${categoryBadge}`}>
+                              {isRabies ? '💉 Immunoglobulin' : isAntibiotic ? '💊 Antibiotic' : isFever ? '🌡️ Antipyretic' : '🤢 Gastro'}
+                            </span>
                           </div>
-                          <div className="text-gray-400 text-[10px] italic">{pd.notes}</div>
+
+                          <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                            <span className="text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2 py-0.5 rounded-lg font-mono text-xs font-black">
+                              Calculated Volume: {pd.calculatedVolumeMl}
+                            </span>
+                            <span className="text-gray-300 font-mono text-[11px] font-semibold bg-slate-900 px-2 py-0.5 rounded border border-gray-800">
+                              ⏰ {pd.frequency}
+                            </span>
+                          </div>
+
+                          <div className="text-gray-400 text-[10.5px] italic pt-0.5 leading-relaxed">
+                            💡 {pd.notes}
+                          </div>
                         </div>
 
                         <button
                           type="button"
                           onClick={() => toggleDrugSelection(doseLabel)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition shrink-0 ${
+                          className={`px-4 py-2 rounded-xl text-xs font-extrabold transition shrink-0 shadow flex items-center justify-center gap-1 ${
                             isChecked
-                              ? 'bg-amber-500 text-slate-950 shadow-md'
-                              : 'bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30'
+                              ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-amber-500/20'
+                              : 'bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 active:scale-95'
                           }`}
                         >
-                          {isChecked ? '✓ Added' : '+ Add Dose'}
+                          {isChecked ? '✓ Added to Rx' : '+ Add Dose to Rx'}
                         </button>
                       </div>
                     );
@@ -3854,15 +3890,17 @@ export default function UserWorkspacePage() {
               </div>
 
               {/* SECTION 2: BSA-BASED DOSES */}
-              <div className="space-y-2 pt-2">
-                <h4 className="font-bold text-blue-400 text-xs flex items-center justify-between border-b border-gray-800 pb-1">
-                  <span>📐 Body Surface Area (BSA m²) Specialized Dosing</span>
-                  <span className="text-[9.5px] text-gray-400 font-mono">
+              <div className="space-y-2.5 pt-2">
+                <div className="flex items-center justify-between border-b border-gray-800 pb-1.5">
+                  <h4 className="font-extrabold text-blue-400 text-xs flex items-center gap-1.5">
+                    <span>📐 Body Surface Area (BSA m²) Specialized Protocols</span>
+                  </h4>
+                  <span className="text-[10px] font-mono font-bold text-blue-300 bg-blue-950 px-2 py-0.5 rounded-full border border-blue-800">
                     BSA: {calculateBsa(parseFloat(vitals.height) || 0, parseFloat(vitals.weight) || 10).toFixed(2)} m²
                   </span>
-                </h4>
+                </div>
 
-                <div className="space-y-1.5">
+                <div className="grid grid-cols-1 gap-2">
                   {calculateBsaDose(
                     parseFloat(vitals.height) || 0,
                     parseFloat(vitals.weight) || 10,
@@ -3873,26 +3911,44 @@ export default function UserWorkspacePage() {
                     return (
                       <div
                         key={idx}
-                        className="bg-slate-950 p-2.5 rounded-xl border border-gray-800 flex items-center justify-between gap-2 hover:border-blue-500/40 transition"
+                        className={`p-3 rounded-2xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                          isChecked
+                            ? 'bg-slate-900 border-blue-400 shadow-md ring-1 ring-blue-400/50'
+                            : 'bg-slate-950/90 border-gray-800 hover:border-gray-700'
+                        }`}
                       >
-                        <div className="space-y-0.5 min-w-0">
-                          <div className="font-bold text-white text-xs truncate">{bd.drugName}</div>
-                          <div className="text-blue-300 font-mono text-[11px]">
-                            Calculated Total: <strong>{bd.totalCalculatedDose}</strong> ({bd.dosePerBsa})
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-extrabold text-white text-xs tracking-wide">{bd.drugName}</span>
+                            <span className="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase bg-blue-900/60 text-blue-200 border border-blue-500/40">
+                              📐 BSA Protocol
+                            </span>
                           </div>
-                          <div className="text-gray-400 text-[10px] italic">Indication: {bd.clinicalIndication} | {bd.frequency}</div>
+
+                          <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                            <span className="text-blue-300 bg-blue-950/60 border border-blue-500/40 px-2 py-0.5 rounded-lg font-mono text-xs font-black">
+                              Calculated Total: {bd.totalCalculatedDose}
+                            </span>
+                            <span className="text-gray-300 font-mono text-[11px] font-semibold bg-slate-900 px-2 py-0.5 rounded border border-gray-800">
+                              ({bd.dosePerBsa})
+                            </span>
+                          </div>
+
+                          <div className="text-gray-400 text-[10.5px] italic pt-0.5 leading-relaxed">
+                            💡 Indication: {bd.clinicalIndication} | {bd.frequency}
+                          </div>
                         </div>
 
                         <button
                           type="button"
                           onClick={() => toggleDrugSelection(doseLabel)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition shrink-0 ${
+                          className={`px-4 py-2 rounded-xl text-xs font-extrabold transition shrink-0 shadow flex items-center justify-center gap-1 ${
                             isChecked
-                              ? 'bg-blue-500 text-white shadow-md'
-                              : 'bg-slate-800 hover:bg-slate-700 text-blue-400 border border-blue-500/30'
+                              ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-blue-500/20'
+                              : 'bg-slate-800 hover:bg-slate-700 text-blue-400 border border-blue-500/30 active:scale-95'
                           }`}
                         >
-                          {isChecked ? '✓ Added' : '+ Add Dose'}
+                          {isChecked ? '✓ Added to Rx' : '+ Add Dose to Rx'}
                         </button>
                       </div>
                     );
