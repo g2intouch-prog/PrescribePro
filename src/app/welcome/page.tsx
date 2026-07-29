@@ -229,6 +229,7 @@ export default function UserWorkspacePage() {
     gender: 'Male',
     careOf: 'Robert Doe (Father)',
     address: '123 Health Ave, Cityville',
+    allergies: 'NKDA (No Known Drug Allergies)',
   });
 
   // Medical History State
@@ -2007,6 +2008,64 @@ export default function UserWorkspacePage() {
               </button>
             </div>
           </div>
+
+          {/* LIVE DRUG SAFETY & INTERACTION WARNING BANNER (TOP PROMINENT ALERT PANEL) */}
+          {detectedSafetyWarnings.length > 0 && (
+            <div className="bg-red-950/90 border-2 border-red-500 rounded-2xl p-3 space-y-2 shadow-2xl shrink-0 my-1">
+              <div className="flex items-center justify-between border-b border-red-500/40 pb-1.5">
+                <div className="flex items-center gap-2 text-red-300 font-extrabold text-xs">
+                  <ShieldAlert className="h-5 w-5 text-red-400 shrink-0 animate-bounce" />
+                  <span>🚨 DRUG SAFETY & INTERACTION ALERT ({detectedSafetyWarnings.length})</span>
+                </div>
+                <span className="text-[10px] bg-red-600 text-white font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                  Physician Judgment Mode
+                </span>
+              </div>
+
+              <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                {detectedSafetyWarnings.map((warning) => (
+                  <div key={warning.rule.id} className="bg-slate-900/90 p-2.5 rounded-xl border border-red-500/40 text-xs space-y-1 shadow">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-extrabold text-red-400 text-xs flex items-center gap-1.5">
+                        ⚠️ {warning.rule.title}
+                      </span>
+                      <span className="text-[9px] bg-amber-950 text-amber-300 font-mono px-2 py-0.5 rounded font-bold border border-amber-500/40 shrink-0">
+                        🏛️ Source: {warning.rule.source}
+                      </span>
+                    </div>
+
+                    <p className="text-gray-200 leading-snug">
+                      <strong className="text-white">Conflict:</strong> <span className="text-red-300 font-bold">{warning.foundDrugA}</span> ↔ <span className="text-red-300 font-bold">{warning.foundDrugB}</span>
+                    </p>
+                    <p className="text-gray-400 text-[11px] italic">{warning.rule.description}</p>
+                    <div className="bg-emerald-950/60 p-1.5 rounded-lg border border-emerald-500/30 text-emerald-300 text-[11px]">
+                      <strong>Recommendation:</strong> {warning.rule.recommendation}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-800">
+                      {warning.foundDrugB !== 'Patient Safety Alert' && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveConflictingDrug(warning.foundDrugB)}
+                          className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white font-bold text-[10px] rounded-lg transition flex items-center gap-1"
+                        >
+                          🗑️ Remove Medication
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDismissWarning(warning.rule.id)}
+                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] rounded-lg transition"
+                        title="Acknowledge clinical judgment and dismiss warning"
+                      >
+                        🛡️ Dismiss / Override Warning
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* DYNAMIC PRINT CSS FOR CALIBRATED MILLIMETER MARGINS */}
           <style jsx global>{`
