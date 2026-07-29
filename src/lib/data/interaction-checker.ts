@@ -110,6 +110,58 @@ export function checkPrescriptionSafety(
     }
   }
 
+  // 1.5 DYNAMIC DUPLICATE GENERIC ACTIVE INGREDIENT & SUB-CLASS CHECK
+  // (Detects when the exact same generic salt e.g. "cefixime", "paracetamol", "amoxicillin" is prescribed twice in different doses or forms)
+  const NON_GENERIC_STOP_WORDS = new Set([
+    'tablet', 'tablets', 'tab', 'capsule', 'capsules', 'cap', 'syrup', 'syp', 'suspension',
+    'injection', 'inj', 'ointment', 'gel', 'drop', 'drops', 'eye', 'ear', 'cream', 'lotion',
+    'mg', 'gm', 'mcg', 'ml', 'iu', '1-0-1', '1-0-0', '0-0-1', '1-1-1', 's.o.s', 'sos', 'bd', 'tds', 'od', 'stat'
+  ]);
+
+  for (let i = 0; i < parsedDrugs.length; i++) {
+    for (let j = i + 1; j < parsedDrugs.length; j++) {
+      const drugA = parsedDrugs[i];
+      const drugB = parsedDrugs[j];
+
+      // Find common active ingredient keywords (excluding dosage/form stop words)
+      const commonGenerics = drugA.keywords.filter(
+        (k) => drugB.keywords.includes(k) && !NON_GENERIC_STOP_WORDS.has(k) && k.length > 3
+      );
+
+      if (commonGenerics.length > 0) {
+        const primarySalt = commonGenerics[0].toUpperCase();
+        const ruleId = `dynamic-duplicate-${commonGenerics[0]}-${i}-${j}`;
+
+        if (!ignoredSet.has(ruleId)) {
+          const alreadyAdded = detected.some(
+            (d) =>
+              (d.foundDrugA === drugA.original && d.foundDrugB === drugB.original) ||
+              (d.foundDrugA === drugB.original && d.foundDrugB === drugA.original)
+          );
+
+          if (!alreadyAdded) {
+            detected.push({
+              rule: {
+                id: ruleId,
+                drugA: [commonGenerics[0]],
+                drugB: [commonGenerics[0]],
+                severity: 'high',
+                title: `🚨 Duplicate Generic Active Ingredient: ${primarySalt}`,
+                description: `Co-prescribing multiple formulations containing the exact same active generic salt "${primarySalt}" (${drugA.original} and ${drugB.original}) causes accidental toxicity, severe cumulative overdose, and redundant therapy.`,
+                recommendation: `Discontinue one of the redundant ${primarySalt} line items and select a single dosage formulation.`,
+                source: 'CDSCO / NLEM India & WHO EML Safety Advisory',
+                category: 'Antimicrobial'
+              },
+              foundDrugA: drugA.original,
+              foundDrugB: drugB.original,
+              type: 'interaction'
+            });
+          }
+        }
+      }
+    }
+  }
+
   // 2. PATIENT ALLERGY CHECK
   if (patientAllergies && patientAllergies.trim().length > 0) {
     const allergyKeywords = patientAllergies
