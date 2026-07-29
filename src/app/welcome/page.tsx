@@ -186,6 +186,319 @@ const PRESET_PATIENTS: PatientRecord[] = [
   },
 ];
 
+export interface BrandSuggestionItem {
+  brandName: string;
+  formulation: string;
+  calculatedDose: string;
+  frequency: string;
+  isPediatric: boolean;
+}
+
+export function getClinicalBrandSuggestions(
+  genericFullName: string,
+  weightKg: number,
+  ageYears: number,
+  bsaM2: number,
+  customBrandMap: Record<string, string[]>
+): BrandSuggestionItem[] {
+  const lower = genericFullName.toLowerCase();
+  const isPediatricPatient = (weightKg > 0 && weightKg < 35) || (ageYears > 0 && ageYears < 12);
+  const results: BrandSuggestionItem[] = [];
+
+  // 1. AZITHROMYCIN
+  if (lower.includes('azithromycin')) {
+    if (isPediatricPatient && weightKg > 0) {
+      const targetMg = Math.round(weightKg * 10);
+      const ml200 = (targetMg / 40).toFixed(1);
+      const ml100 = (targetMg / 20).toFixed(1);
+      results.push({
+        brandName: 'Azithral XL 200 Liquid',
+        formulation: 'Syrup 200mg/5ml',
+        calculatedDose: `${ml200} ml OD (Target: 10mg/kg = ${targetMg}mg)`,
+        frequency: '1 OD for 3-5 days 1 hr before food',
+        isPediatric: true,
+      });
+      results.push({
+        brandName: 'Aziwok 200 ReadyMix',
+        formulation: 'Syrup 200mg/5ml',
+        calculatedDose: `${ml200} ml OD (Target: 10mg/kg = ${targetMg}mg)`,
+        frequency: '1 OD for 3-5 days 1 hr before food',
+        isPediatric: true,
+      });
+      results.push({
+        brandName: 'Zady 100 Dry Syrup',
+        formulation: 'Syrup 100mg/5ml',
+        calculatedDose: `${ml100} ml OD (Target: 10mg/kg = ${targetMg}mg)`,
+        frequency: '1 OD for 3-5 days 1 hr before food',
+        isPediatric: true,
+      });
+    } else {
+      results.push({
+        brandName: 'Aziwok 500mg Tablet',
+        formulation: 'Tablet 500mg',
+        calculatedDose: '1 Tab OD (500mg)',
+        frequency: '1 OD for 3 days 1 hr before food',
+        isPediatric: false,
+      });
+      results.push({
+        brandName: 'Azithral 500mg Tablet',
+        formulation: 'Tablet 500mg',
+        calculatedDose: '1 Tab OD (500mg)',
+        frequency: '1 OD for 3 days 1 hr before food',
+        isPediatric: false,
+      });
+      results.push({
+        brandName: 'Zady 500mg Tablet',
+        formulation: 'Tablet 500mg',
+        calculatedDose: '1 Tab OD (500mg)',
+        frequency: '1 OD for 3 days 1 hr before food',
+        isPediatric: false,
+      });
+    }
+  }
+
+  // 2. PARACETAMOL
+  else if (lower.includes('paracetamol') || lower.includes('acetaminophen')) {
+    if (isPediatricPatient && weightKg > 0) {
+      const targetMg = Math.round(weightKg * 15);
+      const ml250 = (targetMg / 50).toFixed(1);
+      const ml120 = (targetMg / 24).toFixed(1);
+      results.push({
+        brandName: 'Calpol 250 Peadiatric Suspension',
+        formulation: 'Syrup 250mg/5ml',
+        calculatedDose: `${ml250} ml Q6H / SOS (${targetMg}mg)`,
+        frequency: 'Stat & Q6H SOS after food',
+        isPediatric: true,
+      });
+      results.push({
+        brandName: 'Dolo 120 Suspension',
+        formulation: 'Syrup 120mg/5ml',
+        calculatedDose: `${ml120} ml Q6H / SOS (${targetMg}mg)`,
+        frequency: 'Stat & Q6H SOS after food',
+        isPediatric: true,
+      });
+      results.push({
+        brandName: 'Pacimol 250 Syrup',
+        formulation: 'Syrup 250mg/5ml',
+        calculatedDose: `${ml250} ml Q6H / SOS (${targetMg}mg)`,
+        frequency: 'Stat & Q6H SOS after food',
+        isPediatric: true,
+      });
+    } else {
+      results.push({
+        brandName: 'Calpol 650 Tablet',
+        formulation: 'Tablet 650mg',
+        calculatedDose: '1 Tab TDS / SOS',
+        frequency: '1-0-1 after food (Max 4g/day)',
+        isPediatric: false,
+      });
+      results.push({
+        brandName: 'Dolo 650 Tablet',
+        formulation: 'Tablet 650mg',
+        calculatedDose: '1 Tab TDS / SOS',
+        frequency: '1-0-1 after food (Max 4g/day)',
+        isPediatric: false,
+      });
+      results.push({
+        brandName: 'Crocin 650 Advance',
+        formulation: 'Tablet 650mg',
+        calculatedDose: '1 Tab TDS / SOS',
+        frequency: '1-0-1 after food',
+        isPediatric: false,
+      });
+    }
+  }
+
+  // 3. PANTOPRAZOLE
+  else if (lower.includes('pantoprazole')) {
+    if (isPediatricPatient && weightKg < 30) {
+      results.push({
+        brandName: 'Junior Pan 20 Dispersible Tab',
+        formulation: 'Tablet 20mg',
+        calculatedDose: '1 Tab OD morning',
+        frequency: '1 OD 30 min before breakfast',
+        isPediatric: true,
+      });
+    } else {
+      results.push({
+        brandName: 'Pan-40 Tablet',
+        formulation: 'Tablet 40mg',
+        calculatedDose: '1 Tab OD (40mg)',
+        frequency: '1 OD 30 min B/F (before food)',
+        isPediatric: false,
+      });
+      results.push({
+        brandName: 'Pantocid 40 Tablet',
+        formulation: 'Tablet 40mg',
+        calculatedDose: '1 Tab OD (40mg)',
+        frequency: '1 OD 30 min B/F',
+        isPediatric: false,
+      });
+      results.push({
+        brandName: 'Pan-D SR Capsule',
+        formulation: 'Capsule (Pan 40 + Dom 30)',
+        calculatedDose: '1 Cap OD SR',
+        frequency: '1 OD 30 min B/F',
+        isPediatric: false,
+      });
+    }
+  }
+
+  // 4. AMOXICILLIN + CLAVULANIC ACID
+  else if (lower.includes('amoxicillin') || lower.includes('clavulan')) {
+    if (isPediatricPatient && weightKg > 0) {
+      const targetMg = Math.round(weightKg * 15);
+      const ml228 = (targetMg / 40).toFixed(1);
+      const ml457 = (targetMg / 80).toFixed(1);
+      results.push({
+        brandName: 'Augmentin Duo Dry Syrup',
+        formulation: 'Syrup 228.5mg/5ml',
+        calculatedDose: `${ml228} ml BD (${targetMg}mg)`,
+        frequency: '1-0-1 for 5 days after food',
+        isPediatric: true,
+      });
+      results.push({
+        brandName: 'Clavam Forte Syrup',
+        formulation: 'Syrup 457mg/5ml',
+        calculatedDose: `${ml457} ml BD (${targetMg}mg)`,
+        frequency: '1-0-1 for 5 days after food',
+        isPediatric: true,
+      });
+    } else {
+      results.push({
+        brandName: 'Augmentin 625 Tablet',
+        formulation: 'Tablet 625mg',
+        calculatedDose: '1 Tab BD (625mg)',
+        frequency: '1-0-1 for 5 days after food',
+        isPediatric: false,
+      });
+      results.push({
+        brandName: 'Moxkind-CV 625 Tablet',
+        formulation: 'Tablet 625mg',
+        calculatedDose: '1 Tab BD (625mg)',
+        frequency: '1-0-1 for 5 days after food',
+        isPediatric: false,
+      });
+      results.push({
+        brandName: 'Clavam 625 Tablet',
+        formulation: 'Tablet 625mg',
+        calculatedDose: '1 Tab BD (625mg)',
+        frequency: '1-0-1 for 5 days after food',
+        isPediatric: false,
+      });
+    }
+  }
+
+  // 5. CEFIXIME
+  else if (lower.includes('cefixime')) {
+    if (isPediatricPatient && weightKg > 0) {
+      const targetMg = Math.round(weightKg * 4);
+      const ml50 = (targetMg / 10).toFixed(1);
+      const ml100 = (targetMg / 20).toFixed(1);
+      results.push({
+        brandName: 'Taxim-O 50 Dry Syrup',
+        formulation: 'Syrup 50mg/5ml',
+        calculatedDose: `${ml50} ml BD (${targetMg}mg)`,
+        frequency: '1-0-1 for 5 days',
+        isPediatric: true,
+      });
+      results.push({
+        brandName: 'Zifi 100 Dry Syrup',
+        formulation: 'Syrup 100mg/5ml',
+        calculatedDose: `${ml100} ml BD (${targetMg}mg)`,
+        frequency: '1-0-1 for 5 days',
+        isPediatric: true,
+      });
+    } else {
+      results.push({
+        brandName: 'Zifi 200 Tablet',
+        formulation: 'Tablet 200mg',
+        calculatedDose: '1 Tab BD (200mg)',
+        frequency: '1-0-1 for 5 days',
+        isPediatric: false,
+      });
+      results.push({
+        brandName: 'Taxim-O 200 Tablet',
+        formulation: 'Tablet 200mg',
+        calculatedDose: '1 Tab BD (200mg)',
+        frequency: '1-0-1 for 5 days',
+        isPediatric: false,
+      });
+      results.push({
+        brandName: 'Ceftas 200 Tablet',
+        formulation: 'Tablet 200mg',
+        calculatedDose: '1 Tab BD (200mg)',
+        frequency: '1-0-1 for 5 days',
+        isPediatric: false,
+      });
+    }
+  }
+
+  // 6. ONDANSETRON (BSA / WEIGHT CALCULATED)
+  else if (lower.includes('ondansetron')) {
+    if (isPediatricPatient && weightKg > 0) {
+      const mgDose = (weightKg * 0.15).toFixed(1);
+      const ml = (parseFloat(mgDose) / 0.4).toFixed(1);
+      results.push({
+        brandName: 'Emeset Syrup',
+        formulation: 'Syrup 2mg/5ml',
+        calculatedDose: `${ml} ml S.O.S (BSA: ${bsaM2.toFixed(2)}m²)`,
+        frequency: 'S.O.S for nausea/vomiting',
+        isPediatric: true,
+      });
+      results.push({
+        brandName: 'Vomikind Syrup',
+        formulation: 'Syrup 2mg/5ml',
+        calculatedDose: `${ml} ml S.O.S (BSA: ${bsaM2.toFixed(2)}m²)`,
+        frequency: 'S.O.S for nausea/vomiting',
+        isPediatric: true,
+      });
+    } else {
+      results.push({
+        brandName: 'Emeset 4 MD Tablet',
+        formulation: 'Tablet 4mg MD',
+        calculatedDose: '1 Tab S.O.S',
+        frequency: 'Dissolve on tongue S.O.S',
+        isPediatric: false,
+      });
+      results.push({
+        brandName: 'Vomikind 4 MD Tablet',
+        formulation: 'Tablet 4mg MD',
+        calculatedDose: '1 Tab S.O.S',
+        frequency: 'Dissolve on tongue S.O.S',
+        isPediatric: false,
+      });
+    }
+  }
+
+  // Check custom brands dictionary
+  const key = genericFullName.toLowerCase().split(' ')[0];
+  const customList = customBrandMap[key] || [];
+  customList.forEach((c) => {
+    if (!results.some((r) => r.brandName.toLowerCase() === c.toLowerCase())) {
+      results.push({
+        brandName: c,
+        formulation: isPediatricPatient ? 'Custom Pediatric Dose' : 'Custom Adult Dose',
+        calculatedDose: isPediatricPatient ? `${(weightKg * 10 / 20).toFixed(1)} ml` : '1 Unit',
+        frequency: 'As Prescribed',
+        isPediatric: isPediatricPatient,
+      });
+    }
+  });
+
+  if (results.length === 0) {
+    results.push({
+      brandName: `Generic ${genericFullName}`,
+      formulation: isPediatricPatient ? 'Pediatric Liquid' : 'Adult Oral Form',
+      calculatedDose: isPediatricPatient ? `${(weightKg * 10 / 20).toFixed(1)} ml` : '1 Unit',
+      frequency: 'Standard Clinical Regimen',
+      isPediatric: isPediatricPatient,
+    });
+  }
+
+  return results;
+}
+
 export default function UserWorkspacePage() {
   const router = useRouter();
   const [email, setEmail] = useState<string>('');
@@ -266,6 +579,28 @@ export default function UserWorkspacePage() {
   const handleSetErigPreference = (key: string) => {
     setPreferredErigKey(key);
     localStorage.setItem('prescribepro_erig_pref', key);
+  };
+
+  const handleEditableFocus = (e: React.FocusEvent<HTMLElement>) => {
+    const text = e.currentTarget.textContent || '';
+    if (text.trim().startsWith('Click to edit')) {
+      e.currentTarget.textContent = '';
+    } else if (text.trim().length > 0) {
+      setTimeout(() => {
+        const range = document.createRange();
+        range.selectNodeContents(e.currentTarget);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }, 10);
+    }
+  };
+
+  const getClinicalBrandSuggestionsList = (genericFullName: string) => {
+    const w = parseFloat(vitals.weight) || 0;
+    const a = parseFloat(patient.age) || 30;
+    const bsa = calculateBsa(parseFloat(vitals.height) || 0, w);
+    return getClinicalBrandSuggestions(genericFullName, w, a, bsa, customBrandMap);
   };
 
   const getBrandsForGeneric = (genericFullName: string): string[] => {
@@ -2096,23 +2431,23 @@ export default function UserWorkspacePage() {
             </button>
           </div>
 
-          {/* ULTRA-COMPACT SINGLE-LINE CONTROL STRIP */}
-          <div className={`px-2.5 py-1 rounded-xl text-[10px] shrink-0 mb-1.5 border flex items-center justify-between gap-2 overflow-x-auto ${
+          {/* ULTRA-COMPACT ADAPTIVE TOP CONTROL STRIP (NO HORIZONTAL SCROLL) */}
+          <div className={`px-2 py-1 rounded-xl text-[10px] shrink-0 mb-1.5 border flex flex-wrap items-center justify-between gap-1.5 ${
             theme === 'day' ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-950 border-gray-800'
           }`}>
             {/* LEFT SIDE: TITLE + PAPER SIZE + PAD MODE */}
-            <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <div className={`flex items-center gap-1 font-bold text-xs ${theme === 'day' ? 'text-blue-700' : 'text-emerald-400'}`}>
                 <FileSpreadsheet className="h-3.5 w-3.5" />
-                <span className="whitespace-nowrap">Section 2: Preview</span>
+                <span className="font-extrabold text-[11px] whitespace-nowrap">Section 2</span>
               </div>
 
               {/* PAPER SIZE TOGGLE */}
-              <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
+              <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700 text-[9.5px]">
                 <button
                   type="button"
                   onClick={() => handleSetPageSize('A4')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold transition ${
+                  className={`px-1.5 py-0.5 rounded text-[9.5px] font-extrabold transition ${
                     pageSize === 'A4' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
                   title="A4 Standard (210mm x 297mm)"
@@ -2122,7 +2457,7 @@ export default function UserWorkspacePage() {
                 <button
                   type="button"
                   onClick={() => handleSetPageSize('A5')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold transition ${
+                  className={`px-1.5 py-0.5 rounded text-[9.5px] font-extrabold transition ${
                     pageSize === 'A5' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
                   title="A5 Compact (148mm x 210mm)"
@@ -2132,11 +2467,11 @@ export default function UserWorkspacePage() {
               </div>
 
               {/* PAD MODE TOGGLE */}
-              <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
+              <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700 text-[9.5px]">
                 <button
                   type="button"
                   onClick={() => setPadMode('digital')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition ${
+                  className={`px-1.5 py-0.5 rounded text-[9.5px] font-bold transition ${
                     padMode === 'digital' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
                 >
@@ -2145,7 +2480,7 @@ export default function UserWorkspacePage() {
                 <button
                   type="button"
                   onClick={() => setPadMode('preprinted')}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition ${
+                  className={`px-1.5 py-0.5 rounded text-[9.5px] font-bold transition ${
                     padMode === 'preprinted' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
                 >
@@ -2154,10 +2489,10 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
-            {/* RIGHT SIDE: MARGIN INPUTS + BANNER HEIGHT + SAVE TEMPLATE */}
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="flex items-center gap-1">
-                <span className="text-slate-500 font-medium">Top:</span>
+            {/* RIGHT SIDE: MARGIN CONTROLS + SAVE TEMPLATE */}
+            <div className="flex items-center gap-1.5 flex-wrap text-[9.5px]">
+              <div className="flex items-center gap-1 bg-slate-200/60 dark:bg-slate-900 px-1.5 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
+                <span className="text-slate-500 font-bold">Top:</span>
                 <input
                   type="number"
                   min={0}
@@ -2169,15 +2504,15 @@ export default function UserWorkspacePage() {
                     const p = getAdminPresets();
                     saveAdminPresets({ ...p, headerMarginMm: val });
                   }}
-                  className={`w-10 px-1 py-0.5 rounded border text-center font-mono font-bold text-blue-600 text-[10px] ${
+                  className={`w-7 px-0.5 py-0 rounded border text-center font-mono font-bold text-blue-600 text-[9.5px] ${
                     theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-emerald-400'
                   }`}
                 />
                 <span className="text-slate-500 font-mono">mm</span>
-              </div>
 
-              <div className="flex items-center gap-1">
-                <span className="text-slate-500 font-medium">Btm:</span>
+                <span className="text-slate-400 px-0.5">|</span>
+
+                <span className="text-slate-500 font-bold">Btm:</span>
                 <input
                   type="number"
                   min={0}
@@ -2189,15 +2524,15 @@ export default function UserWorkspacePage() {
                     const p = getAdminPresets();
                     saveAdminPresets({ ...p, footerMarginMm: val });
                   }}
-                  className={`w-10 px-1 py-0.5 rounded border text-center font-mono font-bold text-pink-600 text-[10px] ${
+                  className={`w-7 px-0.5 py-0 rounded border text-center font-mono font-bold text-pink-600 text-[9.5px] ${
                     theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-pink-400'
                   }`}
                 />
                 <span className="text-slate-500 font-mono">mm</span>
-              </div>
 
-              <div className="flex items-center gap-1">
-                <span className="text-slate-500 font-medium">Ht:</span>
+                <span className="text-slate-400 px-0.5">|</span>
+
+                <span className="text-slate-500 font-bold">Ht:</span>
                 <input
                   type="number"
                   min={18}
@@ -2208,7 +2543,7 @@ export default function UserWorkspacePage() {
                     setFooterImgHeight(val);
                     localStorage.setItem('prescribepro_footer_img_height', String(val));
                   }}
-                  className={`w-10 px-1 py-0.5 rounded border text-center font-mono font-bold text-purple-600 text-[10px] ${
+                  className={`w-7 px-0.5 py-0 rounded border text-center font-mono font-bold text-purple-600 text-[9.5px] ${
                     theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-purple-400'
                   }`}
                 />
@@ -2218,10 +2553,10 @@ export default function UserWorkspacePage() {
               <button
                 type="button"
                 onClick={handleSaveCurrentAsTemplate}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-pink-600 text-white text-[10px] font-bold shadow hover:bg-pink-700 transition shrink-0 ml-1"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-pink-600 text-white text-[9.5px] font-extrabold shadow hover:bg-pink-700 transition shrink-0"
                 title="Save Template"
               >
-                <BookmarkPlus className="h-3.5 w-3.5" /> Save Template
+                <BookmarkPlus className="h-3 w-3" /> Save Template
               </button>
             </div>
           </div>
@@ -2335,10 +2670,22 @@ export default function UserWorkspacePage() {
                       </ul>
                     )}
                     <div className="bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px]">
-                      <span className="font-bold text-teal-950 block">Results:</span>
+                    <div className="bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px]">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-teal-950 block">Results:</span>
+                        <button
+                          type="button"
+                          onClick={() => setTestResultsText('')}
+                          className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1"
+                          title="Clear test results"
+                        >
+                          ✕ Clear
+                        </button>
+                      </div>
                       <p
                         contentEditable
                         suppressContentEditableWarning
+                        onFocus={handleEditableFocus}
                         onBlur={(e) => setTestResultsText(e.currentTarget.textContent || '')}
                         className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-teal-100/50 p-0.5 rounded cursor-text"
                       >
@@ -2350,9 +2697,19 @@ export default function UserWorkspacePage() {
                   {/* PROCEDURES (ALL NON-DRUG CARE, MANEUVERS & REHAB - ONLY SHOW IF CHECKED OR TYPED) */}
                   {(selectedProcedures.length > 0 || selectedAdvice.length > 0 || customProcedureText.trim() !== '') && (
                     <div>
-                      <strong className="text-indigo-900 block font-bold border-b border-indigo-200 pb-0.5 mb-1 uppercase tracking-tighter">
-                        🛠️ Procedures & Non-Drug Care:
-                      </strong>
+                      <div className="flex items-center justify-between border-b border-indigo-200 pb-0.5 mb-1">
+                        <strong className="text-indigo-900 font-bold uppercase tracking-tighter">
+                          🛠️ Procedures & Non-Drug Care:
+                        </strong>
+                        <button
+                          type="button"
+                          onClick={() => setCustomProcedureText('')}
+                          className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1"
+                          title="Clear procedures"
+                        >
+                          ✕ Clear
+                        </button>
+                      </div>
                       {selectedProcedures.length > 0 && (
                         <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5 font-medium">
                           {selectedProcedures.map((p) => (
@@ -2370,6 +2727,7 @@ export default function UserWorkspacePage() {
                       <p
                         contentEditable
                         suppressContentEditableWarning
+                        onFocus={handleEditableFocus}
                         onBlur={(e) => setCustomProcedureText(e.currentTarget.textContent || '')}
                         className={`text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-indigo-100/50 p-0.5 rounded cursor-text ${
                           !customProcedureText ? 'print:hidden' : ''
@@ -2384,107 +2742,179 @@ export default function UserWorkspacePage() {
                 {/* RIGHT PANE: CLINICAL ASSESSMENT, RX DRUGS & SPECIFIC ADVICE (8 COLUMNS) */}
                 <div className="col-span-8 pl-1 space-y-1 text-[9px]">
                   {/* 1. CHIEF COMPLAINT */}
-                  <div>
-                    <strong className="text-gray-900 font-bold">C/O (Chief Complaints): </strong>
+                  <div className="flex items-center gap-1 group">
+                    <strong className="text-gray-900 font-bold shrink-0">C/O (Chief Complaints): </strong>
                     <span
                       contentEditable
                       suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
                       onBlur={(e) => setChiefComplaints(e.currentTarget.textContent || '')}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {chiefComplaints || 'Click to edit chief complaints...'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setChiefComplaints('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Chief Complaints"
+                    >
+                      ✕
+                    </button>
                   </div>
 
                   {/* 2. SIGNS & SYMPTOMS */}
-                  <div>
-                    <strong className="text-gray-900 font-bold">Signs & Symptoms: </strong>
+                  <div className="flex items-center gap-1 group">
+                    <strong className="text-gray-900 font-bold shrink-0">Signs & Symptoms: </strong>
                     <span
                       contentEditable
                       suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
                       onBlur={(e) => setSignsSymptoms(e.currentTarget.textContent || '')}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {signsSymptoms || 'Click to edit signs & symptoms...'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setSignsSymptoms('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Signs & Symptoms"
+                    >
+                      ✕
+                    </button>
                   </div>
 
                   {/* 3. CLINICAL HISTORY */}
-                  <div>
-                    <strong className="text-gray-900 font-bold">H/O (Clinical History): </strong>
+                  <div className="flex items-center gap-1 group">
+                    <strong className="text-gray-900 font-bold shrink-0">H/O (Clinical History): </strong>
                     <span
                       contentEditable
                       suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
                       onBlur={(e) => setClinicalHistory(e.currentTarget.textContent || '')}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {clinicalHistory || 'Click to edit clinical history...'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setClinicalHistory('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Clinical History"
+                    >
+                      ✕
+                    </button>
                   </div>
 
                   {/* 4. FAMILY HISTORY */}
-                  <div>
-                    <strong className="text-gray-900 font-bold">Family History: </strong>
+                  <div className="flex items-center gap-1 group">
+                    <strong className="text-gray-900 font-bold shrink-0">Family History: </strong>
                     <span
                       contentEditable
                       suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
                       onBlur={(e) => setFamilyHistory(e.currentTarget.textContent || '')}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {familyHistory || 'Click to edit family history...'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setFamilyHistory('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Family History"
+                    >
+                      ✕
+                    </button>
                   </div>
 
                   {/* 5. DRUG HISTORY */}
-                  <div>
-                    <strong className="text-gray-900 font-bold">Drug History / Allergies: </strong>
+                  <div className="flex items-center gap-1 group">
+                    <strong className="text-gray-900 font-bold shrink-0">Drug History / Allergies: </strong>
                     <span
                       contentEditable
                       suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
                       onBlur={(e) => setDrugHistory(e.currentTarget.textContent || '')}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {drugHistory || 'Click to edit drug history...'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setDrugHistory('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Drug History"
+                    >
+                      ✕
+                    </button>
                   </div>
 
                   {/* 6. CLINICAL & EXAMINATION FINDINGS */}
-                  <div>
-                    <strong className="text-gray-900 font-bold">Clinical & Exam Findings: </strong>
+                  <div className="flex items-center gap-1 group">
+                    <strong className="text-gray-900 font-bold shrink-0">Clinical & Exam Findings: </strong>
                     <span
                       contentEditable
                       suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
                       onBlur={(e) => setExaminationFindings(e.currentTarget.textContent || '')}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {examinationFindings || 'Click to edit exam findings...'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setExaminationFindings('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Exam Findings"
+                    >
+                      ✕
+                    </button>
                   </div>
 
                   {/* 7. PROVISIONAL DIAGNOSIS */}
-                  <div className="bg-gray-100/90 p-1 rounded font-bold text-gray-900">
-                    <strong>Provisional Diagnosis: </strong>
+                  <div className="bg-gray-100/90 p-1 rounded font-bold text-gray-900 flex items-center gap-1 group">
+                    <strong className="shrink-0">Provisional Diagnosis: </strong>
                     <span
                       contentEditable
                       suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
                       onBlur={(e) => setProvisionalDiagnosis(e.currentTarget.textContent || '')}
-                      className="outline-none hover:bg-yellow-200/70 p-0.5 rounded cursor-text"
+                      className="outline-none hover:bg-yellow-200/70 p-0.5 rounded cursor-text flex-1"
                     >
                       {provisionalDiagnosis || 'Click to edit provisional diagnosis...'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setProvisionalDiagnosis('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Diagnosis"
+                    >
+                      ✕
+                    </button>
                   </div>
 
                   {/* 8. DIFFERENTIAL DIAGNOSIS */}
-                  <div className="text-gray-700 italic text-[8.5px]">
-                    <strong>Differential Diagnosis (D/D): </strong>
+                  <div className="text-gray-700 italic text-[8.5px] flex items-center gap-1 group">
+                    <strong className="shrink-0">Differential Diagnosis (D/D): </strong>
                     <span
                       contentEditable
                       suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
                       onBlur={(e) => setDifferentialDiagnosis(e.currentTarget.textContent || '')}
-                      className="outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text"
+                      className="outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {differentialDiagnosis || 'Click to edit differential diagnosis...'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setDifferentialDiagnosis('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Differential Diagnosis"
+                    >
+                      ✕
+                    </button>
                   </div>
 
                   {/* LIVE DRUG SAFETY & INTERACTION WARNING BANNER (PRINT-HIDDEN) */}
@@ -3987,6 +4417,18 @@ export default function UserWorkspacePage() {
               </button>
             </div>
 
+            {/* PATIENT AGE/WEIGHT/BSA CLINICAL CONTEXT STRIP */}
+            <div className="p-2 rounded-xl bg-slate-950 border border-emerald-500/30 flex items-center justify-between text-[10px]">
+              <span className="font-extrabold text-emerald-400 flex items-center gap-1">
+                {(parseFloat(vitals.weight) > 0 && parseFloat(vitals.weight) < 35) || (parseFloat(patient.age) > 0 && parseFloat(patient.age) < 12)
+                  ? '👶 Pediatric Clinical Calculations Active'
+                  : '👨 Adult Standard Dosage Active'}
+              </span>
+              <span className="font-mono text-gray-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-gray-800">
+                Wt: {vitals.weight || '15'}kg • BSA: {calculateBsa(parseFloat(vitals.height) || 0, parseFloat(vitals.weight) || 15).toFixed(2)}m²
+              </span>
+            </div>
+
             {/* ROW 1: #1 DEFAULT CHOICE - PURE GENERIC NAME */}
             <div className="space-y-1.5">
               <span className="text-[10px] uppercase font-extrabold tracking-wider text-amber-400 block">
@@ -4015,55 +4457,69 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
-            {/* SECTION B: BRAND NAMES LIST (WITH ADD/EDIT/DELETE) */}
+            {/* SECTION B: CLINICALLY MATCHED BRAND FORMULATIONS */}
             <div className="space-y-2 pt-1 border-t border-gray-800">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-400 block">
-                  🏷️ Popular Brand Names (1-Tap Add / Delete):
+                  🏷️ Age / Weight / BSA Matched Brands:
                 </span>
                 <span className="text-[9.5px] text-gray-400 font-mono">
-                  {getBrandsForGeneric(activeGenericDrugForBrands.genericName).length} Brands
+                  {getClinicalBrandSuggestionsList(activeGenericDrugForBrands.genericName).length} Formulations
                 </span>
               </div>
 
-              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                {getBrandsForGeneric(activeGenericDrugForBrands.genericName).map((brand, bIdx) => (
+              <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                {getClinicalBrandSuggestionsList(activeGenericDrugForBrands.genericName).map((brandItem, bIdx) => (
                   <div
                     key={bIdx}
                     className="p-2.5 rounded-xl bg-slate-950 border border-gray-800 hover:border-emerald-500/40 flex items-center justify-between gap-2 transition"
                   >
                     <div
                       onClick={() => {
-                        const label = `${brand} - ${activeGenericDrugForBrands.genericName} (${activeGenericDrugForBrands.dosage})`;
+                        const label = `${brandItem.brandName} (${brandItem.calculatedDose} • ${brandItem.frequency})`;
                         toggleDrugSelection(label);
                         setIsBrandPickerModalOpen(false);
                         setActiveGenericDrugForBrands(null);
                       }}
-                      className="flex-1 cursor-pointer min-w-0"
+                      className="flex-1 cursor-pointer min-w-0 space-y-0.5"
                     >
-                      <span className="font-extrabold text-white text-xs block truncate">{brand}</span>
-                      <span className="text-[9.5px] text-emerald-400 font-mono">
-                        {activeGenericDrugForBrands.dosage}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-extrabold text-white text-xs truncate">{brandItem.brandName}</span>
+                        <span className={`text-[8.5px] px-1.5 py-0.2 rounded font-bold uppercase border ${
+                          brandItem.isPediatric
+                            ? 'bg-purple-900/80 text-purple-200 border-purple-500/40'
+                            : 'bg-blue-900/80 text-blue-200 border-blue-500/40'
+                        }`}>
+                          {brandItem.formulation}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[9.5px] flex-wrap">
+                        <span className="text-amber-300 font-mono font-bold">
+                          Dose: {brandItem.calculatedDose}
+                        </span>
+                        <span className="text-gray-400 font-mono">
+                          ⏰ {brandItem.frequency}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => {
-                          const label = `${brand} - ${activeGenericDrugForBrands.genericName} (${activeGenericDrugForBrands.dosage})`;
+                          const label = `${brandItem.brandName} (${brandItem.calculatedDose} • ${brandItem.frequency})`;
                           toggleDrugSelection(label);
                           setIsBrandPickerModalOpen(false);
                           setActiveGenericDrugForBrands(null);
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] shadow"
+                        className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] shadow"
                       >
                         + Add Brand
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDeleteBrand(activeGenericDrugForBrands.genericName, brand)}
-                        className="px-2 py-1 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-800/60 text-[10px] font-bold"
+                        onClick={() => handleDeleteBrand(activeGenericDrugForBrands.genericName, brandItem.brandName)}
+                        className="px-2 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-800/60 text-[10px] font-bold"
                         title="Delete Brand"
                       >
                         🗑️
@@ -4079,7 +4535,7 @@ export default function UserWorkspacePage() {
                   type="text"
                   value={newCustomBrandInput}
                   onChange={(e) => setNewCustomBrandInput(e.target.value)}
-                  placeholder="Add custom brand name (e.g. Dolo 650, Calpol)..."
+                  placeholder="Add custom brand name (e.g. Aziwok 200, Dolo 120)..."
                   className="flex-1 bg-slate-950 border border-gray-700 rounded-xl px-3 py-1.5 text-xs text-white"
                 />
                 <button
