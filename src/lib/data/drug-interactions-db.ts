@@ -111,16 +111,9 @@ export const INDIAN_BRAND_TO_GENERIC_MAP: Record<string, string[]> = {
   'zocon': ['fluconazole', 'azole-antifungal'],
   'forcan': ['fluconazole', 'azole-antifungal'],
   'itrasys': ['itraconazole', 'azole-antifungal'],
-  'canditral': ['itraconazole', 'azole-antifungal'],
   'ultram': ['tramadol', 'opioid'],
   'tramazac': ['tramadol', 'opioid'],
-  'nexito': ['escitalopram', 'ssri'],
   'depran': ['escitalopram', 'clonazepam', 'ssri'],
-  'zoloft': ['sertraline', 'ssri'],
-  'eptoin': ['phenytoin', 'antiepileptic'],
-  'tegretol': ['carbamazepine', 'antiepileptic'],
-  'valparin': ['valproate', 'sodium valproate', 'antiepileptic'],
-  'encorate': ['valproate', 'sodium valproate', 'antiepileptic'],
   'deriphyllin': ['theophylline', 'etofylline', 'xanthine'],
   'asthalin': ['salbutamol', 'albuterol', 'beta2-agonist'],
   'levolin': ['levosalbutamol', 'beta2-agonist'],
@@ -278,7 +271,7 @@ export const DEFAULT_OFFLINE_DRUG_INTERACTIONS: DrugInteractionRule[] = [
     description: 'Co-prescribing multiple Domperidone-containing combination drugs (e.g., Pantoprazole+Domperidone with Rabeprazole+Domperidone) causes cumulative daily overdose (>30mg/day), elevating the risk of QT prolongation, ventricular arrhythmias, and sudden cardiac arrest.',
     recommendation: 'Discontinue duplicate Domperidone-containing formulations. Ensure total daily Domperidone intake does not exceed 30mg.',
     source: 'IPC / PvPI Drug Safety Advisory & CDSCO India',
-    category: 'Gastroenterology / Cardiology'
+    category: 'Gastroenterology'
   },
   {
     id: 'ddi-duplicate-nsaid-therapy',

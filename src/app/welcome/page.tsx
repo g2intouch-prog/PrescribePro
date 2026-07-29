@@ -680,6 +680,7 @@ export default function UserWorkspacePage() {
       gender: 'Male',
       careOf: '',
       address: '',
+      allergies: '',
     });
 
     setVitals({
@@ -746,6 +747,7 @@ export default function UserWorkspacePage() {
         gender: found.gender,
         careOf: found.careOf || '',
         address: found.address || '',
+        allergies: (found as any).allergies || '',
       });
 
       if (found.vitals) {
