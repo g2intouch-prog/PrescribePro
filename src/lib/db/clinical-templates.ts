@@ -271,7 +271,10 @@ export function calculateBsaDose(heightCm: number, weightKg: number, ageYrs: num
   ];
 }
 
-export function calculatePediatricDose(weightKg: number): CalculatedPediatricDose[] {
+export function calculatePediatricDose(
+  weightKg: number,
+  preferredErigKey: string = 'erig-300'
+): CalculatedPediatricDose[] {
   if (weightKg <= 0) return [];
 
   // 1. Paracetamol (15 mg/kg/dose Q6H)
@@ -317,40 +320,56 @@ export function calculatePediatricDose(weightKg: number): CalculatedPediatricDos
 
   // 10. Equine Rabies Immunoglobulin (ERIG - Equirab: 40 IU/kg)
   const erigTotalIu = Math.round(weightKg * 40);
-  const erigMl300 = (erigTotalIu / 300).toFixed(1); // 300 IU/ml (1500 IU / 5ml vial: Wt * 40 / 300)
-  const erigMl200 = (erigTotalIu / 200).toFixed(1); // 200 IU/ml (1000 IU / 5ml vial: Wt * 40 / 200)
+  const erigMl300 = (erigTotalIu / 300).toFixed(1); // 300 IU/ml (Equirab / Vinrab 1500 IU / 5ml: Wt * 40 / 300)
+  const erigMl200 = (erigTotalIu / 200).toFixed(1); // 200 IU/ml (Govt Supply / CRI Kasauli 1000 IU / 5ml: Wt * 40 / 200)
 
-  // 11. Human Rabies Immunoglobulin (HRIG - Rabigard: 20 IU/kg; 300 IU/2ml = 150 IU/ml)
+  // 11. Human Rabies Immunoglobulin (HRIG - Rabigard / Berirab: 20 IU/kg; 300 IU/2ml = 150 IU/ml)
   const hrigTotalIu = Math.round(weightKg * 20);
   const hrigMl = (hrigTotalIu / 150).toFixed(1);
 
+  // Rabies Immunoglobulin items
+  const erig300Item: CalculatedPediatricDose = {
+    drugName: 'Equine Rabies Immunoglobulin (ERIG 300 IU/ml - Equirab / Vinrab 1500 IU / 5ml)',
+    recommendedDoseMg: erigTotalIu,
+    formulation: 'Injectable 300 IU/ml (1500 IU/5ml)',
+    calculatedVolumeMl: `${erigMl300} ml (${erigTotalIu} IU)`,
+    frequency: 'Stat Category III Rabies Bite Infiltration on Day 0',
+    notes: `Target: 40 IU/kg (${erigTotalIu} IU). Formula: Wt × 40 / 300. Infiltrate into/around wound after skin test.`,
+  };
+
+  const erig200Item: CalculatedPediatricDose = {
+    drugName: 'Equine Rabies Immunoglobulin (ERIG 200 IU/ml - Govt. Supply / CRI Kasauli 1000 IU / 5ml)',
+    recommendedDoseMg: erigTotalIu,
+    formulation: 'Injectable 200 IU/ml (1000 IU/5ml)',
+    calculatedVolumeMl: `${erigMl200} ml (${erigTotalIu} IU)`,
+    frequency: 'Stat Category III Rabies Bite Infiltration on Day 0',
+    notes: `Target: 40 IU/kg (${erigTotalIu} IU). Formula: Wt × 40 / 200. Infiltrate into/around wound after skin test.`,
+  };
+
+  const hrig150Item: CalculatedPediatricDose = {
+    drugName: 'Human Rabies Immunoglobulin (HRIG / Rabigard / Berirab 20 IU/kg)',
+    recommendedDoseMg: hrigTotalIu,
+    formulation: 'Injectable 150 IU/ml (300 IU/2ml)',
+    calculatedVolumeMl: `${hrigMl} ml (${hrigTotalIu} IU)`,
+    frequency: 'Stat Category III Rabies Bite Infiltration on Day 0',
+    notes: `Target: 20 IU/kg (${hrigTotalIu} IU). Formula: Wt × 20 / 150. Infiltrate thoroughly into/around wound; rest deep IM.`,
+  };
+
+  // Sort rabies immunoglobulin items based on doctor's preferred choice (#1 position)
+  let rabiesIgItems: CalculatedPediatricDose[] = [];
+  if (preferredErigKey === 'erig-200') {
+    rabiesIgItems = [erig200Item, erig300Item, hrig150Item];
+  } else if (preferredErigKey === 'hrig-150') {
+    rabiesIgItems = [hrig150Item, erig300Item, erig200Item];
+  } else {
+    // Default 'erig-300'
+    rabiesIgItems = [erig300Item, erig200Item, hrig150Item];
+  }
+
   return [
+    ...rabiesIgItems,
     {
-      drugName: 'Equine Rabies Immunoglobulin (ERIG 300 IU/ml - 1500 IU/5ml Vial)',
-      recommendedDoseMg: erigTotalIu,
-      formulation: 'Injectable 300 IU/ml (1500 IU/5ml)',
-      calculatedVolumeMl: `${erigMl300} ml (${erigTotalIu} IU)`,
-      frequency: 'Stat Category III Rabies Bite Infiltration on Day 0',
-      notes: `Target: 40 IU/kg (${erigTotalIu} IU). Formula: Wt × 40 / 300. Infiltrate into/around wound after skin test.`,
-    },
-    {
-      drugName: 'Equine Rabies Immunoglobulin (ERIG 200 IU/ml - 1000 IU/5ml Vial)',
-      recommendedDoseMg: erigTotalIu,
-      formulation: 'Injectable 200 IU/ml (1000 IU/5ml)',
-      calculatedVolumeMl: `${erigMl200} ml (${erigTotalIu} IU)`,
-      frequency: 'Stat Category III Rabies Bite Infiltration on Day 0',
-      notes: `Target: 40 IU/kg (${erigTotalIu} IU). Formula: Wt × 40 / 200. Infiltrate into/around wound after skin test.`,
-    },
-    {
-      drugName: 'Human Rabies Immunoglobulin (HRIG / Rabigard 20 IU/kg)',
-      recommendedDoseMg: hrigTotalIu,
-      formulation: 'Injectable 150 IU/ml (300 IU/2ml)',
-      calculatedVolumeMl: `${hrigMl} ml (${hrigTotalIu} IU)`,
-      frequency: 'Stat Category III Rabies Bite Infiltration on Day 0',
-      notes: `Target: 20 IU/kg (${hrigTotalIu} IU). Infiltrate thoroughly into/around wound; rest deep IM.`,
-    },
-    {
-      drugName: 'Purified Chick Embryo Rabies Vaccine (Rabipur / Abhayrab)',
+      drugName: 'Purified Chick Embryo Rabies Vaccine (Rabipur / Abhayrab / Indirab)',
       recommendedDoseMg: 0.5,
       formulation: 'Reconstituted 0.5ml Vial',
       calculatedVolumeMl: '0.5 ml IM (or 0.1 ml ID 2-site)',

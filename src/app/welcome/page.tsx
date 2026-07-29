@@ -207,6 +207,104 @@ export default function UserWorkspacePage() {
   const [isDrugModalOpen, setIsDrugModalOpen] = useState(false);
   const [isPediatricModalOpen, setIsPediatricModalOpen] = useState(false);
 
+  // Doctor Rabies/ERIG Preference State
+  const [preferredErigKey, setPreferredErigKey] = useState<string>('erig-300');
+
+  // Prescribing Mode State: 'generic' vs 'brand'
+  const [prescribingMode, setPrescribingMode] = useState<'generic' | 'brand'>('generic');
+
+  // Generic ↔ Brand Picker Modal State
+  const [isBrandPickerModalOpen, setIsBrandPickerModalOpen] = useState(false);
+  const [activeGenericDrugForBrands, setActiveGenericDrugForBrands] = useState<DrugItem | null>(null);
+  const [newCustomBrandInput, setNewCustomBrandInput] = useState('');
+
+  // Custom Brand Map State (Generic Name -> Brand Names[])
+  const [customBrandMap, setCustomBrandMap] = useState<Record<string, string[]>>({
+    'paracetamol': ['Calpol 650mg', 'Dolo 650mg', 'Crocin 650mg', 'Pacimol 650mg'],
+    'pantoprazole': ['Pan-40', 'Pantocid 40', 'Pantop 40', 'Pan-D SR'],
+    'rabeprazole': ['Rabeloc 20', 'Rabekind 20', 'Razo 20'],
+    'esomeprazole': ['Esomac 40', 'Nexpro 40', 'NEXPRO-RD'],
+    'amoxicillin': ['Mox 500', 'Novamox 500', 'Augmentin 625', 'Moxkind-CV 625'],
+    'cefixime': ['Zifi 200', 'Taxim-O 200', 'Ceftas 200', 'Mahashaf 200'],
+    'azithromycin': ['Azithral 500', 'Aziwok 500', 'Zady 500'],
+    'ciprofloxacin': ['Ciplox 500', 'Cifran 500'],
+    'ofloxacin': ['Oflox 200', 'Zanocin 200'],
+    'levofloxacin': ['Levomac 500', 'Loxof 500'],
+    'telmisartan': ['Telma 40', 'Telmikind 40', 'Tazloc 40'],
+    'amlodipine': ['Amlong 5', 'Stamlo 5'],
+    'metformin': ['Glycomet 500', 'Obimet 500'],
+    'clonazepam': ['Clonotril 0.5', 'Zapiz 0.5', 'Epitril 0.5'],
+    'escitalopram': ['Nexito 10', 'Cilentra 10', 'Depran 10'],
+    'alprazolam': ['Alprax 0.25', 'Restyl 0.25', 'Trika 0.25'],
+    'ondansetron': ['Emeset 4mg', 'Vomikind 4mg', 'Ondem 4mg'],
+  });
+
+  useEffect(() => {
+    const savedPref = localStorage.getItem('prescribepro_erig_pref');
+    if (savedPref) setPreferredErigKey(savedPref);
+
+    const savedRxMode = localStorage.getItem('prescribepro_rx_mode');
+    if (savedRxMode === 'generic' || savedRxMode === 'brand') {
+      setPrescribingMode(savedRxMode);
+    }
+
+    const savedBrands = localStorage.getItem('prescribepro_custom_brands');
+    if (savedBrands) {
+      try {
+        setCustomBrandMap(JSON.parse(savedBrands));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
+
+  const handleSetPrescribingMode = (mode: 'generic' | 'brand') => {
+    setPrescribingMode(mode);
+    localStorage.setItem('prescribepro_rx_mode', mode);
+  };
+
+  const handleSetErigPreference = (key: string) => {
+    setPreferredErigKey(key);
+    localStorage.setItem('prescribepro_erig_pref', key);
+  };
+
+  const getBrandsForGeneric = (genericFullName: string): string[] => {
+    const lower = genericFullName.toLowerCase();
+    const matches: string[] = [];
+
+    for (const [key, brands] of Object.entries(customBrandMap)) {
+      if (lower.includes(key.toLowerCase())) {
+        brands.forEach((b) => {
+          if (!matches.includes(b)) matches.push(b);
+        });
+      }
+    }
+
+    return matches.length > 0 ? matches : [`Generic ${genericFullName}`];
+  };
+
+  const handleAddCustomBrand = (genericFullName: string) => {
+    if (!newCustomBrandInput.trim()) return;
+    const key = genericFullName.toLowerCase().split(' ')[0];
+    const current = customBrandMap[key] || [];
+    const updated = {
+      ...customBrandMap,
+      [key]: [...current, newCustomBrandInput.trim()]
+    };
+    setCustomBrandMap(updated);
+    localStorage.setItem('prescribepro_custom_brands', JSON.stringify(updated));
+    setNewCustomBrandInput('');
+  };
+
+  const handleDeleteBrand = (genericFullName: string, brandToDelete: string) => {
+    const key = genericFullName.toLowerCase().split(' ')[0];
+    const current = customBrandMap[key] || [];
+    const updatedList = current.filter((b) => b !== brandToDelete);
+    const updatedMap = { ...customBrandMap, [key]: updatedList };
+    setCustomBrandMap(updatedMap);
+    localStorage.setItem('prescribepro_custom_brands', JSON.stringify(updatedMap));
+  };
+
   // Modal Editing Forms
   const [newSpecialtyName, setNewSpecialtyName] = useState('');
   const [newTemplateName, setNewTemplateName] = useState('');
@@ -2760,85 +2858,43 @@ export default function UserWorkspacePage() {
                 <span>💊 Open Full Generic Drug Pharmacopeia (Popup Modal)</span>
               </button>
 
-              <div className="flex items-center justify-between shrink-0 pt-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
-                  <Pill className="h-3.5 w-3.5 text-emerald-600" /> Generic Quick List
-                </span>
-                <span className="text-[9px] text-slate-500 font-mono font-bold">{drugCatalog.length} Generics</span>
+              {/* PRESCRIBING MODE TOGGLE STRIP (GENERIC VS BRAND) */}
+              <div className={`p-1.5 rounded-xl border text-[10px] shrink-0 space-y-1 ${
+                theme === 'day' ? 'bg-slate-100 border-slate-300 text-slate-800' : 'bg-slate-950 border-gray-800 text-gray-200'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-[10px] uppercase tracking-wider text-emerald-600">Prescribing Mode:</span>
+                  <span className="text-[9px] font-mono text-slate-500">
+                    {prescribingMode === 'generic' ? 'Direct 1-Tap Generic' : 'Brand Picker Popup'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-1 p-0.5 rounded-lg bg-slate-900/40">
+                  <button
+                    type="button"
+                    onClick={() => handleSetPrescribingMode('generic')}
+                    className={`py-1 px-2 rounded-lg font-extrabold text-[10px] transition flex items-center justify-center gap-1 ${
+                      prescribingMode === 'generic'
+                        ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
+                        : (theme === 'day' ? 'text-slate-600 hover:text-slate-900' : 'text-gray-400 hover:text-white')
+                    }`}
+                  >
+                    <span>💊 Generic Mode</span>
+                    <span className="text-[8.5px] bg-emerald-950/40 px-1 rounded text-emerald-950 font-bold">(No Popup)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetPrescribingMode('brand')}
+                    className={`py-1 px-2 rounded-lg font-extrabold text-[10px] transition flex items-center justify-center gap-1 ${
+                      prescribingMode === 'brand'
+                        ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                        : (theme === 'day' ? 'text-slate-600 hover:text-slate-900' : 'text-gray-400 hover:text-white')
+                    }`}
+                  >
+                    <span>🏷️ Brand Mode</span>
+                    <span className="text-[8.5px] bg-amber-950/40 px-1 rounded text-amber-950 font-bold">(Picker)</span>
+                  </button>
+                </div>
               </div>
-
-              {/* PEDIATRIC WEIGHT-BASED DOSAGE CALCULATOR BOX (FOR CHILDREN <40KG) */}
-              {parseFloat(vitals.weight) > 0 && parseFloat(vitals.weight) < 40 && (
-                <div className="p-2 rounded-xl bg-amber-50 border border-amber-300 text-[10px] text-amber-950 space-y-1 shrink-0 shadow-sm">
-                  <div className="flex items-center justify-between font-bold text-amber-900">
-                    <span className="flex items-center gap-1 text-[10px]">
-                      <Calculator className="h-3.5 w-3.5 text-amber-700" />
-                      Pediatric Weight Calc ({vitals.weight} kg Child)
-                    </span>
-                    <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-mono">
-                      Target: 15mg/kg
-                    </span>
-                  </div>
-                  <div className="space-y-1 max-h-20 overflow-y-auto pr-0.5">
-                    {calculatePediatricDose(parseFloat(vitals.weight)).map((pd, idx) => {
-                      const doseLabel = `${pd.drugName} - ${pd.calculatedVolumeMl} (${pd.frequency})`;
-                      const isChecked = selectedDrugs.includes(doseLabel);
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => toggleDrugSelection(doseLabel)}
-                          className={`p-1 rounded border cursor-pointer flex items-center justify-between transition ${
-                            isChecked ? 'bg-amber-200 border-amber-400 font-bold' : 'bg-white border-amber-200 hover:bg-amber-100/60'
-                          }`}
-                        >
-                          <span className="truncate">{pd.drugName}: <strong className="text-amber-900">{pd.calculatedVolumeMl}</strong></span>
-                          <span className="text-[8px] bg-amber-300 px-1 rounded font-bold shrink-0">{isChecked ? 'Added' : '+ Add'}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* BODY SURFACE AREA (BSA m²) CLINICAL DOSING PANEL */}
-              {parseFloat(vitals.weight) > 0 && (
-                <div className="p-2 rounded-xl bg-blue-50 border border-blue-300 text-[10px] text-blue-950 space-y-1 shrink-0 shadow-sm">
-                  <div className="flex items-center justify-between font-bold text-blue-900">
-                    <span className="flex items-center gap-1 text-[10px]">
-                      <Calculator className="h-3.5 w-3.5 text-blue-700" />
-                      Body Surface Area (BSA) Calc
-                    </span>
-                    <span className="text-[9px] bg-blue-200 text-blue-950 px-1.5 py-0.5 rounded font-mono font-bold">
-                      BSA: {calculateBsa(parseFloat(vitals.height) || 0, parseFloat(vitals.weight)).toFixed(2)} m²
-                    </span>
-                  </div>
-                  <div className="space-y-1 max-h-20 overflow-y-auto pr-0.5">
-                    {calculateBsaDose(
-                      parseFloat(vitals.height) || 0,
-                      parseFloat(vitals.weight),
-                      parseFloat(patient.age) || 5
-                    ).map((bd, idx) => {
-                      const doseLabel = `${bd.drugName} - ${bd.totalCalculatedDose} (${bd.dosePerBsa})`;
-                      const isChecked = selectedDrugs.includes(doseLabel);
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => toggleDrugSelection(doseLabel)}
-                          className={`p-1 rounded border cursor-pointer flex items-center justify-between transition ${
-                            isChecked ? 'bg-blue-200 border-blue-400 font-bold' : 'bg-white border-blue-200 hover:bg-blue-100/60'
-                          }`}
-                        >
-                          <div className="truncate">
-                            <span className="font-semibold block truncate text-[9px]">{bd.drugName}</span>
-                            <span className="text-[8px] text-blue-800 font-mono">{bd.totalCalculatedDose} ({bd.dosePerBsa})</span>
-                          </div>
-                          <span className="text-[8px] bg-blue-300 px-1 rounded font-bold shrink-0">{isChecked ? 'Added' : '+ Add'}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
 
               {/* SEARCH & AGE/WEIGHT SMART SUGGESTION STRIP */}
               <div className="space-y-1 shrink-0">
@@ -2848,152 +2904,59 @@ export default function UserWorkspacePage() {
                     type="text"
                     value={drugSearchQuery}
                     onChange={(e) => setDrugSearchQuery(e.target.value)}
-                    placeholder="Search specialty drugs (e.g. Orthopedics, Psychiatry, Eye)..."
+                    placeholder="Search specialty drugs (A-Z)..."
                     className={`w-full rounded-lg pl-7 pr-2 py-0.5 text-[10px] ${inputBg}`}
                   />
                 </div>
-
-                <div className="flex items-center gap-1 text-[9px] overflow-x-auto py-0.5">
-                  <span className="text-slate-500 font-bold shrink-0">Filter:</span>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('')}
-                    className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200 shrink-0"
-                  >
-                    All
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('dental')}
-                    className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-950 font-bold hover:bg-amber-200 shrink-0"
-                  >
-                    Dental
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('hepatology')}
-                    className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-950 font-bold hover:bg-emerald-200 shrink-0"
-                  >
-                    Hepatology
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('nephrology')}
-                    className="px-1.5 py-0.5 rounded bg-sky-100 text-sky-950 font-bold hover:bg-sky-200 shrink-0"
-                  >
-                    Nephrology
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('gynae')}
-                    className="px-1.5 py-0.5 rounded bg-pink-100 text-pink-950 font-bold hover:bg-pink-200 shrink-0"
-                  >
-                    Gynecology
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('ortho')}
-                    className="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-950 font-bold hover:bg-indigo-200 shrink-0"
-                  >
-                    Orthopedics
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('psych')}
-                    className="px-1.5 py-0.5 rounded bg-violet-100 text-violet-950 font-bold hover:bg-violet-200 shrink-0"
-                  >
-                    Psychiatry
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('cardio')}
-                    className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-950 font-bold hover:bg-rose-200 shrink-0"
-                  >
-                    Cardiology
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('gastro')}
-                    className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-950 font-bold hover:bg-amber-200 shrink-0"
-                  >
-                    Gastroenterology
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('eye')}
-                    className="px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-950 font-bold hover:bg-cyan-200 shrink-0"
-                  >
-                    Eye Drops
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('ent')}
-                    className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-950 font-bold hover:bg-teal-200 shrink-0"
-                  >
-                    ENT / Nasal
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('derma')}
-                    className="px-1.5 py-0.5 rounded bg-orange-100 text-orange-950 font-bold hover:bg-orange-200 shrink-0"
-                  >
-                    Dermatology
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('cough')}
-                    className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 font-bold hover:bg-emerald-200 shrink-0"
-                  >
-                    Cough Syrups
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('alkaliser')}
-                    className="px-1.5 py-0.5 rounded bg-pink-100 text-pink-900 font-bold hover:bg-pink-200 shrink-0"
-                  >
-                    Alkalisers
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('Injection')}
-                    className="px-1.5 py-0.5 rounded bg-red-100 text-red-900 font-bold hover:bg-red-200 shrink-0"
-                  >
-                    ER / Injectables
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDrugSearchQuery('Anesthetic')}
-                    className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-900 font-bold hover:bg-purple-200 shrink-0"
-                  >
-                    Anesthetics
-                  </button>
-                </div>
               </div>
 
-              {/* CHECKLIST OF GENERIC MEDICATIONS WITH CONTRAINDICATION SAFETY GAURDS */}
-              <div className="flex-1 overflow-y-auto space-y-1 pr-1">
-                {searchClinicalDrugs(drugSearchQuery, drugCatalog).map((d) => {
-                  const w = parseFloat(vitals.weight) || 0;
+              {/* 2-TIER ALPHABETICALLY SORTED SPECIALTY DRUGS CHECKLIST */}
+              <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                {(() => {
+                  const matched = searchClinicalDrugs(drugSearchQuery, drugCatalog);
+                  
+                  // Tier 1: Most Prescribed Common Specialty Drugs (Sorted A-Z)
+                  const commonTier = matched
+                    .slice(0, 12)
+                    .sort((a, b) => a.genericName.localeCompare(b.genericName));
+                  
+                  const commonIds = new Set(commonTier.map((d) => d.id));
+
+                  // Tier 2: All Other Specialty & Pharmacopeia Drugs (Sorted A-Z)
+                  const otherTier = matched
+                    .filter((d) => !commonIds.has(d.id))
+                    .sort((a, b) => a.genericName.localeCompare(b.genericName));
+
+                  const renderDrugItem = (d: DrugItem) => {
+                    const w = parseFloat(vitals.weight) || 0;
                     const isContraindicated = w > 0 && w < 30 && d.category === 'adult';
                     const label = `${d.genericName} (${d.dosage})`;
-                    const isChecked = selectedDrugs.includes(label);
+                    const isChecked = selectedDrugs.includes(label) || selectedDrugs.some((s) => s.includes(d.genericName));
 
                     return (
-                      <label
+                      <div
                         key={d.id}
                         onClick={() => {
                           if (isContraindicated) {
-                            alert(`⚠️ SAFETY CONTRAINDICATION WARNING:\n\nA ${w} kg child cannot take ${d.genericName} (${d.dosage}) adult dose!\n\nPlease select the calculated Pediatric Syrup dosage (${calculatePediatricDose(w)[0]?.calculatedVolumeMl} t.d.s) instead.`);
+                            alert(`⚠️ SAFETY CONTRAINDICATION WARNING:\n\nA ${w} kg child cannot take ${d.genericName} (${d.dosage}) adult dose!\n\nPlease select calculated Pediatric Syrup dosage.`);
                             return;
                           }
-                          toggleDrugSelection(label);
+
+                          if (prescribingMode === 'generic') {
+                            // Direct 1-tap addition without popup!
+                            toggleDrugSelection(label);
+                          } else {
+                            // Brand Mode -> Open Brand Picker Modal!
+                            setActiveGenericDrugForBrands(d);
+                            setIsBrandPickerModalOpen(true);
+                          }
                         }}
-                        className={`flex items-start gap-2 p-1.5 rounded-lg border text-[10px] cursor-pointer transition ${
+                        className={`flex items-start gap-2 p-2 rounded-xl border text-[10.5px] cursor-pointer transition ${
                           isContraindicated
                             ? 'bg-red-50 border-red-300 text-red-900 opacity-60'
                             : isChecked
                             ? (theme === 'day' ? 'bg-emerald-100 border-emerald-400 text-emerald-950 font-bold' : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300 font-semibold')
-                            : (theme === 'day' ? 'bg-white border-slate-200 text-slate-700 hover:border-emerald-300' : 'bg-gray-950/40 border-gray-800/80 text-gray-400')
+                            : (theme === 'day' ? 'bg-white border-slate-200 text-slate-800 hover:border-emerald-300' : 'bg-gray-950/40 border-gray-800/80 text-gray-300')
                         }`}
                       >
                         <input type="checkbox" checked={isChecked} disabled={isContraindicated} onChange={() => {}} className="rounded text-emerald-600 mt-0.5" />
@@ -3012,13 +2975,44 @@ export default function UserWorkspacePage() {
                               {isContraindicated ? 'Unsafe for Weight' : d.category}
                             </span>
                           </div>
-                          <span className="text-[9px] text-slate-500 block truncate">
+                          <span className="text-[9px] text-slate-500 block truncate pt-0.5">
                             {isContraindicated ? `⚠️ Adult dose unsafe for ${w}kg child` : `${d.dosage} • ${d.duration}`}
                           </span>
                         </div>
-                      </label>
+                      </div>
                     );
-                  })}
+                  };
+
+                  return (
+                    <div className="space-y-3">
+                      {/* TIER 1: MOST PRESCRIBED COMMON SPECIALTY DRUGS (A-Z) */}
+                      {commonTier.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 pb-0.5 border-b border-emerald-500/20">
+                            <span>⭐ Most Common Specialty Drugs (A-Z)</span>
+                            <span className="font-mono text-[9px] text-slate-400">{commonTier.length}</span>
+                          </div>
+                          <div className="space-y-1">
+                            {commonTier.map(renderDrugItem)}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* TIER 2: ALL OTHER SPECIALTY MEDICINES (A-Z) */}
+                      {otherTier.length > 0 && (
+                        <div className="space-y-1 pt-1">
+                          <div className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-blue-600 pb-0.5 border-b border-blue-500/20">
+                            <span>📚 Other Specialty & Pharmacopeia Drugs (A-Z)</span>
+                            <span className="font-mono text-[9px] text-slate-400">{otherTier.length}</span>
+                          </div>
+                          <div className="space-y-1">
+                            {otherTier.map(renderDrugItem)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -3964,6 +3958,150 @@ export default function UserWorkspacePage() {
                 className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs"
               >
                 Close Assistant
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* GENERIC ↔ BRAND PICKER & CUSTOMIZER POPUP MODAL */}
+      {isBrandPickerModalOpen && activeGenericDrugForBrands && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-emerald-500/40 max-w-md w-full rounded-2xl p-5 shadow-2xl space-y-4 text-xs">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-2.5">
+              <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-sm">
+                <Pill className="h-5 w-5 text-emerald-400 shrink-0" />
+                <div className="min-w-0">
+                  <span className="block text-white font-bold text-xs truncate">{activeGenericDrugForBrands.genericName}</span>
+                  <span className="text-[10px] text-gray-400 font-normal">Choose Generic vs Brand Name to prescribe</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsBrandPickerModalOpen(false);
+                  setActiveGenericDrugForBrands(null);
+                }}
+                className="text-gray-400 hover:text-white font-bold text-sm px-2"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* ROW 1: #1 DEFAULT CHOICE - PURE GENERIC NAME */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] uppercase font-extrabold tracking-wider text-amber-400 block">
+                ⭐ #1 Choice (Standard Generic Prescription):
+              </span>
+              <div
+                onClick={() => {
+                  const label = `${activeGenericDrugForBrands.genericName} (${activeGenericDrugForBrands.dosage})`;
+                  toggleDrugSelection(label);
+                  setIsBrandPickerModalOpen(false);
+                  setActiveGenericDrugForBrands(null);
+                }}
+                className="p-3 rounded-xl bg-gradient-to-r from-amber-950/80 via-slate-900 to-slate-900 border border-amber-500/40 hover:border-amber-400 cursor-pointer transition flex items-center justify-between shadow-md"
+              >
+                <div className="space-y-0.5">
+                  <span className="font-extrabold text-amber-300 text-xs block">
+                    {activeGenericDrugForBrands.genericName}
+                  </span>
+                  <span className="text-[10px] text-gray-300 font-mono">
+                    {activeGenericDrugForBrands.dosage} • {activeGenericDrugForBrands.duration}
+                  </span>
+                </div>
+                <span className="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-extrabold text-[10px] shrink-0 shadow">
+                  + Add Generic
+                </span>
+              </div>
+            </div>
+
+            {/* SECTION B: BRAND NAMES LIST (WITH ADD/EDIT/DELETE) */}
+            <div className="space-y-2 pt-1 border-t border-gray-800">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-400 block">
+                  🏷️ Popular Brand Names (1-Tap Add / Delete):
+                </span>
+                <span className="text-[9.5px] text-gray-400 font-mono">
+                  {getBrandsForGeneric(activeGenericDrugForBrands.genericName).length} Brands
+                </span>
+              </div>
+
+              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                {getBrandsForGeneric(activeGenericDrugForBrands.genericName).map((brand, bIdx) => (
+                  <div
+                    key={bIdx}
+                    className="p-2.5 rounded-xl bg-slate-950 border border-gray-800 hover:border-emerald-500/40 flex items-center justify-between gap-2 transition"
+                  >
+                    <div
+                      onClick={() => {
+                        const label = `${brand} - ${activeGenericDrugForBrands.genericName} (${activeGenericDrugForBrands.dosage})`;
+                        toggleDrugSelection(label);
+                        setIsBrandPickerModalOpen(false);
+                        setActiveGenericDrugForBrands(null);
+                      }}
+                      className="flex-1 cursor-pointer min-w-0"
+                    >
+                      <span className="font-extrabold text-white text-xs block truncate">{brand}</span>
+                      <span className="text-[9.5px] text-emerald-400 font-mono">
+                        {activeGenericDrugForBrands.dosage}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const label = `${brand} - ${activeGenericDrugForBrands.genericName} (${activeGenericDrugForBrands.dosage})`;
+                          toggleDrugSelection(label);
+                          setIsBrandPickerModalOpen(false);
+                          setActiveGenericDrugForBrands(null);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] shadow"
+                      >
+                        + Add Brand
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteBrand(activeGenericDrugForBrands.genericName, brand)}
+                        className="px-2 py-1 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-800/60 text-[10px] font-bold"
+                        title="Delete Brand"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* ADD NEW CUSTOM BRAND INPUT */}
+              <div className="pt-2 border-t border-gray-800 flex gap-2">
+                <input
+                  type="text"
+                  value={newCustomBrandInput}
+                  onChange={(e) => setNewCustomBrandInput(e.target.value)}
+                  placeholder="Add custom brand name (e.g. Dolo 650, Calpol)..."
+                  className="flex-1 bg-slate-950 border border-gray-700 rounded-xl px-3 py-1.5 text-xs text-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddCustomBrand(activeGenericDrugForBrands.genericName)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shrink-0 shadow"
+                >
+                  + Add Brand
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-gray-800 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsBrandPickerModalOpen(false);
+                  setActiveGenericDrugForBrands(null);
+                }}
+                className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold"
+              >
+                Close
               </button>
             </div>
           </div>
