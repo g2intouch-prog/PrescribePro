@@ -2330,7 +2330,9 @@ export default function UserWorkspacePage() {
         </section>
 
         {/* SECTION 2 (CENTER COLUMN - 6 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
-        <section className={`lg:col-span-6 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full ${cardBg}`}>
+        <section className={`lg:col-span-6 rounded-none lg:rounded-2xl p-2 sm:p-3.5 flex flex-col justify-between overflow-hidden h-full w-full ${cardBg} ${
+          mobileDrawer === 'none' ? 'flex' : 'hidden lg:flex'
+        }`}>
           
           {/* LIVE DRUG SAFETY & INTERACTION ALERT BANNER (VERY TOP OF SECTION 2) */}
           {detectedSafetyWarnings.length > 0 && (
@@ -2400,34 +2402,34 @@ export default function UserWorkspacePage() {
             </div>
           )}
 
-          {/* MOBILE TOP SECTION SWITCHER BAR (MOBILE ONLY) */}
-          <div className="lg:hidden flex items-center justify-between gap-1 p-1 bg-slate-900/90 rounded-xl border border-slate-800 text-[10px] mb-1.5 shrink-0">
+          {/* MOBILE FULL SCREEN SECTION SWITCHER BAR (MOBILE ONLY) */}
+          <div className="lg:hidden flex items-center justify-between gap-1 p-1 bg-slate-900/90 backdrop-blur-md rounded-xl border border-slate-800 text-[10.5px] mb-2 shrink-0 shadow-lg">
             <button
               type="button"
               onClick={() => setMobileDrawer('left')}
-              className={`flex-1 py-1 px-2 rounded-lg font-bold flex items-center justify-center gap-1 shadow transition ${
-                mobileDrawer === 'left' ? 'bg-blue-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+              className={`flex-1 py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1 transition ${
+                mobileDrawer === 'left' ? 'bg-blue-600 text-white font-extrabold shadow-md shadow-blue-600/40' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
               }`}
             >
-              <ChevronLeft className="h-3 w-3" /> Section 1 (Inputs)
+              👤 Section 1 (Inputs)
             </button>
             <button
               type="button"
               onClick={() => setMobileDrawer('none')}
-              className={`py-1 px-3 rounded-lg font-extrabold flex items-center justify-center gap-1 transition ${
-                mobileDrawer === 'none' ? 'bg-emerald-600 text-white shadow' : 'bg-slate-800 text-slate-400'
+              className={`flex-1 py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1 transition ${
+                mobileDrawer === 'none' ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/40' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
               }`}
             >
-              📄 Pad
+              📄 Section 2 (Pad)
             </button>
             <button
               type="button"
               onClick={() => setMobileDrawer('right')}
-              className={`flex-1 py-1 px-2 rounded-lg font-bold flex items-center justify-center gap-1 shadow transition ${
-                mobileDrawer === 'right' ? 'bg-purple-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+              className={`flex-1 py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1 transition ${
+                mobileDrawer === 'right' ? 'bg-purple-600 text-white font-extrabold shadow-md shadow-purple-600/40' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
               }`}
             >
-              Section 3 (Drugs) <ChevronRight className="h-3 w-3" />
+              💊 Section 3 (Drugs)
             </button>
           </div>
 
@@ -2574,10 +2576,10 @@ export default function UserWorkspacePage() {
           {/* CENTERED LIVE PRESCRIPTION PAD PREVIEW CARD (A4 / A5 DYNAMIC PORTRAIT MODE) */}
           <div
             id="printable-prescription-pad"
-            className={`flex-1 bg-white text-gray-900 rounded-xl p-4 shadow-2xl space-y-3 font-sans border border-gray-200 overflow-y-auto flex flex-col justify-between w-full mx-auto transition-all duration-300 ${
+            className={`flex-1 bg-white text-gray-900 rounded-xl p-3 sm:p-4 shadow-2xl space-y-3 font-sans border border-gray-200 overflow-y-auto flex flex-col justify-between w-full max-w-full lg:mx-auto transition-all duration-300 ${
               pageSize === 'A5'
-                ? 'aspect-[148/210] max-w-[440px] text-[10px]'
-                : 'aspect-[210/297] max-w-[560px] text-[11px]'
+                ? 'lg:aspect-[148/210] lg:max-w-[440px] text-[10px]'
+                : 'lg:aspect-[210/297] lg:max-w-[560px] text-[11px]'
             }`}
           >
             
