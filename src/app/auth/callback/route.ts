@@ -17,12 +17,12 @@ export async function GET(request: Request) {
       if (!invited) {
         // Uninvited user -> sign out and reject
         await supabase.auth.signOut();
-        return NextResponse.redirect(`${origin}/auth?error=uninvited`);
+        return NextResponse.redirect(`${origin}/?error=uninvited`);
       }
 
       return NextResponse.redirect(`${origin}/welcome`);
     }
   }
 
-  return NextResponse.redirect(`${origin}/auth`);
+  return NextResponse.redirect(`${origin}/`);
 }
