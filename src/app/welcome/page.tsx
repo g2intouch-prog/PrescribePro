@@ -938,24 +938,30 @@ export default function UserWorkspacePage() {
     brandName: string,
     formulation?: string
   ): string => {
-    const lower = originalLine.toLowerCase().trim();
+    const text = originalLine.trim();
+    const lower = text.toLowerCase();
+
+    const hasWord = (...words: string[]) => {
+      return words.some((w) => new RegExp(`\\b${w.replace('.', '\\.')}\\b`, 'i').test(lower));
+    };
+
     let prefix = 'Tab.';
 
-    if (lower.startsWith('inj') || lower.includes('inj') || lower.includes('injection') || lower.includes('infusion') || lower.includes('vial') || lower.includes('amp') || lower.includes('iv') || lower.includes('im')) {
+    if (lower.startsWith('inj') || hasWord('inj', 'inj.', 'injection', 'infusion', 'vial', 'ampoule', 'iv', 'im', 'stat iv', 'iv/im')) {
       prefix = 'Inj.';
-    } else if (lower.startsWith('cap') || lower.includes('capsule')) {
+    } else if (lower.startsWith('cap') || hasWord('cap', 'cap.', 'capsule', 'capsules', 'softgel')) {
       prefix = 'Cap.';
-    } else if (lower.startsWith('syp') || lower.includes('syrup') || lower.includes('suspension')) {
+    } else if (lower.startsWith('syp') || hasWord('syp', 'syp.', 'syrup', 'suspension', 'linctus', 'expectorant', 'elixir')) {
       prefix = 'Syp.';
-    } else if (lower.startsWith('drop') || lower.includes('drop')) {
+    } else if (lower.startsWith('drop') || lower.startsWith('drops') || hasWord('drop', 'drops', 'drop.', 'drops.', 'ophthalmic', 'otic')) {
       prefix = 'Drops.';
-    } else if (lower.startsWith('oint') || lower.includes('ointment') || lower.includes('cream') || lower.includes('gel')) {
+    } else if (lower.startsWith('oint') || lower.startsWith('cream') || lower.startsWith('gel') || hasWord('ointment', 'cream', 'gel', 'lotion', 'patch')) {
       prefix = 'Oint.';
-    } else if (lower.startsWith('tab') || lower.includes('tablet')) {
+    } else if (lower.startsWith('tab') || hasWord('tab', 'tab.', 'tablet', 'tablets', 'dt', 'md')) {
       prefix = 'Tab.';
     } else if (formulation) {
       const f = formulation.toLowerCase();
-      if (f.includes('inj') || f.includes('vial') || f.includes('amp')) prefix = 'Inj.';
+      if (f.includes('inj') || f.includes('vial') || f.includes('amp') || f.includes('infusion')) prefix = 'Inj.';
       else if (f.includes('cap') || f.includes('capsule')) prefix = 'Cap.';
       else if (f.includes('syp') || f.includes('syrup') || f.includes('suspension')) prefix = 'Syp.';
       else if (f.includes('drop')) prefix = 'Drops.';
@@ -963,9 +969,12 @@ export default function UserWorkspacePage() {
       else prefix = 'Tab.';
     }
 
-    let cleanBrand = brandName.replace(/^(inj\.|tab\.|cap\.|syp\.|drops\.|oint\.|inj|tab|cap|syp|drops|oint)\s+/i, '').trim();
+    let cleanBrand = brandName
+      .replace(/^(inj\.|tab\.|cap\.|syp\.|drops\.|oint\.|inj|tab|cap|syp|drops|oint)\s+/i, '')
+      .replace(/\b(tablet|tablets|capsule|capsules|syrup|injection)\b/gi, '')
+      .trim();
 
-    const matchInst = originalLine.match(/\(.*\).*/);
+    const matchInst = text.match(/\(.*\).*/);
     const inst = matchInst ? ` ${matchInst[0].trim()}` : '';
 
     return `${prefix} ${cleanBrand}${inst}`;
@@ -5762,7 +5771,9 @@ export default function UserWorkspacePage() {
                   : '👨 Adult Standard Dosage Active'}
               </span>
               <span className="font-mono text-gray-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-gray-800">
-                Wt: {vitals.weight || '15'}kg • BSA: {calculateBsa(parseFloat(vitals.height) || 0, parseFloat(vitals.weight) || 15).toFixed(2)}m²
+                {parseFloat(vitals.weight) > 0
+                  ? `Wt: ${vitals.weight}kg • BSA: ${calculateBsa(parseFloat(vitals.height) || 0, parseFloat(vitals.weight)).toFixed(2)}m²`
+                  : `Patient Age: ${patient.age || 'Adult'} Y`}
               </span>
             </div>
 
