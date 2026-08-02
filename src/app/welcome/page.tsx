@@ -4117,248 +4117,261 @@ export default function UserWorkspacePage() {
       {/* DOCTOR PROFILE CREDENTIALS MODAL POPUP */}
       {isDoctorProfileModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-5 overflow-hidden">
-            <div className="flex items-center justify-between border-b pb-3">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            {/* HEADER */}
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-800 font-extrabold text-base">
                   👨‍⚕️
                 </div>
                 <div>
                   <h3 className="font-extrabold text-base text-slate-900">
-                    Physician Profile & Credentials
+                    Physician Profile, Credentials & Settings
                   </h3>
                   <p className="text-xs text-slate-500 font-medium">
-                    Displayed at bottom right of every prescription pad & print output
+                    Manage doctor details, reg no format, digital header/footer, and HDD backup options
                   </p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsDoctorProfileModalOpen(false)}
-                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition"
+                className="p-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveDoctorProfile} className="space-y-3 text-xs">
-              <div>
-                <label className="block mb-1 font-bold text-slate-800">1. Full Name & Title</label>
-                <input
-                  type="text"
-                  required
-                  value={doctorProfile.name}
-                  onChange={(e) => setDoctorProfile({ ...doctorProfile, name: e.target.value })}
-                  placeholder="e.g. Dr. Alexander Fleming, MD"
-                  className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 font-bold text-slate-800">2. Medical Registration No. (Regd. No)</label>
-                <input
-                  type="text"
-                  required
-                  value={doctorProfile.regNo}
-                  onChange={(e) => setDoctorProfile({ ...doctorProfile, regNo: e.target.value })}
-                  placeholder="e.g. MCI/2026/89472"
-                  className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-mono font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 font-bold text-slate-800">3. Medical Qualification</label>
-                <input
-                  type="text"
-                  required
-                  value={doctorProfile.qualification}
-                  onChange={(e) => setDoctorProfile({ ...doctorProfile, qualification: e.target.value })}
-                  placeholder="e.g. MBBS, MD (Internal Medicine), DNB"
-                  className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 font-bold text-slate-800">4. Designation & Specialty</label>
-                <input
-                  type="text"
-                  required
-                  value={doctorProfile.designation}
-                  onChange={(e) => setDoctorProfile({ ...doctorProfile, designation: e.target.value })}
-                  placeholder="e.g. Senior Consultant Physician & Diabetologist"
-                  className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
-                />
-              </div>
-
-              <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 space-y-2">
-                <label className="block font-bold text-blue-950">5. Patient Reg. No. Default Format Preference</label>
-                <select
-                  value={doctorProfile.regNoMode || 'blank'}
-                  onChange={(e: any) => setDoctorProfile({ ...doctorProfile, regNoMode: e.target.value })}
-                  className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-slate-900 font-semibold outline-none text-xs"
-                >
-                  <option value="blank">Blank / Custom Free Typing (No Auto Prefix)</option>
-                  <option value="custom_prefix">Custom Prefix (e.g. OPD-)</option>
-                  <option value="auto_year">Auto Year Format (e.g. OPD-2026-)</option>
-                </select>
-                {doctorProfile.regNoMode === 'custom_prefix' && (
-                  <input
-                    type="text"
-                    value={doctorProfile.customRegNoPrefix || ''}
-                    onChange={(e) => setDoctorProfile({ ...doctorProfile, customRegNoPrefix: e.target.value })}
-                    placeholder="Enter Custom Prefix (e.g. OPD- or CLINIC/)"
-                    className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-xs font-mono"
-                  />
-                )}
-                <p className="text-[10px] text-slate-500 italic">
-                  Allows complete freedom to type registration numbers in any custom format (OPD-2026-001, 2026/08/101, etc.)
-                </p>
-              </div>
-
-              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-2">
-                <label className="block font-bold text-emerald-950">6. Digital Pad Header Banner / Logo (Optional)</label>
-                <div className="flex items-center gap-3">
-                  <label className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shadow transition flex items-center gap-1">
-                    <span>🖼️ Upload Logo File</span>
-                    <input type="file" accept="image/*" onChange={handleHeaderImageUpload} className="hidden" />
-                  </label>
-                  {headerImg && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveHeaderImage}
-                      className="px-2.5 py-1 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 font-bold text-xs transition"
-                    >
-                      ✕ Remove Logo
-                    </button>
-                  )}
-                </div>
-                {headerImg ? (
-                  <div className="mt-1 border rounded-lg p-2 bg-white flex items-center justify-center">
-                    <img src={headerImg} alt="Header Preview" className="h-10 object-contain" />
-                  </div>
-                ) : (
-                  <p className="text-[10px] text-slate-500 italic">No image uploaded. Digital pad displays default clinic text header.</p>
-                )}
-              </div>
-
-              <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 space-y-2">
-                <label className="block font-bold text-purple-950">7. Digital Pad Footer Banner (Optional)</label>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <label className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs cursor-pointer shadow transition flex items-center gap-1">
-                    <span>🖼️ Upload Custom Footer</span>
-                    <input type="file" accept="image/*" onChange={handleFooterImageUpload} className="hidden" />
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleApplyOdiaShantiMantraFooter}
-                    className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow transition flex items-center gap-1"
-                  >
-                    <span>🕉️ Apply Odia Mantra Banner</span>
-                  </button>
-                  {footerImg && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveFooterImage}
-                      className="px-2.5 py-1 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 font-bold text-xs transition"
-                    >
-                      ✕ Remove
-                    </button>
-                  )}
-                </div>
-                {footerImg ? (
-                  <div className="mt-1 border rounded-lg p-2 bg-white flex items-center justify-center">
-                    <img src={footerImg} alt="Footer Preview" className="h-8 object-contain" />
-                  </div>
-                ) : (
-                  <p className="text-[10px] text-slate-500 italic">No footer banner set. Displays default 1cm signature spacing.</p>
-                )}
-              </div>
-
-              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
-                <label className="block font-bold text-amber-950">8. Offline Database Safeguards & Hard Drive Sync</label>
-                <p className="text-[11px] text-slate-600">
-                  Option 1: Connect a folder on your hard drive (e.g. <code>D:\Clinic_Data\</code>) to silently auto-sync your <code>.sqlite</code> database file every time you prescribe, or download manual backups.
-                </p>
-                <div className="flex items-center gap-2 flex-wrap pt-1">
-                  <button
-                    type="button"
-                    onClick={handleConnectFolder}
-                    className="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
-                  >
-                    <span>📁</span>
-                    <span>{connectedFolderName ? `Connected: ${connectedFolderName}` : 'Connect Hard Drive Storage Folder'}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={downloadSqliteBackupFile}
-                    className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
-                  >
-                    <span>💾</span>
-                    <span>Download Backup (.sqlite)</span>
-                  </button>
-                  <label className="px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs shadow transition cursor-pointer flex items-center gap-1.5">
-                    <span>📥</span>
-                    <span>Restore Database</span>
+            {/* FORM CONTAINER: RESPONSIVE 2-COLUMN GRID WITH SCROLLABLE BODY */}
+            <form onSubmit={handleSaveDoctorProfile} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+                
+                {/* LEFT COLUMN: DOCTOR CREDENTIALS & REG NO PREFERENCE */}
+                <div className="space-y-3.5">
+                  <div>
+                    <label className="block mb-1 font-bold text-slate-800">1. Full Name & Title</label>
                     <input
-                      type="file"
-                      accept=".sqlite,.db,.json"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) importSqliteBackupFile(file);
-                      }}
-                      className="hidden"
+                      type="text"
+                      required
+                      value={doctorProfile.name}
+                      onChange={(e) => setDoctorProfile({ ...doctorProfile, name: e.target.value })}
+                      placeholder="e.g. Dr. Alexander Fleming, MD"
+                      className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
                     />
-                  </label>
-                </div>
-                {connectedFolderName && (
-                  <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 pt-1">
-                    <span>✓</span> Live Auto-Sync Active: Saving prescriptions updates <code>{connectedFolderName}/prescribepro_database.sqlite</code> automatically.
-                  </p>
-                )}
-              </div>
-
-              {/* SECTION 9: SOFTWARE UPDATES FROM GITHUB RELEASES */}
-              <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-200 space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="font-bold text-indigo-950">9. Software Updates & GitHub Release Checker</label>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-200 text-indigo-900 font-bold">
-                    Current Version: v1.0.0
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600">
-                  Option 2: Manually check your GitHub repository (<code>g2intouch-prog/PrescribePro</code>) for new software updates, drug database updates, or desktop installer releases.
-                </p>
-                <div className="flex items-center gap-2 flex-wrap pt-1">
-                  <button
-                    type="button"
-                    onClick={handleCheckGitHubRelease}
-                    disabled={isCheckingUpdate}
-                    className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
-                  >
-                    <span>🔄</span>
-                    <span>{isCheckingUpdate ? 'Checking GitHub...' : 'Check for GitHub Updates'}</span>
-                  </button>
-
-                  {githubReleaseInfo && githubReleaseInfo.downloadUrl && (
-                    <a
-                      href={githubReleaseInfo.downloadUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
-                    >
-                      <span>⚡ Download Release ({githubReleaseInfo.tagName})</span>
-                    </a>
-                  )}
-                </div>
-
-                {updateStatusMsg && (
-                  <div className="p-2 rounded-lg bg-white border border-indigo-200 text-[11px] font-semibold text-indigo-900 flex items-center gap-1.5">
-                    <span>📢</span>
-                    <span>{updateStatusMsg}</span>
                   </div>
-                )}
+
+                  <div>
+                    <label className="block mb-1 font-bold text-slate-800">2. Medical Registration No. (Regd. No)</label>
+                    <input
+                      type="text"
+                      required
+                      value={doctorProfile.regNo}
+                      onChange={(e) => setDoctorProfile({ ...doctorProfile, regNo: e.target.value })}
+                      placeholder="e.g. MCI/2026/89472"
+                      className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-mono font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 font-bold text-slate-800">3. Medical Qualification</label>
+                    <input
+                      type="text"
+                      required
+                      value={doctorProfile.qualification}
+                      onChange={(e) => setDoctorProfile({ ...doctorProfile, qualification: e.target.value })}
+                      placeholder="e.g. MBBS, MD (Internal Medicine), DNB"
+                      className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 font-bold text-slate-800">4. Designation & Specialty</label>
+                    <input
+                      type="text"
+                      required
+                      value={doctorProfile.designation}
+                      onChange={(e) => setDoctorProfile({ ...doctorProfile, designation: e.target.value })}
+                      placeholder="e.g. Senior Consultant Physician & Diabetologist"
+                      className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+
+                  <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 space-y-2">
+                    <label className="block font-bold text-blue-950">5. Patient Reg. No. Default Format Preference</label>
+                    <select
+                      value={doctorProfile.regNoMode || 'blank'}
+                      onChange={(e: any) => setDoctorProfile({ ...doctorProfile, regNoMode: e.target.value })}
+                      className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-slate-900 font-semibold outline-none text-xs"
+                    >
+                      <option value="blank">Blank / Custom Free Typing (No Auto Prefix)</option>
+                      <option value="custom_prefix">Custom Prefix (e.g. OPD-)</option>
+                      <option value="auto_year">Auto Year Format (e.g. OPD-2026-)</option>
+                    </select>
+                    {doctorProfile.regNoMode === 'custom_prefix' && (
+                      <input
+                        type="text"
+                        value={doctorProfile.customRegNoPrefix || ''}
+                        onChange={(e) => setDoctorProfile({ ...doctorProfile, customRegNoPrefix: e.target.value })}
+                        placeholder="Enter Custom Prefix (e.g. OPD- or CLINIC/)"
+                        className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-xs font-mono"
+                      />
+                    )}
+                    <p className="text-[10px] text-slate-500 italic">
+                      Allows complete freedom to type registration numbers in any custom format (OPD-2026-001, 2026/08/101, etc.)
+                    </p>
+                  </div>
+                </div>
+
+                {/* RIGHT COLUMN: BANNERS, LOCAL STORAGE SAFEGUARDS & UPDATE CHECKER */}
+                <div className="space-y-3.5">
+                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-2">
+                    <label className="block font-bold text-emerald-950">6. Digital Pad Header Banner / Logo (Optional)</label>
+                    <div className="flex items-center gap-3">
+                      <label className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shadow transition flex items-center gap-1">
+                        <span>🖼️ Upload Logo File</span>
+                        <input type="file" accept="image/*" onChange={handleHeaderImageUpload} className="hidden" />
+                      </label>
+                      {headerImg && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveHeaderImage}
+                          className="px-2.5 py-1 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 font-bold text-xs transition"
+                        >
+                          ✕ Remove Logo
+                        </button>
+                      )}
+                    </div>
+                    {headerImg ? (
+                      <div className="mt-1 border rounded-lg p-2 bg-white flex items-center justify-center">
+                        <img src={headerImg} alt="Header Preview" className="h-10 object-contain" />
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-slate-500 italic">No image uploaded. Digital pad displays default clinic text header.</p>
+                    )}
+                  </div>
+
+                  <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 space-y-2">
+                    <label className="block font-bold text-purple-950">7. Digital Pad Footer Banner (Optional)</label>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <label className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs cursor-pointer shadow transition flex items-center gap-1">
+                        <span>🖼️ Upload Custom Footer</span>
+                        <input type="file" accept="image/*" onChange={handleFooterImageUpload} className="hidden" />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleApplyOdiaShantiMantraFooter}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow transition flex items-center gap-1"
+                      >
+                        <span>🕉️ Apply Odia Mantra Banner</span>
+                      </button>
+                      {footerImg && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveFooterImage}
+                          className="px-2.5 py-1 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 font-bold text-xs transition"
+                        >
+                          ✕ Remove
+                        </button>
+                      )}
+                    </div>
+                    {footerImg ? (
+                      <div className="mt-1 border rounded-lg p-2 bg-white flex items-center justify-center">
+                        <img src={footerImg} alt="Footer Preview" className="h-8 object-contain" />
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-slate-500 italic">No footer banner set. Displays default 1cm signature spacing.</p>
+                    )}
+                  </div>
+
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
+                    <label className="block font-bold text-amber-950">8. Offline Database Safeguards & Hard Drive Sync</label>
+                    <p className="text-[11px] text-slate-600">
+                      Option 1: Connect a folder on your hard drive (e.g. <code>D:\Clinic_Data\</code>) to silently auto-sync your <code>.sqlite</code> database file every time you prescribe, or download manual backups.
+                    </p>
+                    <div className="flex items-center gap-2 flex-wrap pt-1">
+                      <button
+                        type="button"
+                        onClick={handleConnectFolder}
+                        className="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                      >
+                        <span>📁</span>
+                        <span>{connectedFolderName ? `Connected: ${connectedFolderName}` : 'Connect Hard Drive Storage Folder'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={downloadSqliteBackupFile}
+                        className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                      >
+                        <span>💾</span>
+                        <span>Download Backup (.sqlite)</span>
+                      </button>
+                      <label className="px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs shadow transition cursor-pointer flex items-center gap-1.5">
+                        <span>📥</span>
+                        <span>Restore Database</span>
+                        <input
+                          type="file"
+                          accept=".sqlite,.db,.json"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) importSqliteBackupFile(file);
+                          }}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    {connectedFolderName && (
+                      <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 pt-1">
+                        <span>✓</span> Live Auto-Sync Active: Saving prescriptions updates <code>{connectedFolderName}/prescribepro_database.sqlite</code> automatically.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-indigo-950">9. Software Updates & GitHub Release Checker</label>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-200 text-indigo-900 font-bold">
+                        Current Version: v1.0.0
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600">
+                      Option 2: Manually check your GitHub repository (<code>g2intouch-prog/PrescribePro</code>) for new software updates, drug database updates, or desktop installer releases.
+                    </p>
+                    <div className="flex items-center gap-2 flex-wrap pt-1">
+                      <button
+                        type="button"
+                        onClick={handleCheckGitHubRelease}
+                        disabled={isCheckingUpdate}
+                        className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                      >
+                        <span>🔄</span>
+                        <span>{isCheckingUpdate ? 'Checking GitHub...' : 'Check for GitHub Updates'}</span>
+                      </button>
+
+                      {githubReleaseInfo && githubReleaseInfo.downloadUrl && (
+                        <a
+                          href={githubReleaseInfo.downloadUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                        >
+                          <span>⚡ Download Release ({githubReleaseInfo.tagName})</span>
+                        </a>
+                      )}
+                    </div>
+
+                    {updateStatusMsg && (
+                      <div className="p-2 rounded-lg bg-white border border-indigo-200 text-[11px] font-semibold text-indigo-900 flex items-center gap-1.5">
+                        <span>📢</span>
+                        <span>{updateStatusMsg}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
               </div>
 
-              <div className="pt-3 border-t flex items-center justify-end gap-2">
+              {/* FOOTER ACTIONS */}
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsDoctorProfileModalOpen(false)}
@@ -4370,7 +4383,7 @@ export default function UserWorkspacePage() {
                   type="submit"
                   className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition"
                 >
-                  Save Physician Profile
+                  Save Physician Profile & Settings
                 </button>
               </div>
             </form>
