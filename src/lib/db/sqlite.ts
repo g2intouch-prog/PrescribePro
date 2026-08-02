@@ -42,18 +42,33 @@ export async function getSqliteDb(): Promise<Database> {
 
   let SQL: any = null;
   try {
-    SQL = await initSqlJs({
-      locateFile: (file) => `/${file}`,
-    });
+    const res = await fetch('/sql-wasm.wasm');
+    if (res.ok) {
+      const wasmBinary = await res.arrayBuffer();
+      SQL = await initSqlJs({ wasmBinary });
+    } else {
+      throw new Error(`Local fetch status ${res.status}`);
+    }
   } catch (e1) {
-    console.warn('Local WASM initialization failed, trying CDN fallback...', e1);
+    console.warn('Direct fetch /sql-wasm.wasm failed, trying CDN arrayBuffer fetch...', e1);
     try {
-      SQL = await initSqlJs({
-        locateFile: (file) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`,
-      });
+      const res = await fetch('https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.wasm');
+      if (res.ok) {
+        const wasmBinary = await res.arrayBuffer();
+        SQL = await initSqlJs({ wasmBinary });
+      } else {
+        throw new Error(`CDN fetch status ${res.status}`);
+      }
     } catch (e2) {
-      console.error('Failed to load sql.js WASM:', e2);
-      throw new Error('SQLite WASM engine failed to load. Please check network connection or reload.');
+      console.warn('CDN arrayBuffer fetch failed, trying default locateFile...', e2);
+      try {
+        SQL = await initSqlJs({
+          locateFile: (file) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`,
+        });
+      } catch (e3) {
+        console.error('All WASM initializations failed:', e3);
+        throw new Error('SQLite WASM engine failed to load. Please check network connection or reload.');
+      }
     }
   }
 
