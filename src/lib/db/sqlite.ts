@@ -149,7 +149,7 @@ export async function savePrescriptionToSqlite(rec: SavedPrescriptionRecord): Pr
       ]
     );
     saveSqliteDb();
-    await syncSqliteToConnectedFolder(rec);
+    await syncSqliteToConnectedFolder();
 
     // Also mirror into backup key for high availability
     if (typeof window !== 'undefined') {
@@ -515,105 +515,21 @@ export async function connectLocalHardDriveFolder(): Promise<string | null> {
   }
 }
 
-export async function syncSqliteToConnectedFolder(lastRecord?: SavedPrescriptionRecord): Promise<void> {
-  if (!dirHandleInstance) return;
+export async function syncSqliteToConnectedFolder(): Promise<{ success: boolean; error?: string }> {
+  if (!dirHandleInstance) return { success: false, error: 'No hard drive folder connected' };
   try {
-    // 1. Save main SQLite binary file
     const db = await getSqliteDb();
     const binary = db.export();
-    const dbFileHandle = await dirHandleInstance.getFileHandle('prescribepro_database.sqlite', { create: true });
-    const dbWritable = await dbFileHandle.createWritable();
-    await dbWritable.write(binary);
-    await dbWritable.close();
+    const blob = new Blob([binary.buffer as ArrayBuffer], { type: 'application/x-sqlite3' });
 
-    // 2. Save full prescriptions summary JSON file
-    const allRecords = await getAllPrescriptionsFromSqlite();
-    const summaryFileHandle = await dirHandleInstance.getFileHandle('prescriptions_summary.json', { create: true });
-    const summaryWritable = await summaryFileHandle.createWritable();
-    await summaryWritable.write(JSON.stringify(allRecords, null, 2));
-    await summaryWritable.close();
-
-    // 3. Save individual human-readable JSON & TXT files for the target record
-    const targetRecord = lastRecord || (allRecords.length > 0 ? allRecords[0] : null);
-    if (targetRecord) {
-      await writeIndividualRecordToFolder(dirHandleInstance, targetRecord);
-    }
-  } catch (err) {
-    console.error('Failed syncing files to connected folder:', err);
-  }
-}
-
-async function writeIndividualRecordToFolder(dirHandle: any, rec: SavedPrescriptionRecord) {
-  try {
-    const sanitize = (str: string) => str.replace(/[^a-zA-Z0-9_-]/g, '_');
-    const safeName = sanitize(rec.patientName || 'Patient');
-    const dateStr = rec.createdAt ? rec.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10);
-    const baseFileName = `Rx_${safeName}_${dateStr}_${rec.prescriptionId}`;
-
-    // A. Individual JSON Record
-    const jsonFileHandle = await dirHandle.getFileHandle(`${baseFileName}.json`, { create: true });
-    const jsonWritable = await jsonFileHandle.createWritable();
-    await jsonWritable.write(JSON.stringify(rec, null, 2));
-    await jsonWritable.close();
-
-    // B. Individual Formatted Text Record
-    let textContent = `==================================================\n`;
-    textContent += `PRESCRIBEPRO CLINICAL PRESCRIPTION RECORD\n`;
-    textContent += `==================================================\n`;
-    textContent += `Prescription ID : ${rec.prescriptionId}\n`;
-    textContent += `Date & Time     : ${rec.createdAt}\n`;
-    textContent += `Patient Name    : ${rec.patientName}\n`;
-    textContent += `Reg Number      : ${rec.patientRegNo}\n`;
-    textContent += `Mobile          : ${rec.patientMobile || 'N/A'}\n`;
-    textContent += `Age / Gender    : ${rec.patientAge} Yrs / ${rec.patientGender}\n`;
-    textContent += `Action Type     : ${rec.actionSource.toUpperCase()}\n\n`;
-
-    try {
-      const exam = JSON.parse(rec.clinicalExamJson || '{}');
-      if (exam.chiefComplaints && exam.chiefComplaints.length > 0) {
-        textContent += `CHIEF COMPLAINTS:\n- ${exam.chiefComplaints.join('\n- ')}\n\n`;
-      }
-      if (exam.provisionalDiagnosis) {
-        textContent += `PROVISIONAL DIAGNOSIS:\n${exam.provisionalDiagnosis}\n\n`;
-      }
-    } catch (e) {}
-
-    try {
-      const drugs: string[] = JSON.parse(rec.selectedDrugsJson || '[]');
-      if (drugs.length > 0) {
-        textContent += `PRESCRIBED MEDICATIONS (Rx):\n`;
-        drugs.forEach((d, idx) => {
-          textContent += `${idx + 1}. ${d}\n`;
-        });
-        textContent += `\n`;
-      }
-    } catch (e) {}
-
-    try {
-      const tests: string[] = JSON.parse(rec.selectedTestsJson || '[]');
-      if (tests.length > 0) {
-        textContent += `INVESTIGATIONS & TESTS:\n- ${tests.join('\n- ')}\n\n`;
-      }
-    } catch (e) {}
-
-    try {
-      const advice: string[] = JSON.parse(rec.selectedAdviceJson || '[]');
-      if (advice.length > 0 || rec.customAdviceText) {
-        textContent += `CLINICAL ADVICE & INSTRUCTIONS:\n`;
-        if (advice.length > 0) textContent += `- ${advice.join('\n- ')}\n`;
-        if (rec.customAdviceText) textContent += `- ${rec.customAdviceText}\n`;
-        textContent += `\n`;
-      }
-    } catch (e) {}
-
-    textContent += `==================================================\n`;
-
-    const txtFileHandle = await dirHandle.getFileHandle(`${baseFileName}.txt`, { create: true });
-    const txtWritable = await txtFileHandle.createWritable();
-    await txtWritable.write(textContent);
-    await txtWritable.close();
-  } catch (err) {
-    console.error('Error writing individual prescription files:', err);
+    const fileHandle = await dirHandleInstance.getFileHandle('prescribepro_database.sqlite', { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return { success: true };
+  } catch (err: any) {
+    console.error('Failed syncing SQLite to connected folder:', err);
+    return { success: false, error: err?.message || String(err) };
   }
 }
 

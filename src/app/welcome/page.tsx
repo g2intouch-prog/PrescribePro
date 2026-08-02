@@ -4231,7 +4231,7 @@ export default function UserWorkspacePage() {
                     </div>
                     {connectedFolderName && (
                       <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 pt-1">
-                        <span>✓</span> Live Auto-Sync Active: Saving prescriptions automatically writes <code>{connectedFolderName}/prescribepro_database.sqlite</code>, <code>prescriptions_summary.json</code>, and individual <code>Rx_Patient_Name.json / .txt</code> files!
+                        <span>✓</span> Live Auto-Sync Active: Saving prescriptions automatically updates your SQLite database <code>{connectedFolderName}/prescribepro_database.sqlite</code> on your hard drive.
                       </p>
                     )}
                   </div>
