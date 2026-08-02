@@ -81,10 +81,10 @@ export const CLINICAL_SYMPTOM_MAP: Record<string, string[]> = {
   'nasal drop': ['nasal spray', 'nasal drops', 'fluticasone', 'otrivin', 'nasoclear', 'xylometazoline'],
   'nasal spray': ['nasal spray', 'nasal drops', 'fluticasone', 'otrivin', 'nasoclear', 'xylometazoline'],
 
-  dermatology: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'clotrimazole', 'luliconazole', 'permethrin', 'calamine'],
-  derma: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'clotrimazole', 'luliconazole', 'permethrin', 'calamine'],
-  skin: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'clotrimazole', 'luliconazole', 'permethrin', 'calamine'],
-  cream: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'clotrimazole', 'luliconazole'],
+  dermatology: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'luliconazole', 'permethrin', 'calamine'],
+  derma: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'luliconazole', 'permethrin', 'calamine'],
+  skin: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'luliconazole', 'permethrin', 'calamine'],
+  cream: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'luliconazole'],
   ointment: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'mupirocin', 'burnol', 'silver sulfadiazine'],
 
   orthopedics: ['aceclofenac', 'diclofenac', 'etoricoxib', 'thiocolchicoside', 'chymoral', 'tramadol', 'pregabalin', 'gabapentin', 'glucosamine', 'diacerein', 'methotrexate', 'sulfasalazine', 'hydroxychloroquine', 'tizanidine', 'baclofen', 'calcium', 'calcitriol'],
@@ -559,6 +559,19 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'inj_isolyte_m_500ml', genericName: 'Inj Isolyte-M Adult Maintenance Fluid 500ml', category: 'adult', dosage: '500ml IV infusion', duration: 'Maintenance Fluids', keywords: 'inj isolyte-m isolyte m adult IV fluids electrolyte maintenance' },
   { id: 'inj_mannitol_20_100ml', genericName: 'Inj Mannitol 20% 100ml IV Infusion (Osmitrol)', category: 'adult', dosage: '100ml IV rapid infusion over 30 mins (repeat 6-8 hourly)', duration: 'Cerebral Edema / Raised ICP', keywords: 'inj mannitol 20% osmitrol 100ml iv infusion osmotic diuretic cerebral edema raised icp glaucoma' },
   { id: 'inj_saline_3_100ml', genericName: 'Inj Hypertonic Saline 3% 100ml IV Infusion', category: 'all', dosage: '100ml IV infusion over 30-60 mins for acute hyponatremia', duration: 'Severe Hyponatremia Stat', keywords: 'inj hypertonic saline 3% NaCl 100ml iv infusion hyponatremia sodium shift raised icp' },
+
+  // ==========================================
+  // RABIES BIOLOGICALS, IMMUNOGLOBULINS & VACCINES
+  // ==========================================
+  { id: 'inj_hrig_300iu', genericName: 'Inj HRIG (Human Rabies Immunoglobulin) 300 IU / 2ml Vial', category: 'all', dosage: '20 IU/kg body weight (Infiltrate thoroughly into & around wound edges stat)', duration: 'Stat wound infiltration', keywords: 'hrig human rabies immunoglobulin hrig 20iu/kg rabies bite animal bite cat 3 bite rabiglob rabigard wound infiltration' },
+  { id: 'inj_erig_1000iu', genericName: 'Inj ERIG (Equine Rabies Immunoglobulin) 1000 IU / 5ml Vial', category: 'all', dosage: '40 IU/kg body weight (Infiltrate thoroughly into & around wound edges stat after skin test)', duration: 'Stat wound infiltration', keywords: 'erig equine rabies immunoglobulin erig 40iu/kg rabies bite animal bite cat 3 bite wound infiltration' },
+  { id: 'inj_arv_1ml', genericName: 'Inj ARV - Cell Culture Rabies Vaccine 1ml (Rabipur / Abhayrab / Rabivax)', category: 'all', dosage: '1ml IM (deltoid) on Days 0, 3, 7, 14, 28 (Essen 5-dose regimen)', duration: '5 doses (Days 0, 3, 7, 14, 28)', keywords: 'arv rabies vaccine cell culture rabies vaccine rabipur abhayrab rabivax rabies prophylaxis animal bite dog bite cat bite' },
+  { id: 'inj_rmab_100iu', genericName: 'Inj Rabies Monoclonal Antibody 100 IU / ml (Rabishield / Twinrab)', category: 'all', dosage: '40 IU/kg body weight (Infiltrate thoroughly into & around wound edges stat)', duration: 'Stat wound infiltration', keywords: 'rabishield twinrab rabies monoclonal antibody rmab rabies immunoglobulin animal bite cat 3 bite' },
+  { id: 'inj_tt_05ml', genericName: 'Inj Tetanus Toxoid (TT) 0.5ml IM Ampoule', category: 'all', dosage: '0.5ml deep IM stat (deltoid)', duration: 'Stat single dose', keywords: 'tt tetanus toxoid tetanus vaccine tetvac tetglob wound injury bite 0.5ml im' },
+  { id: 'inj_td_05ml', genericName: 'Inj Td (Tetanus-Diphtheria Toxoid) 0.5ml IM Ampoule', category: 'all', dosage: '0.5ml deep IM stat', duration: 'Stat single dose', keywords: 'td tetanus diphtheria toxoid vaccine wound prophylaxis' },
+  { id: 'inj_tig_250iu', genericName: 'Inj TIG (Human Tetanus Immunoglobulin) 250 IU / 2ml IM', category: 'all', dosage: '250 IU deep IM stat for dirty tetanus-prone wounds', duration: 'Stat single dose', keywords: 'tig tetanus immunoglobulin human tetanus antibody dirty wound injury tetanus protection' },
+  { id: 'inj_asv_10ml', genericName: 'Inj ASV (Polyvalent Anti-Snake Venom) 10ml IV Vial', category: 'all', dosage: '10 vials reconstituted in 500ml NS IV infusion over 1 hour stat', duration: 'Stat infusion', keywords: 'asv anti-snake venom polyvalent snake bite emergency envenomation neurotoxic hemotoxic' },
+
   { id: 'gen_iver12', genericName: 'Ivermectin 12mg Tablet', category: 'adult', dosage: '1 tablet single dose on empty stomach at bedtime', duration: 'Single dose', keywords: 'ivermectin ivermectol scabies worms antiparasitic lice', minAge: 12 },
   { id: 'gen_zentel400', genericName: 'Albendazole 400mg Chewable Tablet', category: 'all', dosage: '1 tablet chewed thoroughly at bedtime', duration: 'Single dose', keywords: 'albendazole zentel bandy deworming roundworm hookworm pinworm' },
 
@@ -1627,7 +1640,17 @@ export function getClinicalProtocols(): ClinicalProtocol[] {
     const saved = localStorage.getItem(PROTOCOLS_STORAGE_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: ClinicalProtocol[] = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const map = new Map<string, ClinicalProtocol>();
+          DEFAULT_CLINICAL_PROTOCOLS.forEach((proto) => map.set(proto.id, proto));
+          parsed.forEach((proto) => {
+            if (proto && proto.id) {
+              map.set(proto.id, proto);
+            }
+          });
+          return Array.from(map.values());
+        }
       } catch (e) {}
     }
   }

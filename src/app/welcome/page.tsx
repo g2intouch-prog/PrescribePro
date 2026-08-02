@@ -528,6 +528,7 @@ export default function UserWorkspacePage() {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isDrugModalOpen, setIsDrugModalOpen] = useState(false);
   const [isPediatricModalOpen, setIsPediatricModalOpen] = useState(false);
+  const [pediatricSearchQuery, setPediatricSearchQuery] = useState('');
 
   // Clinical Protocols & Order Sets State
   const [protocols, setProtocols] = useState<ClinicalProtocol[]>([]);
@@ -1685,14 +1686,15 @@ export default function UserWorkspacePage() {
   };
 
   const toggleDrugSelection = (label: string) => {
-    const formatted = applyBrandToPrescribedLine(label, label);
+    // If label already contains full dose details (e.g. from pediatric calculator or protocol), use label directly
+    const formatted = (label.includes('(') && label.includes(')')) ? label : applyBrandToPrescribedLine(label, label);
     const cleanGeneric = label.split('(')[0].trim().replace(/^(inj\.|tab\.|cap\.|syp\.|drops\.|oint\.|inj|tab|cap|syp|drops|oint)\s+/i, '').toLowerCase();
 
     const existingIndex = selectedDrugs.findIndex((s) => {
       if (s === formatted || s === label) return true;
       if (cleanGeneric.length >= 4) {
         const cleanS = s.split('(')[0].trim().replace(/^(inj\.|tab\.|cap\.|syp\.|drops\.|oint\.)\s*/i, '').toLowerCase();
-        return cleanS.includes(cleanGeneric) || cleanGeneric.includes(cleanS);
+        return cleanS === cleanGeneric || cleanS.includes(cleanGeneric) || cleanGeneric.includes(cleanS);
       }
       return false;
     });
@@ -2947,7 +2949,7 @@ export default function UserWorkspacePage() {
             {/* RIGHT SIDE: MARGIN CONTROLS + SAVE TEMPLATE */}
             <div className="flex items-center gap-1.5 flex-wrap text-[9.5px]">
               <div className="flex items-center gap-1 bg-slate-200/60 dark:bg-slate-900 px-1.5 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
-                <span className="text-slate-500 font-bold">Top:</span>
+                <span className="text-slate-600 font-extrabold" title="Top Letterhead Page Margin (mm)">Top:</span>
                 <input
                   type="number"
                   min={0}
@@ -2959,15 +2961,16 @@ export default function UserWorkspacePage() {
                     const p = getAdminPresets();
                     saveAdminPresets({ ...p, headerMarginMm: val });
                   }}
-                  className={`w-7 px-0.5 py-0 rounded border text-center font-mono font-bold text-blue-600 text-[9.5px] ${
+                  className={`w-10 sm:w-11 px-1 py-0.5 rounded border text-center font-mono font-black text-blue-600 text-xs ${
                     theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-emerald-400'
                   }`}
+                  title="Top Letterhead Page Margin (in mm)"
                 />
-                <span className="text-slate-500 font-mono">mm</span>
+                <span className="text-slate-500 font-mono text-[9px]">mm</span>
 
                 <span className="text-slate-400 px-0.5">|</span>
 
-                <span className="text-slate-500 font-bold">Btm:</span>
+                <span className="text-slate-600 font-extrabold" title="Bottom Letterhead Page Margin (mm)">Btm:</span>
                 <input
                   type="number"
                   min={0}
@@ -2979,15 +2982,16 @@ export default function UserWorkspacePage() {
                     const p = getAdminPresets();
                     saveAdminPresets({ ...p, footerMarginMm: val });
                   }}
-                  className={`w-7 px-0.5 py-0 rounded border text-center font-mono font-bold text-pink-600 text-[9.5px] ${
+                  className={`w-10 sm:w-11 px-1 py-0.5 rounded border text-center font-mono font-black text-pink-600 text-xs ${
                     theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-pink-400'
                   }`}
+                  title="Bottom Letterhead Page Margin (in mm)"
                 />
-                <span className="text-slate-500 font-mono">mm</span>
+                <span className="text-slate-500 font-mono text-[9px]">mm</span>
 
                 <span className="text-slate-400 px-0.5">|</span>
 
-                <span className="text-slate-500 font-bold">Ht:</span>
+                <span className="text-slate-600 font-extrabold" title="Footer Image Banner Height (px)">Footer Ht:</span>
                 <input
                   type="number"
                   min={18}
@@ -2998,11 +3002,12 @@ export default function UserWorkspacePage() {
                     setFooterImgHeight(val);
                     localStorage.setItem('prescribepro_footer_img_height', String(val));
                   }}
-                  className={`w-7 px-0.5 py-0 rounded border text-center font-mono font-bold text-purple-600 text-[9.5px] ${
+                  className={`w-10 sm:w-11 px-1 py-0.5 rounded border text-center font-mono font-black text-purple-600 text-xs ${
                     theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-purple-400'
                   }`}
+                  title="Footer Banner Height (in pixels)"
                 />
-                <span className="text-slate-500 font-mono">px</span>
+                <span className="text-slate-500 font-mono text-[9px]">px</span>
               </div>
 
               <button
@@ -3836,28 +3841,20 @@ export default function UserWorkspacePage() {
                   // Demographically Filter Drug List per Weight, Age & BSA
                   const filteredMatched = matched.filter((d) => {
                     const lower = d.genericName.toLowerCase();
-                    if (isAdultPatient) {
+                    // If formulation filter is 'all', apply default demographic exclusions
+                    if (isAdultPatient && drugFormulationFilter === 'all') {
                       if (lower.includes('azithromycin') && lower.includes('250mg')) return false;
                       if (lower.includes('syrup') || lower.includes('suspension') || lower.includes('drops') || lower.includes('dry syrup')) return false;
                       if (d.category === 'pediatric' || d.category === 'infant') return false;
                     }
-                    if (isPediatricPatient) {
+                    if (isPediatricPatient && drugFormulationFilter === 'all') {
                       if (d.category === 'adult' && (lower.includes('500mg') || lower.includes('625mg') || lower.includes('650mg') || lower.includes('40mg'))) return false;
                     }
                     return true;
                   });
 
-                  // Tier 1: Most Prescribed Common Specialty Drugs (Sorted A-Z)
-                  const commonTier = filteredMatched
-                    .slice(0, 12)
-                    .sort((a, b) => a.genericName.localeCompare(b.genericName));
-                  
-                  const commonIds = new Set(commonTier.map((d) => d.id));
-
-                  // Tier 2: All Other Specialty & Pharmacopeia Drugs (Sorted A-Z)
-                  const otherTier = filteredMatched
-                    .filter((d) => !commonIds.has(d.id))
-                    .sort((a, b) => a.genericName.localeCompare(b.genericName));
+                  // Display all matching generic drugs sorted A-Z without truncation
+                  const sortedList = [...filteredMatched].sort((a, b) => a.genericName.localeCompare(b.genericName));
 
                   const renderDrugItem = (d: DrugItem) => {
                     const w = parseFloat(vitals.weight) || 0;
@@ -3916,30 +3913,18 @@ export default function UserWorkspacePage() {
                   };
 
                   return (
-                    <div className="space-y-3">
-                      {/* TIER 1: MOST PRESCRIBED COMMON SPECIALTY DRUGS (A-Z) */}
-                      {commonTier.length > 0 && (
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 pb-0.5 border-b border-emerald-500/20">
-                            <span>⭐ Most Common Specialty Drugs (A-Z)</span>
-                            <span className="font-mono text-[9px] text-slate-400">{commonTier.length}</span>
-                          </div>
-                          <div className="space-y-1">
-                            {commonTier.map(renderDrugItem)}
-                          </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 pb-0.5 border-b border-emerald-500/20">
+                        <span>💊 Available Generic Prescriptions (A-Z)</span>
+                        <span className="font-mono text-[9px] text-slate-400">{sortedList.length} drugs</span>
+                      </div>
+                      {sortedList.length === 0 ? (
+                        <div className="text-center py-6 text-slate-400 text-xs font-bold">
+                          No generic drugs match your search or formulation filter.
                         </div>
-                      )}
-
-                      {/* TIER 2: ALL OTHER SPECIALTY MEDICINES (A-Z) */}
-                      {otherTier.length > 0 && (
-                        <div className="space-y-1 pt-1">
-                          <div className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-blue-600 pb-0.5 border-b border-blue-500/20">
-                            <span>📚 Other Specialty & Pharmacopeia Drugs (A-Z)</span>
-                            <span className="font-mono text-[9px] text-slate-400">{otherTier.length}</span>
-                          </div>
-                          <div className="space-y-1">
-                            {otherTier.map(renderDrugItem)}
-                          </div>
+                      ) : (
+                        <div className="space-y-1">
+                          {sortedList.map(renderDrugItem)}
                         </div>
                       )}
                     </div>
@@ -5756,6 +5741,18 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
+            {/* REAL-TIME PEDIATRIC DRUG SEARCH BAR */}
+            <div className="relative shrink-0">
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
+              <input
+                type="text"
+                value={pediatricSearchQuery}
+                onChange={(e) => setPediatricSearchQuery(e.target.value)}
+                placeholder="🔍 Search pediatric drug or calculation (e.g. Paracetamol, Rabies, HRIG, Cefixime)..."
+                className="w-full bg-slate-950 border border-gray-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white font-medium outline-none focus:ring-1 focus:ring-amber-500"
+              />
+            </div>
+
             {/* SCROLLABLE DOSAGE CARDS */}
             <div className="flex-1 overflow-y-auto space-y-5 pr-1">
               {/* SECTION 1: WEIGHT-BASED DOSES */}
@@ -5770,9 +5767,22 @@ export default function UserWorkspacePage() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-2">
-                  {calculatePediatricDose(parseFloat(vitals.weight) || 10).map((pd, idx) => {
-                    const doseLabel = `${pd.drugName} - ${pd.calculatedVolumeMl} (${pd.frequency})`;
-                    const isChecked = selectedDrugs.includes(doseLabel);
+                  {calculatePediatricDose(parseFloat(vitals.weight) || 10)
+                    .filter((pd) => {
+                      if (!pediatricSearchQuery.trim()) return true;
+                      const q = pediatricSearchQuery.toLowerCase();
+                      return (
+                        pd.drugName.toLowerCase().includes(q) ||
+                        pd.calculatedVolumeMl.toLowerCase().includes(q) ||
+                        pd.notes.toLowerCase().includes(q)
+                      );
+                    })
+                    .map((pd, idx) => {
+                      const isSyrup = pd.formulation.toLowerCase().includes('syrup') || pd.formulation.toLowerCase().includes('liquid') || pd.formulation.toLowerCase().includes('suspension');
+                      const isInj = pd.formulation.toLowerCase().includes('injectable') || pd.formulation.toLowerCase().includes('vial') || pd.formulation.toLowerCase().includes('ampoule');
+                      const prefix = isSyrup ? 'Syp.' : isInj ? 'Inj.' : 'Tab.';
+                      const doseLabel = `${prefix} ${pd.drugName} (${pd.calculatedVolumeMl}) - ${pd.frequency}`;
+                      const isChecked = selectedDrugs.includes(doseLabel);
                     
                     // Categorize badge colors for instant recognition
                     const isRabies = pd.drugName.toLowerCase().includes('rabies') || pd.drugName.toLowerCase().includes('erig') || pd.drugName.toLowerCase().includes('hrig');
@@ -5851,9 +5861,19 @@ export default function UserWorkspacePage() {
                     parseFloat(vitals.height) || 0,
                     parseFloat(vitals.weight) || 10,
                     parseFloat(patient.age) || 5
-                  ).map((bd, idx) => {
-                    const doseLabel = `${bd.drugName} - ${bd.totalCalculatedDose} (${bd.dosePerBsa})`;
-                    const isChecked = selectedDrugs.includes(doseLabel);
+                  )
+                    .filter((bd) => {
+                      if (!pediatricSearchQuery.trim()) return true;
+                      const q = pediatricSearchQuery.toLowerCase();
+                      return (
+                        bd.drugName.toLowerCase().includes(q) ||
+                        bd.totalCalculatedDose.toLowerCase().includes(q) ||
+                        bd.dosePerBsa.toLowerCase().includes(q)
+                      );
+                    })
+                    .map((bd, idx) => {
+                      const doseLabel = `Inj. ${bd.drugName} (${bd.totalCalculatedDose}) - ${bd.dosePerBsa}`;
+                      const isChecked = selectedDrugs.includes(doseLabel);
                     return (
                       <div
                         key={idx}
