@@ -492,10 +492,10 @@ export async function restoreConnectedFolderHandle(): Promise<{ folderName: stri
   return { folderName: name, active: false };
 }
 
-export async function connectLocalHardDriveFolder(): Promise<string | null> {
+export async function connectLocalHardDriveFolder(): Promise<{ folderName: string | null; success: boolean; error?: string }> {
   if (typeof window === 'undefined' || !('showDirectoryPicker' in window)) {
     alert('File System Access API is supported in Chrome, Edge, and Brave desktop browsers.');
-    return null;
+    return { folderName: null, success: false, error: 'File System Access API not supported' };
   }
   try {
     const handle = await (window as any).showDirectoryPicker({
@@ -505,13 +505,15 @@ export async function connectLocalHardDriveFolder(): Promise<string | null> {
     await saveDirHandleToIndexedDB(handle);
     const folderName = handle.name || 'Connected Folder';
     localStorage.setItem('prescribepro_connected_folder_name', folderName);
-    await syncSqliteToConnectedFolder();
-    return folderName;
+    
+    // Perform immediate write while user gesture is active
+    const syncRes = await syncSqliteToConnectedFolder();
+    return { folderName, success: syncRes.success, error: syncRes.error };
   } catch (err: any) {
     if (err.name !== 'AbortError') {
       console.error('Error connecting hard drive folder:', err);
     }
-    return null;
+    return { folderName: null, success: false, error: err?.message || String(err) };
   }
 }
 
@@ -520,12 +522,19 @@ export async function syncSqliteToConnectedFolder(): Promise<{ success: boolean;
   try {
     const db = await getSqliteDb();
     const binary = db.export();
-    const blob = new Blob([binary.buffer as ArrayBuffer], { type: 'application/x-sqlite3' });
+    
+    // Slice exact SQLite byte buffer from WASM linear memory
+    const safeBuffer = binary.buffer.slice(
+      binary.byteOffset,
+      binary.byteOffset + binary.byteLength
+    ) as ArrayBuffer;
+    const blob = new Blob([safeBuffer], { type: 'application/x-sqlite3' });
 
     const fileHandle = await dirHandleInstance.getFileHandle('prescribepro_database.sqlite', { create: true });
     const writable = await fileHandle.createWritable();
     await writable.write(blob);
     await writable.close();
+    console.log('✓ Successfully wrote prescribepro_database.sqlite to hard drive folder!');
     return { success: true };
   } catch (err: any) {
     console.error('Failed syncing SQLite to connected folder:', err);

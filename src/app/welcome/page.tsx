@@ -57,6 +57,7 @@ import {
   importSqliteBackupFile,
   connectLocalHardDriveFolder,
   restoreConnectedFolderHandle,
+  syncSqliteToConnectedFolder,
   checkForGitHubUpdates,
   GitHubReleaseInfo,
   SavedPrescriptionRecord 
@@ -856,12 +857,26 @@ export default function UserWorkspacePage() {
   }, []);
 
   const handleConnectFolder = async () => {
-    const folder = await connectLocalHardDriveFolder();
-    if (folder) {
-      setConnectedFolderName(folder);
-      setSaveStatus(`Connected Local HDD Folder: "${folder}" - Prescriptions auto-syncing!`);
-      setTimeout(() => setSaveStatus(null), 4000);
+    const res = await connectLocalHardDriveFolder();
+    if (res.folderName) {
+      setConnectedFolderName(res.folderName);
+      if (res.success) {
+        setSaveStatus(`✓ Connected & Saved: prescribepro_database.sqlite updated in "${res.folderName}"!`);
+      } else {
+        setSaveStatus(`⚠️ Connected to "${res.folderName}" but initial file write failed: ${res.error}`);
+      }
+      setTimeout(() => setSaveStatus(null), 5000);
     }
+  };
+
+  const handleSyncDatabaseToFolderNow = async () => {
+    const res = await syncSqliteToConnectedFolder();
+    if (res.success) {
+      setSaveStatus(`✓ Success: prescribepro_database.sqlite saved in "${connectedFolderName || 'Connected Folder'}"!`);
+    } else {
+      setSaveStatus(`⚠️ Folder write failed: ${res.error || 'Please click Connect Folder to re-grant permission.'}`);
+    }
+    setTimeout(() => setSaveStatus(null), 4000);
   };
 
   const handleCheckGitHubRelease = async () => {
@@ -1183,10 +1198,72 @@ export default function UserWorkspacePage() {
     regNo: 'MCI-REG-89472',
     qualification: 'MBBS, MD (Internal Medicine)',
     designation: 'Senior Consultant Physician & Diabetologist',
-    regNoMode: 'blank',
-    customRegNoPrefix: '',
+    regNoMode: 'custom_prefix',
+    customRegNoPrefix: 'Tangi-',
   });
   const [isDoctorProfileModalOpen, setIsDoctorProfileModalOpen] = useState(false);
+
+  // Auto-Incrementing Patient Reg No Generator (e.g. Tangi-1, Tangi-2, Tangi-3...)
+  const generateNextPatientRegNo = (docProf?: typeof doctorProfile): string => {
+    const prof = docProf || doctorProfile;
+    const mode = prof?.regNoMode || 'custom_prefix';
+    let prefix = (prof?.customRegNoPrefix || '').trim();
+
+    if (mode === 'blank' && !prefix) return '';
+
+    if (!prefix && mode === 'custom_prefix') prefix = 'Tangi-';
+    if (mode === 'auto_year') {
+      const year = new Date().getFullYear();
+      prefix = prefix ? `${prefix}${year}-` : `Tangi-${year}-`;
+    }
+
+    let highestSeq = 0;
+
+    // Scan SQLite backup records in localStorage
+    try {
+      const savedHistory = localStorage.getItem('prescribepro_sqlite_prescriptions_backup_v1');
+      if (savedHistory) {
+        const records = JSON.parse(savedHistory);
+        records.forEach((r: any) => {
+          if (r.patientRegNo && prefix && r.patientRegNo.toLowerCase().startsWith(prefix.toLowerCase())) {
+            const numStr = r.patientRegNo.slice(prefix.length);
+            const match = numStr.match(/^(\d+)/);
+            if (match) {
+              const num = parseInt(match[1], 10);
+              if (!isNaN(num) && num > highestSeq) highestSeq = num;
+            }
+          }
+        });
+      }
+    } catch (e) {}
+
+    // Scan Patient DB records in localStorage
+    try {
+      const savedPatients = localStorage.getItem('prescribepro_patients_db');
+      if (savedPatients) {
+        const patients = JSON.parse(savedPatients);
+        patients.forEach((p: any) => {
+          if (p.regNo && prefix && p.regNo.toLowerCase().startsWith(prefix.toLowerCase())) {
+            const numStr = p.regNo.slice(prefix.length);
+            const match = numStr.match(/^(\d+)/);
+            if (match) {
+              const num = parseInt(match[1], 10);
+              if (!isNaN(num) && num > highestSeq) highestSeq = num;
+            }
+          }
+        });
+      }
+    } catch (e) {}
+
+    const savedSeq = localStorage.getItem('prescribepro_last_reg_seq');
+    if (savedSeq) {
+      const s = parseInt(savedSeq, 10);
+      if (!isNaN(s) && s > highestSeq) highestSeq = s;
+    }
+
+    const nextSeq = highestSeq + 1;
+    return `${prefix}${nextSeq}`;
+  };
 
   // Past Patients / History Modal State (with Date Filter)
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -1256,6 +1333,20 @@ export default function UserWorkspacePage() {
     };
 
     await savePrescriptionToSqlite(record);
+
+    if (patient.regNo) {
+      const prefix = (doctorProfile.customRegNoPrefix || '').trim() || 'Tangi-';
+      if (prefix && patient.regNo.toLowerCase().startsWith(prefix.toLowerCase())) {
+        const numStr = patient.regNo.slice(prefix.length);
+        const match = numStr.match(/^(\d+)/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num)) {
+            localStorage.setItem('prescribepro_last_reg_seq', String(num));
+          }
+        }
+      }
+    }
 
     const pastRecords = await getPatientPrescriptionsFromSqlite(patient.regNo || patient.mobile || patient.name);
     setSqliteHistory(pastRecords);
@@ -1356,13 +1447,19 @@ export default function UserWorkspacePage() {
       setProtocols(getClinicalProtocols());
 
       const savedDocProfile = localStorage.getItem('prescribepro_doctor_profile');
+      let activeDocProf = doctorProfile;
       if (savedDocProfile) {
         try {
-          setDoctorProfile(JSON.parse(savedDocProfile));
+          activeDocProf = JSON.parse(savedDocProfile);
+          setDoctorProfile(activeDocProf);
         } catch (err) {
           console.error(err);
         }
+      } else {
+        activeDocProf = { ...doctorProfile, regNoMode: 'custom_prefix' as const, customRegNoPrefix: 'Tangi-' };
+        setDoctorProfile(activeDocProf);
       }
+      setPatient((prev) => (prev.regNo ? prev : { ...prev, regNo: generateNextPatientRegNo(activeDocProf) }));
 
       const savedPageSize = localStorage.getItem('prescribepro_page_size');
       if (savedPageSize === 'A4' || savedPageSize === 'A5') {
@@ -1470,7 +1567,11 @@ export default function UserWorkspacePage() {
   const handleSaveDoctorProfile = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('prescribepro_doctor_profile', JSON.stringify(doctorProfile));
+    const nextReg = generateNextPatientRegNo(doctorProfile);
+    setPatient((prev) => ({ ...prev, regNo: nextReg }));
     setIsDoctorProfileModalOpen(false);
+    setSaveStatus(`Saved Doctor Settings! Next Patient Reg No: "${nextReg}"`);
+    setTimeout(() => setSaveStatus(null), 4000);
   };
 
   const toggleTheme = () => {
@@ -1530,8 +1631,9 @@ export default function UserWorkspacePage() {
   };
 
   const handleClearForm = () => {
+    const nextReg = generateNextPatientRegNo(doctorProfile);
     setPatient({
-      regNo: '',
+      regNo: nextReg,
       mobile: '',
       name: '',
       age: '',
@@ -4107,27 +4209,30 @@ export default function UserWorkspacePage() {
                   </div>
 
                   <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 space-y-2">
-                    <label className="block font-bold text-blue-950">5. Patient Reg. No. Default Format Preference</label>
+                    <label className="block font-bold text-blue-950">5. Patient Reg. No. Sequential Format Preference</label>
                     <select
-                      value={doctorProfile.regNoMode || 'blank'}
+                      value={doctorProfile.regNoMode || 'custom_prefix'}
                       onChange={(e: any) => setDoctorProfile({ ...doctorProfile, regNoMode: e.target.value })}
                       className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-slate-900 font-semibold outline-none text-xs"
                     >
+                      <option value="custom_prefix">Custom Auto-Incrementing Prefix (e.g. Tangi-1, Tangi-2...)</option>
+                      <option value="auto_year">Auto Year Sequential Format (e.g. Tangi-2026-1, Tangi-2026-2...)</option>
                       <option value="blank">Blank / Custom Free Typing (No Auto Prefix)</option>
-                      <option value="custom_prefix">Custom Prefix (e.g. OPD-)</option>
-                      <option value="auto_year">Auto Year Format (e.g. OPD-2026-)</option>
                     </select>
-                    {doctorProfile.regNoMode === 'custom_prefix' && (
-                      <input
-                        type="text"
-                        value={doctorProfile.customRegNoPrefix || ''}
-                        onChange={(e) => setDoctorProfile({ ...doctorProfile, customRegNoPrefix: e.target.value })}
-                        placeholder="Enter Custom Prefix (e.g. OPD- or CLINIC/)"
-                        className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-xs font-mono"
-                      />
+                    {doctorProfile.regNoMode !== 'blank' && (
+                      <div className="space-y-1.5 pt-1">
+                        <label className="block text-[11px] font-bold text-blue-900">Custom Prefix Identifier:</label>
+                        <input
+                          type="text"
+                          value={doctorProfile.customRegNoPrefix ?? 'Tangi-'}
+                          onChange={(e) => setDoctorProfile({ ...doctorProfile, customRegNoPrefix: e.target.value })}
+                          placeholder="e.g. Tangi- or OPD-"
+                          className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-xs font-mono font-bold"
+                        />
+                      </div>
                     )}
-                    <p className="text-[10px] text-slate-500 italic">
-                      Allows complete freedom to type registration numbers in any custom format (OPD-2026-001, 2026/08/101, etc.)
+                    <p className="text-[10.5px] text-emerald-800 font-bold bg-emerald-100/60 p-2 rounded-lg border border-emerald-200">
+                      ✨ Progression Preview: <code>{generateNextPatientRegNo(doctorProfile)}</code> → <code>{doctorProfile.customRegNoPrefix || 'Tangi-'}2</code> → <code>{doctorProfile.customRegNoPrefix || 'Tangi-'}3</code>...
                     </p>
                   </div>
                 </div>
