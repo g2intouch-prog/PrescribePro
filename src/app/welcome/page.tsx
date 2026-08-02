@@ -58,6 +58,7 @@ import {
   connectLocalHardDriveFolder,
   restoreConnectedFolderHandle,
   syncSqliteToConnectedFolder,
+  saveSqliteDbWithFilePicker,
   checkForGitHubUpdates,
   GitHubReleaseInfo,
   SavedPrescriptionRecord 
@@ -874,9 +875,20 @@ export default function UserWorkspacePage() {
     if (res.success) {
       setSaveStatus(`✓ Success: prescribepro_database.sqlite saved in "${connectedFolderName || 'Connected Folder'}"!`);
     } else {
+      alert(`Folder write message: ${res.error || 'Please click Connect Folder to re-grant permission.'}`);
       setSaveStatus(`⚠️ Folder write failed: ${res.error || 'Please click Connect Folder to re-grant permission.'}`);
     }
     setTimeout(() => setSaveStatus(null), 4000);
+  };
+
+  const handleSaveDbToChosenFolder = async () => {
+    const res = await saveSqliteDbWithFilePicker();
+    if (res.success && res.fileName) {
+      setSaveStatus(`✓ Saved SQLite Database file "${res.fileName}" directly to your selected location!`);
+      setTimeout(() => setSaveStatus(null), 5000);
+    } else if (res.error) {
+      alert(`Could not save file: ${res.error}`);
+    }
   };
 
   const handleCheckGitHubRelease = async () => {
@@ -4306,18 +4318,27 @@ export default function UserWorkspacePage() {
                     <div className="flex items-center gap-2 flex-wrap pt-1">
                       <button
                         type="button"
+                        onClick={handleSaveDbToChosenFolder}
+                        className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                        title="Pick any folder on your hard drive to save prescribepro_database.sqlite"
+                      >
+                        <span>💾</span>
+                        <span>Save Database (.sqlite) To Hard Drive</span>
+                      </button>
+                      <button
+                        type="button"
                         onClick={handleConnectFolder}
                         className="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
                       >
                         <span>📁</span>
-                        <span>{connectedFolderName ? `Connected: ${connectedFolderName}` : 'Connect Hard Drive Storage Folder'}</span>
+                        <span>{connectedFolderName ? `Auto-Sync: ${connectedFolderName}` : 'Connect Auto-Sync Folder'}</span>
                       </button>
                       <button
                         type="button"
                         onClick={downloadSqliteBackupFile}
                         className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
                       >
-                        <span>💾</span>
+                        <span>⬇️</span>
                         <span>Download Backup (.sqlite)</span>
                       </button>
                       <label className="px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs shadow transition cursor-pointer flex items-center gap-1.5">

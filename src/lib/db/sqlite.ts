@@ -520,14 +520,24 @@ export async function connectLocalHardDriveFolder(): Promise<{ folderName: strin
 export async function syncSqliteToConnectedFolder(): Promise<{ success: boolean; error?: string }> {
   if (!dirHandleInstance) return { success: false, error: 'No hard drive folder connected' };
   try {
+    let perm = await dirHandleInstance.queryPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') {
+      try {
+        perm = await dirHandleInstance.requestPermission({ mode: 'readwrite' });
+      } catch (e) {
+        console.warn('Permission prompt error:', e);
+      }
+    }
+    if (perm !== 'granted') {
+      return { success: false, error: 'Folder permission not granted. Please click "Connect Folder" to re-authorize.' };
+    }
+
     const db = await getSqliteDb();
     const binary = db.export();
     
-    // Slice exact SQLite byte buffer from WASM linear memory
-    const safeBuffer = binary.buffer.slice(
-      binary.byteOffset,
-      binary.byteOffset + binary.byteLength
-    ) as ArrayBuffer;
+    // Slice exact Uint8Array byte buffer from WASM linear memory
+    const u8 = new Uint8Array(binary);
+    const safeBuffer = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
     const blob = new Blob([safeBuffer], { type: 'application/x-sqlite3' });
 
     const fileHandle = await dirHandleInstance.getFileHandle('prescribepro_database.sqlite', { create: true });
@@ -539,6 +549,42 @@ export async function syncSqliteToConnectedFolder(): Promise<{ success: boolean;
   } catch (err: any) {
     console.error('Failed syncing SQLite to connected folder:', err);
     return { success: false, error: err?.message || String(err) };
+  }
+}
+
+export async function saveSqliteDbWithFilePicker(): Promise<{ success: boolean; fileName?: string; error?: string }> {
+  if (typeof window === 'undefined') return { success: false, error: 'Browser environment required' };
+  try {
+    const db = await getSqliteDb();
+    const binary = db.export();
+    const u8 = new Uint8Array(binary);
+    const safeBuffer = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
+    const blob = new Blob([safeBuffer], { type: 'application/x-sqlite3' });
+
+    if ('showSaveFilePicker' in window) {
+      const handle = await (window as any).showSaveFilePicker({
+        suggestedName: 'prescribepro_database.sqlite',
+        types: [
+          {
+            description: 'SQLite Database File',
+            accept: { 'application/x-sqlite3': ['.sqlite', '.db'] },
+          },
+        ],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return { success: true, fileName: handle.name || 'prescribepro_database.sqlite' };
+    } else {
+      downloadSqliteBackupFile();
+      return { success: true, fileName: 'prescribepro_database.sqlite (Downloaded)' };
+    }
+  } catch (err: any) {
+    if (err.name !== 'AbortError') {
+      console.error('File picker save error:', err);
+      return { success: false, error: err?.message || String(err) };
+    }
+    return { success: false };
   }
 }
 
