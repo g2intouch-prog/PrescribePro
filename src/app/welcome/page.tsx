@@ -53,6 +53,8 @@ import {
   savePrescriptionToSqlite, 
   getPatientPrescriptionsFromSqlite, 
   getAllPrescriptionsFromSqlite,
+  downloadSqliteBackupFile,
+  importSqliteBackupFile,
   SavedPrescriptionRecord 
 } from '@/lib/db/sqlite';
 import { 
@@ -4146,6 +4148,36 @@ export default function UserWorkspacePage() {
                 ) : (
                   <p className="text-[10px] text-slate-500 italic">No footer banner set. Displays default 1cm signature spacing.</p>
                 )}
+              </div>
+
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
+                <label className="block font-bold text-amber-950">8. Offline Database Safeguard & Backup (.sqlite)</label>
+                <p className="text-[11px] text-slate-600">
+                  Download a 1-click backup file of your entire SQLite prescription database onto your computer hard drive to protect against browser cache clearing or browser reinstalls.
+                </p>
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <button
+                    type="button"
+                    onClick={downloadSqliteBackupFile}
+                    className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                  >
+                    <span>💾</span>
+                    <span>Download SQLite Backup File (.sqlite)</span>
+                  </button>
+                  <label className="px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs shadow transition cursor-pointer flex items-center gap-1.5">
+                    <span>📥</span>
+                    <span>Restore Database File</span>
+                    <input
+                      type="file"
+                      accept=".sqlite,.db,.json"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) importSqliteBackupFile(file);
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="pt-3 border-t flex items-center justify-end gap-2">

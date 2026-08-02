@@ -364,3 +364,26 @@ export async function markSqliteTasksSynced(): Promise<void> {
   db.run('UPDATE pwa_tasks SET synced = 1');
   saveSqliteDb();
 }
+
+export async function downloadSqliteBackupFile(): Promise<void> {
+  const db = await getSqliteDb();
+  const binary = db.export();
+  const blob = new Blob([binary.buffer as unknown as BlobPart], { type: 'application/x-sqlite3' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `PrescribePro_Clinic_Backup_${new Date().toISOString().slice(0, 10)}.sqlite`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export async function importSqliteBackupFile(file: File): Promise<void> {
+  const arrayBuffer = await file.arrayBuffer();
+  const uInt8Array = new Uint8Array(arrayBuffer);
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(uInt8Array)));
+  }
+  window.location.reload();
+}
