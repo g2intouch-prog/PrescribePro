@@ -149,6 +149,7 @@ export async function savePrescriptionToSqlite(rec: SavedPrescriptionRecord): Pr
       ]
     );
     saveSqliteDb();
+    await syncSqliteToConnectedFolder(rec);
 
     // Also mirror into backup key for high availability
     if (typeof window !== 'undefined') {
@@ -393,7 +394,103 @@ export async function importSqliteBackupFile(file: File): Promise<void> {
 // HARD DRIVE FOLDER AUTO-SYNC & GITHUB UPDATE CHECKER
 // ----------------------------------------------------
 
+// ----------------------------------------------------
+// HARD DRIVE FOLDER AUTO-SYNC & INDEXEDDB HANDLE PERSISTENCE
+// ----------------------------------------------------
+
 let dirHandleInstance: any = null;
+
+export async function saveDirHandleToIndexedDB(handle: any): Promise<void> {
+  if (typeof window === 'undefined') return;
+  return new Promise((resolve) => {
+    const req = indexedDB.open('prescribepro_fs_db', 1);
+    req.onupgradeneeded = (e: any) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('handles')) {
+        db.createObjectStore('handles');
+      }
+    };
+    req.onsuccess = (e: any) => {
+      const db = e.target.result;
+      const tx = db.transaction('handles', 'readwrite');
+      tx.objectStore('handles').put(handle, 'connectedDirHandle');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    };
+    req.onerror = () => resolve();
+  });
+}
+
+export async function getDirHandleFromIndexedDB(): Promise<any> {
+  if (typeof window === 'undefined') return null;
+  return new Promise((resolve) => {
+    const req = indexedDB.open('prescribepro_fs_db', 1);
+    req.onupgradeneeded = (e: any) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('handles')) {
+        db.createObjectStore('handles');
+      }
+    };
+    req.onsuccess = (e: any) => {
+      const db = e.target.result;
+      const tx = db.transaction('handles', 'readonly');
+      const getReq = tx.objectStore('handles').get('connectedDirHandle');
+      getReq.onsuccess = () => resolve(getReq.result || null);
+      getReq.onerror = () => resolve(null);
+    };
+    req.onerror = () => resolve(null);
+  });
+}
+
+export async function clearDirHandleFromIndexedDB(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  return new Promise((resolve) => {
+    const req = indexedDB.open('prescribepro_fs_db', 1);
+    req.onsuccess = (e: any) => {
+      const db = e.target.result;
+      if (db.objectStoreNames.contains('handles')) {
+        const tx = db.transaction('handles', 'readwrite');
+        tx.objectStore('handles').delete('connectedDirHandle');
+        tx.oncomplete = () => resolve();
+      } else {
+        resolve();
+      }
+    };
+    req.onerror = () => resolve();
+  });
+}
+
+export async function restoreConnectedFolderHandle(): Promise<{ folderName: string | null; active: boolean }> {
+  if (typeof window === 'undefined') return { folderName: null, active: false };
+  try {
+    const handle = await getDirHandleFromIndexedDB();
+    if (handle) {
+      let perm = await handle.queryPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') {
+        try {
+          perm = await handle.requestPermission({ mode: 'readwrite' });
+        } catch (e) {
+          // May require direct user click gesture
+        }
+      }
+
+      if (perm === 'granted') {
+        dirHandleInstance = handle;
+        const name = handle.name || 'Connected Folder';
+        localStorage.setItem('prescribepro_connected_folder_name', name);
+        await syncSqliteToConnectedFolder();
+        return { folderName: name, active: true };
+      } else {
+        const name = localStorage.getItem('prescribepro_connected_folder_name') || handle.name;
+        return { folderName: name, active: false };
+      }
+    }
+  } catch (e) {
+    console.warn('Error restoring connected folder handle:', e);
+  }
+  const name = localStorage.getItem('prescribepro_connected_folder_name');
+  return { folderName: name, active: false };
+}
 
 export async function connectLocalHardDriveFolder(): Promise<string | null> {
   if (typeof window === 'undefined' || !('showDirectoryPicker' in window)) {
@@ -405,6 +502,7 @@ export async function connectLocalHardDriveFolder(): Promise<string | null> {
       mode: 'readwrite',
     });
     dirHandleInstance = handle;
+    await saveDirHandleToIndexedDB(handle);
     const folderName = handle.name || 'Connected Folder';
     localStorage.setItem('prescribepro_connected_folder_name', folderName);
     await syncSqliteToConnectedFolder();
@@ -417,17 +515,105 @@ export async function connectLocalHardDriveFolder(): Promise<string | null> {
   }
 }
 
-export async function syncSqliteToConnectedFolder(): Promise<void> {
+export async function syncSqliteToConnectedFolder(lastRecord?: SavedPrescriptionRecord): Promise<void> {
   if (!dirHandleInstance) return;
   try {
+    // 1. Save main SQLite binary file
     const db = await getSqliteDb();
     const binary = db.export();
-    const fileHandle = await dirHandleInstance.getFileHandle('prescribepro_database.sqlite', { create: true });
-    const writable = await fileHandle.createWritable();
-    await writable.write(binary);
-    await writable.close();
+    const dbFileHandle = await dirHandleInstance.getFileHandle('prescribepro_database.sqlite', { create: true });
+    const dbWritable = await dbFileHandle.createWritable();
+    await dbWritable.write(binary);
+    await dbWritable.close();
+
+    // 2. Save full prescriptions summary JSON file
+    const allRecords = await getAllPrescriptionsFromSqlite();
+    const summaryFileHandle = await dirHandleInstance.getFileHandle('prescriptions_summary.json', { create: true });
+    const summaryWritable = await summaryFileHandle.createWritable();
+    await summaryWritable.write(JSON.stringify(allRecords, null, 2));
+    await summaryWritable.close();
+
+    // 3. Save individual human-readable JSON & TXT files for the target record
+    const targetRecord = lastRecord || (allRecords.length > 0 ? allRecords[0] : null);
+    if (targetRecord) {
+      await writeIndividualRecordToFolder(dirHandleInstance, targetRecord);
+    }
   } catch (err) {
-    console.error('Failed syncing SQLite to connected folder:', err);
+    console.error('Failed syncing files to connected folder:', err);
+  }
+}
+
+async function writeIndividualRecordToFolder(dirHandle: any, rec: SavedPrescriptionRecord) {
+  try {
+    const sanitize = (str: string) => str.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const safeName = sanitize(rec.patientName || 'Patient');
+    const dateStr = rec.createdAt ? rec.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10);
+    const baseFileName = `Rx_${safeName}_${dateStr}_${rec.prescriptionId}`;
+
+    // A. Individual JSON Record
+    const jsonFileHandle = await dirHandle.getFileHandle(`${baseFileName}.json`, { create: true });
+    const jsonWritable = await jsonFileHandle.createWritable();
+    await jsonWritable.write(JSON.stringify(rec, null, 2));
+    await jsonWritable.close();
+
+    // B. Individual Formatted Text Record
+    let textContent = `==================================================\n`;
+    textContent += `PRESCRIBEPRO CLINICAL PRESCRIPTION RECORD\n`;
+    textContent += `==================================================\n`;
+    textContent += `Prescription ID : ${rec.prescriptionId}\n`;
+    textContent += `Date & Time     : ${rec.createdAt}\n`;
+    textContent += `Patient Name    : ${rec.patientName}\n`;
+    textContent += `Reg Number      : ${rec.patientRegNo}\n`;
+    textContent += `Mobile          : ${rec.patientMobile || 'N/A'}\n`;
+    textContent += `Age / Gender    : ${rec.patientAge} Yrs / ${rec.patientGender}\n`;
+    textContent += `Action Type     : ${rec.actionSource.toUpperCase()}\n\n`;
+
+    try {
+      const exam = JSON.parse(rec.clinicalExamJson || '{}');
+      if (exam.chiefComplaints && exam.chiefComplaints.length > 0) {
+        textContent += `CHIEF COMPLAINTS:\n- ${exam.chiefComplaints.join('\n- ')}\n\n`;
+      }
+      if (exam.provisionalDiagnosis) {
+        textContent += `PROVISIONAL DIAGNOSIS:\n${exam.provisionalDiagnosis}\n\n`;
+      }
+    } catch (e) {}
+
+    try {
+      const drugs: string[] = JSON.parse(rec.selectedDrugsJson || '[]');
+      if (drugs.length > 0) {
+        textContent += `PRESCRIBED MEDICATIONS (Rx):\n`;
+        drugs.forEach((d, idx) => {
+          textContent += `${idx + 1}. ${d}\n`;
+        });
+        textContent += `\n`;
+      }
+    } catch (e) {}
+
+    try {
+      const tests: string[] = JSON.parse(rec.selectedTestsJson || '[]');
+      if (tests.length > 0) {
+        textContent += `INVESTIGATIONS & TESTS:\n- ${tests.join('\n- ')}\n\n`;
+      }
+    } catch (e) {}
+
+    try {
+      const advice: string[] = JSON.parse(rec.selectedAdviceJson || '[]');
+      if (advice.length > 0 || rec.customAdviceText) {
+        textContent += `CLINICAL ADVICE & INSTRUCTIONS:\n`;
+        if (advice.length > 0) textContent += `- ${advice.join('\n- ')}\n`;
+        if (rec.customAdviceText) textContent += `- ${rec.customAdviceText}\n`;
+        textContent += `\n`;
+      }
+    } catch (e) {}
+
+    textContent += `==================================================\n`;
+
+    const txtFileHandle = await dirHandle.getFileHandle(`${baseFileName}.txt`, { create: true });
+    const txtWritable = await txtFileHandle.createWritable();
+    await txtWritable.write(textContent);
+    await txtWritable.close();
+  } catch (err) {
+    console.error('Error writing individual prescription files:', err);
   }
 }
 

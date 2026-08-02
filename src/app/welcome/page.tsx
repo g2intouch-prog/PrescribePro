@@ -56,6 +56,7 @@ import {
   downloadSqliteBackupFile,
   importSqliteBackupFile,
   connectLocalHardDriveFolder,
+  restoreConnectedFolderHandle,
   checkForGitHubUpdates,
   GitHubReleaseInfo,
   SavedPrescriptionRecord 
@@ -848,8 +849,9 @@ export default function UserWorkspacePage() {
     }
 
     if (typeof window !== 'undefined') {
-      const folder = localStorage.getItem('prescribepro_connected_folder_name');
-      if (folder) setConnectedFolderName(folder);
+      restoreConnectedFolderHandle().then(({ folderName, active }) => {
+        if (folderName) setConnectedFolderName(folderName);
+      });
     }
   }, []);
 
@@ -857,7 +859,7 @@ export default function UserWorkspacePage() {
     const folder = await connectLocalHardDriveFolder();
     if (folder) {
       setConnectedFolderName(folder);
-      setSaveStatus(`Connected Local HDD Folder: "${folder}"`);
+      setSaveStatus(`Connected Local HDD Folder: "${folder}" - Prescriptions auto-syncing!`);
       setTimeout(() => setSaveStatus(null), 4000);
     }
   };
@@ -4229,7 +4231,7 @@ export default function UserWorkspacePage() {
                     </div>
                     {connectedFolderName && (
                       <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 pt-1">
-                        <span>✓</span> Live Auto-Sync Active: Saving prescriptions updates <code>{connectedFolderName}/prescribepro_database.sqlite</code> automatically.
+                        <span>✓</span> Live Auto-Sync Active: Saving prescriptions automatically writes <code>{connectedFolderName}/prescribepro_database.sqlite</code>, <code>prescriptions_summary.json</code>, and individual <code>Rx_Patient_Name.json / .txt</code> files!
                       </p>
                     )}
                   </div>
