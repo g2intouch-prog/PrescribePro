@@ -876,6 +876,101 @@ export default function UserWorkspacePage() {
     }
   };
 
+  const matchDrugFormulation = (
+    drug: { genericName: string; dosage?: string; keywords?: string },
+    filter: 'all' | 'inj' | 'tab' | 'cap' | 'syp' | 'drops' | 'topical'
+  ): boolean => {
+    if (filter === 'all') return true;
+
+    const text = `${drug.genericName} ${drug.dosage || ''} ${drug.keywords || ''}`.toLowerCase();
+
+    const hasWord = (...words: string[]) => {
+      return words.some((w) => new RegExp(`\\b${w.replace('.', '\\.')}\\b`, 'i').test(text));
+    };
+
+    if (filter === 'inj') {
+      return (
+        text.startsWith('inj') ||
+        hasWord('inj', 'inj.', 'injection', 'infusion', 'vial', 'ampoule', 'amp', 'iv', 'im', 'stat iv', 'iv/im')
+      );
+    }
+
+    if (filter === 'tab') {
+      if (text.startsWith('inj') || hasWord('inj', 'inj.', 'injection', 'vial', 'ampoule', 'infusion')) return false;
+      return (
+        text.startsWith('tab') ||
+        hasWord('tab', 'tab.', 'tablet', 'tablets', 'dt', 'md', 'dispersible', 'chewable')
+      );
+    }
+
+    if (filter === 'cap') {
+      return (
+        text.startsWith('cap') ||
+        hasWord('cap', 'cap.', 'capsule', 'capsules', 'softgel')
+      );
+    }
+
+    if (filter === 'syp') {
+      return (
+        text.startsWith('syp') ||
+        hasWord('syp', 'syp.', 'syrup', 'suspension', 'linctus', 'expectorant', 'elixir')
+      );
+    }
+
+    if (filter === 'drops') {
+      if (text.startsWith('inj') || hasWord('inj', 'injection', 'vial')) return false;
+      return (
+        hasWord('drop', 'drops', 'drop.', 'drops.', 'ophthalmic', 'otic', 'eye drop', 'ear drop', 'nasal drop')
+      );
+    }
+
+    if (filter === 'topical') {
+      return (
+        hasWord('cream', 'ointment', 'oint', 'gel', 'lotion', 'shampoo', 'mouthwash', 'gargle', 'spray', 'patch')
+      );
+    }
+
+    return true;
+  };
+
+  const applyBrandToPrescribedLine = (
+    originalLine: string,
+    brandName: string,
+    formulation?: string
+  ): string => {
+    const lower = originalLine.toLowerCase().trim();
+    let prefix = 'Tab.';
+
+    if (lower.startsWith('inj') || lower.includes('inj') || lower.includes('injection') || lower.includes('infusion') || lower.includes('vial') || lower.includes('amp') || lower.includes('iv') || lower.includes('im')) {
+      prefix = 'Inj.';
+    } else if (lower.startsWith('cap') || lower.includes('capsule')) {
+      prefix = 'Cap.';
+    } else if (lower.startsWith('syp') || lower.includes('syrup') || lower.includes('suspension')) {
+      prefix = 'Syp.';
+    } else if (lower.startsWith('drop') || lower.includes('drop')) {
+      prefix = 'Drops.';
+    } else if (lower.startsWith('oint') || lower.includes('ointment') || lower.includes('cream') || lower.includes('gel')) {
+      prefix = 'Oint.';
+    } else if (lower.startsWith('tab') || lower.includes('tablet')) {
+      prefix = 'Tab.';
+    } else if (formulation) {
+      const f = formulation.toLowerCase();
+      if (f.includes('inj') || f.includes('vial') || f.includes('amp')) prefix = 'Inj.';
+      else if (f.includes('cap') || f.includes('capsule')) prefix = 'Cap.';
+      else if (f.includes('syp') || f.includes('syrup') || f.includes('suspension')) prefix = 'Syp.';
+      else if (f.includes('drop')) prefix = 'Drops.';
+      else if (f.includes('oint') || f.includes('cream') || f.includes('gel')) prefix = 'Oint.';
+      else prefix = 'Tab.';
+    }
+
+    let cleanBrand = brandName.replace(/^(inj\.|tab\.|cap\.|syp\.|drops\.|oint\.|inj|tab|cap|syp|drops|oint)\s+/i, '').trim();
+
+    const matchInst = originalLine.match(/\(.*\).*/);
+    const inst = matchInst ? ` ${matchInst[0].trim()}` : '';
+
+    return `${prefix} ${cleanBrand}${inst}`;
+  };
+
   const handleSetPrescribingMode = (mode: 'generic' | 'brand') => {
     setPrescribingMode(mode);
     localStorage.setItem('prescribepro_rx_mode', mode);
@@ -3684,28 +3779,7 @@ export default function UserWorkspacePage() {
                   let matched = searchClinicalDrugs(drugSearchQuery, drugCatalog);
 
                   if (drugFormulationFilter !== 'all') {
-                    matched = matched.filter((drug) => {
-                      const text = `${drug.genericName} ${drug.dosage} ${drug.keywords || ''}`.toLowerCase();
-                      if (drugFormulationFilter === 'inj') {
-                        return text.includes('inj') || text.includes('injection') || text.includes('infusion') || text.includes('vial') || text.includes('ampoule') || text.includes('iv') || text.includes('im');
-                      }
-                      if (drugFormulationFilter === 'tab') {
-                        return text.includes('tablet') || text.includes('tab ') || text.includes(' dt') || text.includes(' md') || text.includes('dispersible');
-                      }
-                      if (drugFormulationFilter === 'cap') {
-                        return text.includes('capsule') || text.includes('cap ') || text.includes('softgel');
-                      }
-                      if (drugFormulationFilter === 'syp') {
-                        return text.includes('syrup') || text.includes('suspension') || text.includes('syp') || text.includes('linctus') || text.includes('expectorant') || text.includes('solution') || text.includes('elixir');
-                      }
-                      if (drugFormulationFilter === 'drops') {
-                        return text.includes('drop') || text.includes('ophthalmic') || text.includes('otic');
-                      }
-                      if (drugFormulationFilter === 'topical') {
-                        return text.includes('cream') || text.includes('ointment') || text.includes('gel') || text.includes('lotion') || text.includes('shampoo') || text.includes('mouthwash') || text.includes('gargle') || text.includes('spray') || text.includes('patch');
-                      }
-                      return true;
-                    });
+                    matched = matched.filter((drug) => matchDrugFormulation(drug, drugFormulationFilter));
                   }
 
                   const w = parseFloat(vitals.weight) || 0;
@@ -4702,28 +4776,7 @@ export default function UserWorkspacePage() {
               {(() => {
                 let matched = searchClinicalDrugs(drugSearchQuery, drugCatalog);
                 if (drugFormulationFilter !== 'all') {
-                  matched = matched.filter((drug) => {
-                    const text = `${drug.genericName} ${drug.dosage} ${drug.keywords || ''}`.toLowerCase();
-                    if (drugFormulationFilter === 'inj') {
-                      return text.includes('inj') || text.includes('injection') || text.includes('infusion') || text.includes('vial') || text.includes('ampoule') || text.includes('iv') || text.includes('im');
-                    }
-                    if (drugFormulationFilter === 'tab') {
-                      return text.includes('tablet') || text.includes('tab ') || text.includes(' dt') || text.includes(' md') || text.includes('dispersible');
-                    }
-                    if (drugFormulationFilter === 'cap') {
-                      return text.includes('capsule') || text.includes('cap ') || text.includes('softgel');
-                    }
-                    if (drugFormulationFilter === 'syp') {
-                      return text.includes('syrup') || text.includes('suspension') || text.includes('syp') || text.includes('linctus') || text.includes('expectorant') || text.includes('solution') || text.includes('elixir');
-                    }
-                    if (drugFormulationFilter === 'drops') {
-                      return text.includes('drop') || text.includes('ophthalmic') || text.includes('otic');
-                    }
-                    if (drugFormulationFilter === 'topical') {
-                      return text.includes('cream') || text.includes('ointment') || text.includes('gel') || text.includes('lotion') || text.includes('shampoo') || text.includes('mouthwash') || text.includes('gargle') || text.includes('spray') || text.includes('patch');
-                    }
-                    return true;
-                  });
+                  matched = matched.filter((drug) => matchDrugFormulation(drug, drugFormulationFilter));
                 }
 
                 return matched.map((drug) => {
@@ -5760,19 +5813,22 @@ export default function UserWorkspacePage() {
                   >
                     <div
                       onClick={() => {
-                        const label = `${brandItem.brandName} (${brandItem.calculatedDose} • ${brandItem.frequency})`;
                         if (activeItemIndexForBrand !== null && activeItemIndexForBrand >= 0) {
                           const original = selectedDrugs[activeItemIndexForBrand] || '';
-                          const matchInst = original.match(/\(.*\)/);
-                          const inst = matchInst ? ` ${matchInst[0]}` : '';
+                          const formattedLine = applyBrandToPrescribedLine(original, brandItem.brandName, brandItem.formulation);
                           const updated = [...selectedDrugs];
-                          updated[activeItemIndexForBrand] = `${brandItem.brandName}${inst}`;
+                          updated[activeItemIndexForBrand] = formattedLine;
                           setSelectedDrugs(updated);
                           setIsBrandPickerModalOpen(false);
                           setActiveGenericDrugForBrands(null);
                           setActiveItemIndexForBrand(null);
                         } else {
-                          toggleDrugSelection(label);
+                          const formattedLine = applyBrandToPrescribedLine(
+                            brandItem.brandName,
+                            brandItem.brandName,
+                            brandItem.formulation
+                          ) + ` (${brandItem.calculatedDose} • ${brandItem.frequency})`;
+                          toggleDrugSelection(formattedLine);
                           setIsBrandPickerModalOpen(false);
                           setActiveGenericDrugForBrands(null);
                         }
