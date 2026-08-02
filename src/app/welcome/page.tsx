@@ -52,11 +52,15 @@ import { checkPrescriptionSafety, DetectedInteraction } from '@/lib/data/interac
 import { 
   savePrescriptionToSqlite, 
   getPatientPrescriptionsFromSqlite, 
+  getAllPrescriptionsFromSqlite,
   SavedPrescriptionRecord 
 } from '@/lib/db/sqlite';
 import { 
   getSpecialties, 
   saveSpecialties, 
+  getClinicalProtocols,
+  saveClinicalProtocols,
+  ClinicalProtocol,
   getDrugCatalog, 
   saveDrugCatalog, 
   calculatePediatricDose,
@@ -520,6 +524,197 @@ export default function UserWorkspacePage() {
   const [isDrugModalOpen, setIsDrugModalOpen] = useState(false);
   const [isPediatricModalOpen, setIsPediatricModalOpen] = useState(false);
 
+  // Clinical Protocols & Order Sets State
+  const [protocols, setProtocols] = useState<ClinicalProtocol[]>([]);
+  const [isProtocolsModalOpen, setIsProtocolsModalOpen] = useState(false);
+  const [protocolSearchTerm, setProtocolSearchTerm] = useState('');
+  const [protocolCategoryFilter, setProtocolCategoryFilter] = useState<string>('all');
+
+  // Template Editor Popup State
+  const [isTemplateEditorOpen, setIsTemplateEditorOpen] = useState(false);
+  const [templateEditorSpecialtyId, setTemplateEditorSpecialtyId] = useState('');
+  const [editingTemplate, setEditingTemplate] = useState<{
+    id?: string;
+    name: string;
+    complaints: string;
+    diagnosis: string;
+    drugsText: string;
+    testsText: string;
+    advice: string;
+  }>({
+    name: '',
+    complaints: '',
+    diagnosis: '',
+    drugsText: '',
+    testsText: '',
+    advice: '',
+  });
+
+  // Protocol Editor Popup State
+  const [isProtocolEditorOpen, setIsProtocolEditorOpen] = useState(false);
+  const [editingProtocol, setEditingProtocol] = useState<ClinicalProtocol>({
+    id: '',
+    title: '',
+    category: 'general',
+    targetGroup: 'Adult & Pediatric',
+    guidelinesSummary: '',
+    redFlags: '',
+    diagnosis: '',
+    chiefComplaints: [],
+    drugs: [],
+    tests: [],
+    advice: '',
+  });
+
+  const handleOpenNewTemplateEditor = (specialtyId: string) => {
+    setTemplateEditorSpecialtyId(specialtyId);
+    setEditingTemplate({
+      name: '',
+      complaints: '',
+      diagnosis: '',
+      drugsText: '',
+      testsText: '',
+      advice: '',
+    });
+    setIsTemplateEditorOpen(true);
+  };
+
+  const handleOpenEditTemplateEditor = (specialtyId: string, tpl: PrescriptionTemplate) => {
+    setTemplateEditorSpecialtyId(specialtyId);
+    const advStr = Array.isArray(tpl.advice) ? tpl.advice.join('\n') : (tpl.advice || '');
+    setEditingTemplate({
+      id: tpl.id,
+      name: tpl.name,
+      complaints: (tpl.complaints || []).join(', '),
+      diagnosis: tpl.diagnosis || '',
+      drugsText: (tpl.drugs || []).join('\n'),
+      testsText: (tpl.tests || []).join(', '),
+      advice: advStr,
+    });
+    setIsTemplateEditorOpen(true);
+  };
+
+  const handleSaveTemplateEditor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTemplate.name.trim() || !templateEditorSpecialtyId) return;
+
+    const complaintsArr = editingTemplate.complaints
+      ? editingTemplate.complaints.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+    const drugsArr = editingTemplate.drugsText
+      ? editingTemplate.drugsText.split('\n').map((s) => s.trim()).filter(Boolean)
+      : [];
+    const testsArr = editingTemplate.testsText
+      ? editingTemplate.testsText.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+    const adviceArr = editingTemplate.advice
+      ? editingTemplate.advice.split('\n').map((s) => s.trim()).filter(Boolean)
+      : [];
+
+    const updatedSpecialties = specialties.map((sp) => {
+      if (sp.id !== templateEditorSpecialtyId) return sp;
+
+      let updatedTemplates = [...sp.templates];
+      if (editingTemplate.id) {
+        updatedTemplates = updatedTemplates.map((t) =>
+          t.id === editingTemplate.id
+            ? {
+                ...t,
+                name: editingTemplate.name.trim(),
+                complaints: complaintsArr,
+                diagnosis: editingTemplate.diagnosis.trim(),
+                drugs: drugsArr,
+                tests: testsArr,
+                advice: adviceArr,
+              }
+            : t
+        );
+      } else {
+        const newTpl: PrescriptionTemplate = {
+          id: `tpl-${Date.now()}`,
+          name: editingTemplate.name.trim(),
+          complaints: complaintsArr,
+          diagnosis: editingTemplate.diagnosis.trim(),
+          drugs: drugsArr,
+          tests: testsArr,
+          advice: adviceArr,
+        };
+        updatedTemplates.push(newTpl);
+      }
+
+      return {
+        ...sp,
+        templates: updatedTemplates,
+      };
+    });
+
+    setSpecialties(updatedSpecialties);
+    saveSpecialties(updatedSpecialties);
+    setIsTemplateEditorOpen(false);
+  };
+
+  const handleApplyProtocol = (proto: ClinicalProtocol) => {
+    if (proto.diagnosis) setProvisionalDiagnosis(proto.diagnosis);
+    if (proto.chiefComplaints && proto.chiefComplaints.length > 0) setChiefComplaints(proto.chiefComplaints.join(', '));
+    if (proto.drugs && proto.drugs.length > 0) setSelectedDrugs(proto.drugs);
+    if (proto.tests && proto.tests.length > 0) setSelectedTests(proto.tests);
+    if (proto.advice) setSpecificAdviceText(proto.advice);
+    setIsProtocolsModalOpen(false);
+    setSaveStatus(`Applied Clinical Protocol: "${proto.title}"`);
+    setTimeout(() => setSaveStatus(null), 3500);
+  };
+
+  const handleOpenNewProtocolEditor = () => {
+    setEditingProtocol({
+      id: '',
+      title: '',
+      category: 'general',
+      targetGroup: 'Adult & Pediatric',
+      guidelinesSummary: '',
+      redFlags: '',
+      diagnosis: '',
+      chiefComplaints: [],
+      drugs: [],
+      tests: [],
+      advice: '',
+    });
+    setIsProtocolEditorOpen(true);
+  };
+
+  const handleOpenEditProtocolEditor = (proto: ClinicalProtocol) => {
+    setEditingProtocol({ ...proto });
+    setIsProtocolEditorOpen(true);
+  };
+
+  const handleSaveProtocolEditor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProtocol.title.trim()) return;
+
+    let updatedProtocols = [...protocols];
+    if (editingProtocol.id) {
+      updatedProtocols = updatedProtocols.map((p) =>
+        p.id === editingProtocol.id ? editingProtocol : p
+      );
+    } else {
+      const newProto: ClinicalProtocol = {
+        ...editingProtocol,
+        id: `proto-${Date.now()}`,
+      };
+      updatedProtocols.push(newProto);
+    }
+
+    setProtocols(updatedProtocols);
+    saveClinicalProtocols(updatedProtocols);
+    setIsProtocolEditorOpen(false);
+  };
+
+  const handleDeleteProtocol = (protoId: string) => {
+    if (!confirm('Are you sure you want to delete this clinical protocol?')) return;
+    const updated = protocols.filter((p) => p.id !== protoId);
+    setProtocols(updated);
+    saveClinicalProtocols(updated);
+  };
+
   // Doctor Rabies/ERIG Preference State
   const [preferredErigKey, setPreferredErigKey] = useState<string>('erig-300');
 
@@ -529,27 +724,95 @@ export default function UserWorkspacePage() {
   // Generic ↔ Brand Picker Modal State
   const [isBrandPickerModalOpen, setIsBrandPickerModalOpen] = useState(false);
   const [activeGenericDrugForBrands, setActiveGenericDrugForBrands] = useState<DrugItem | null>(null);
+  const [activeItemIndexForBrand, setActiveItemIndexForBrand] = useState<number | null>(null);
   const [newCustomBrandInput, setNewCustomBrandInput] = useState('');
+
+  const handleOpenBrandPickerForItem = (index: number, fullDrugString: string) => {
+    setActiveItemIndexForBrand(index);
+    const cleanName = fullDrugString.split('(')[0].trim();
+    setActiveGenericDrugForBrands({
+      id: `item-${index}`,
+      genericName: cleanName,
+      category: 'all',
+      dosage: '',
+      duration: '',
+    });
+    setIsBrandPickerModalOpen(true);
+  };
 
   // Custom Brand Map State (Generic Name -> Brand Names[])
   const [customBrandMap, setCustomBrandMap] = useState<Record<string, string[]>>({
-    'paracetamol': ['Calpol 650mg', 'Dolo 650mg', 'Crocin 650mg', 'Pacimol 650mg'],
-    'pantoprazole': ['Pan-40', 'Pantocid 40', 'Pantop 40', 'Pan-D SR'],
-    'rabeprazole': ['Rabeloc 20', 'Rabekind 20', 'Razo 20'],
-    'esomeprazole': ['Esomac 40', 'Nexpro 40', 'NEXPRO-RD'],
-    'amoxicillin': ['Mox 500', 'Novamox 500', 'Augmentin 625', 'Moxkind-CV 625'],
-    'cefixime': ['Zifi 200', 'Taxim-O 200', 'Ceftas 200', 'Mahashaf 200'],
-    'azithromycin': ['Azithral 500', 'Aziwok 500', 'Zady 500'],
-    'ciprofloxacin': ['Ciplox 500', 'Cifran 500'],
-    'ofloxacin': ['Oflox 200', 'Zanocin 200'],
-    'levofloxacin': ['Levomac 500', 'Loxof 500'],
-    'telmisartan': ['Telma 40', 'Telmikind 40', 'Tazloc 40'],
-    'amlodipine': ['Amlong 5', 'Stamlo 5'],
-    'metformin': ['Glycomet 500', 'Obimet 500'],
-    'clonazepam': ['Clonotril 0.5', 'Zapiz 0.5', 'Epitril 0.5'],
-    'escitalopram': ['Nexito 10', 'Cilentra 10', 'Depran 10'],
-    'alprazolam': ['Alprax 0.25', 'Restyl 0.25', 'Trika 0.25'],
+    'paracetamol': ['Calpol 650mg', 'Dolo 650mg', 'Crocin 650mg', 'Pacimol 650mg', 'Febrinil 650', 'Sumo L 650'],
+    'pantoprazole': ['Pan-40', 'Pantocid 40', 'Pantop 40', 'Pan-D SR', 'Pantocid-D SR'],
+    'rabeprazole': ['Rabeloc 20', 'Rabekind 20', 'Razo 20', 'Rabium 20', 'Cyra-D'],
+    'esomeprazole': ['Esomac 40', 'Nexpro 40', 'NEXPRO-RD', 'Sompraz 40'],
+    'omeprazole': ['Omez 20', 'Omee 20', 'Omez-D'],
+    'ranitidine': ['Aciloc 150', 'Rantac 150', 'Zinetac 150'],
+    'amoxicillin': ['Mox 500', 'Novamox 500', 'Augmentin 625', 'Moxkind-CV 625', 'Clavam 625'],
+    'cefuroxime': ['Ceftum 500', 'Forcef 500', 'Oratil 500', 'Cetil 500'],
+    'ceftriaxone': ['Monocef 1g IV', 'Cefaxone 1g', 'Oframax 1g', 'Monocef 500mg'],
+    'cefixime': ['Zifi 200', 'Taxim-O 200', 'Ceftas 200', 'Mahashaf 200', 'Omnicef 200'],
+    'cefpodoxime': ['Gudcef 200', 'Cepodem 200', 'Doxcef 200', 'Monocef-O 200'],
+    'azithromycin': ['Azithral 500', 'Aziwok 500', 'Zady 500', 'Azithro 500'],
+    'ciprofloxacin': ['Ciplox 500', 'Cifran 500', 'Ciprolet 500'],
+    'ofloxacin': ['Oflox 200', 'Zanocin 200', 'Oflox-OZ', 'Zenflox 200'],
+    'levofloxacin': ['Levomac 500', 'Loxof 500', 'Factiv 500'],
+    'doxycycline': ['Microdox-100', 'Dox-SL 100', 'Doxy-1 100'],
+    'metronidazole': ['Metrogyl 400', 'Flagyl 400', 'Aristogyl 400'],
+    'nitrofurantoin': ['Niftran 100 SR', 'Martifur 100 SR'],
+    'fluconazole': ['Forcan 150', 'Zocon 150', 'Syscan 150'],
+    'itraconazole': ['Itraspor 100', 'Canditral 100', 'IT-Mac 200'],
+    'diclofenac': ['Voveran SR 100', 'Voveran AQ IM', 'Reactin 50', 'Dynapar AQ'],
+    'aceclofenac': ['Zerodol-SP', 'Hifenac-P', 'Zerodol 100', 'Aceclo-100'],
+    'ibuprofen': ['Brufen 400', 'Combiflam', 'Ibugesic Plus'],
+    'tramadol': ['Tramazac 50', 'Ultracet', 'Contramal 100', 'Tramasure 100'],
+    'drotaverine': ['Drotin 40', 'Drotaver 40', 'Drotin-M'],
+    'dicyclomine': ['Cyclopam', 'Meftal-Spas', 'Spasmo-Proxyvon'],
     'ondansetron': ['Emeset 4mg', 'Vomikind 4mg', 'Ondem 4mg'],
+    'metoclopramide': ['Perinorm 10mg', 'Reglan 10mg'],
+    'domperidone': ['Domstal 10', 'Vomistop 10'],
+    'deriphyllin': ['Deriphyllin 150mg', 'Deriphyllin Retard', 'Deriphyllin 2ml Inj'],
+    'etofylline': ['Deriphyllin 150mg', 'Deriphyllin 2ml Inj'],
+    'salbutamol': ['Asthalin 4mg', 'Asthalin Inhaler', 'Ventorlin'],
+    'levosalbutamol': ['Levolin 1mg', 'Levolin Inhaler'],
+    'budesonide': ['Budecort 200', 'Budecort Respules'],
+    'montelukast': ['Telekast 10', 'Romilast 10', 'Monticope'],
+    'furosemide': ['Lasix 40mg', 'Lasix 20mg Inj'],
+    'torsemide': ['Dytor 10', 'Torsine 10'],
+    'telmisartan': ['Telma 40', 'Telmikind 40', 'Tazloc 40', 'Telma-H'],
+    'amlodipine': ['Amlong 5', 'Stamlo 5', 'Amlopin 5'],
+    'metoprolol': ['Betaloc XR 25', 'Metolar 50'],
+    'atenolol': ['Aten 50', 'Tenormin 50'],
+    'ramipril': ['Cardace 2.5', 'Ramcor 5'],
+    'rosuvastatin': ['Rosuvas 10', 'Rosulip 10', 'Crestor 10'],
+    'atorvastatin': ['Atorva 10', 'Lipivas 10', 'Storvas 10'],
+    'metformin': ['Glycomet 500 SR', 'Obimet 500', 'Riomet 500'],
+    'teneligliptin': ['Tenepure 20', 'Zita-Plus 20'],
+    'dapagliflozin': ['Forxiga 10', 'Dapa-10'],
+    'empagliflozin': ['Jardiance 10', 'Gibo-10'],
+    'glimepiride': ['Amaryl 1mg', 'Glimestar 2mg'],
+    'clonazepam': ['Clonotril 0.5', 'Zapiz 0.5', 'Epitril 0.5'],
+    'alprazolam': ['Alprax 0.25', 'Restyl 0.25', 'Trika 0.25'],
+    'lorazepam': ['Ativan 1mg', 'Lopez 2mg'],
+    'escitalopram': ['Nexito 10', 'Cilentra 10', 'Depran 10'],
+    'phenytoin': ['Eptoin 100', 'Dilantin 100'],
+    'levetiracetam': ['Levipil 500', 'Levepsy 500'],
+    'valproate': ['Encorate Chrono 300', 'Valparin 200'],
+    'hydrocortisone': ['Efcorlin 100mg IV', 'Cort-S 100mg'],
+    'dexamethasone': ['Decadron 8mg Inj', 'Dexona 4mg'],
+    'prednisolone': ['Wysolone 5mg', 'Omnacortil 10mg'],
+    'defcort': ['Defcort 6mg', 'Defza 6mg'],
+    'iron sucrose': ['Encifer 100mg IV', 'Orofer 100mg IV', 'Ferium 100mg'],
+    'artesunate': ['Falcinil 60mg IV', 'Larinate 60mg'],
+    'normal saline': ['NS 0.9% 500ml IV', 'NS 100ml Infusion'],
+    'ringer lactate': ['RL 500ml IV Infusion'],
+    'dextrose 5%': ['D5W 500ml IV Infusion'],
+    'dextrose 10%': ['D10W 500ml IV Infusion'],
+    'dextrose 25%': ['D25W 100ml IV Stat Bolus'],
+    'dextrose 50%': ['D50W 100ml IV Emergency'],
+    'dextrose normal saline': ['DNS 500ml IV Infusion'],
+    'isolyte': ['Isolyte-P 500ml', 'Isolyte-M 500ml'],
+    'mannitol': ['Osmitrol 20% 100ml', 'Mannitol 20% Infusion'],
   });
 
   useEffect(() => {
@@ -615,7 +878,15 @@ export default function UserWorkspacePage() {
       }
     }
 
-    return matches.length > 0 ? matches : [`Generic ${genericFullName}`];
+    if (matches.length > 0) return matches;
+
+    const words = genericFullName.split(' ');
+    const mainWord = words[0] || 'Medication';
+    return [
+      `Brand ${mainWord} 500mg`,
+      `Brand ${mainWord} Forte`,
+      `Generic ${genericFullName}`,
+    ];
   };
 
   const handleAddCustomBrand = (genericFullName: string) => {
@@ -648,77 +919,57 @@ export default function UserWorkspacePage() {
   const [newDrugDuration, setNewDrugDuration] = useState('');
 
   // Selected Ticked Drugs on Prescription
-  const [selectedDrugs, setSelectedDrugs] = useState<string[]>([
-    'Paracetamol 650mg (1-0-1)',
-    'Pantoprazole 40mg (1-0-0 B/F)',
-  ]);
+  const [selectedDrugs, setSelectedDrugs] = useState<string[]>([]);
   const [drugSearchQuery, setDrugSearchQuery] = useState('');
+  const [drugFormulationFilter, setDrugFormulationFilter] = useState<'all' | 'inj' | 'tab' | 'cap' | 'syp' | 'drops' | 'topical'>('all');
 
   // Patient Registration Form State
   const [patient, setPatient] = useState({
-    regNo: 'REG-2026-089',
-    mobile: '9876543210',
-    name: 'John Doe',
-    age: '34',
+    regNo: '',
+    mobile: '',
+    name: '',
+    age: '',
     gender: 'Male',
-    careOf: 'Robert Doe (Father)',
-    address: '123 Health Ave, Cityville',
-    allergies: 'NKDA (No Known Drug Allergies)',
+    careOf: '',
+    address: '',
+    allergies: '',
   });
 
   // Medical History State
-  const [medicalHistory, setMedicalHistory] = useState<MedicalRecord[]>([
-    {
-      date: '2026-06-14',
-      diagnosis: 'Acute Upper Respiratory Infection',
-      prescription: 'Amoxicillin 500mg, Paracetamol 650mg',
-      notes: 'Advised rest and fluids.',
-    },
-    {
-      date: '2026-03-02',
-      diagnosis: 'Seasonal Allergic Rhinitis',
-      prescription: 'Cetirizine 10mg',
-      notes: 'Avoid outdoor allergens.',
-    },
-  ]);
+  const [medicalHistory, setMedicalHistory] = useState<MedicalRecord[]>([]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
   // Vitals State
   const [vitals, setVitals] = useState({
-    height: '172',
-    weight: '68',
-    bp: '120/80',
-    pulse: '72',
-    temp: '98.6',
+    height: '',
+    weight: '',
+    bp: '',
+    pulse: '',
+    temp: '',
   });
 
   // Diagnostic Tests & Results State
-  const [selectedTests, setSelectedTests] = useState<string[]>([
-    'CBC (Complete Blood Count with Differential)',
-    'HbA1c (Glycated Hemoglobin)',
-  ]);
+  const [selectedTests, setSelectedTests] = useState<string[]>([]);
   const [testFilterQuery, setTestFilterQuery] = useState('');
   const [newCustomTestInput, setNewCustomTestInput] = useState('');
-  const [testResultsText, setTestResultsText] = useState(
-    'Hemoglobin: 14.2 g/dL | Fasting Sugar: 98 mg/dL | HbA1c: 5.6%'
-  );
+  const [testResultsText, setTestResultsText] = useState('');
 
   // Additional Advice State
   const [selectedAdvice, setSelectedAdvice] = useState<string[]>([]);
   const [customAdviceText, setCustomAdviceText] = useState('');
 
   // Clinical Examination & Diagnostic History States
-  const [chiefComplaints, setChiefComplaints] = useState('Fever x 3 days, Dry Cough, Bodyache');
-  const [signsSymptoms, setSignsSymptoms] = useState('Mild pharyngeal erythema, Low-grade fever, Fatigue');
-  const [clinicalHistory, setClinicalHistory] = useState('No prior hospitalizations or major surgeries.');
-  const [familyHistory, setFamilyHistory] = useState('Father: Hypertension | Mother: Type 2 Diabetes');
-  const [drugHistory, setDrugHistory] = useState('Tab Paracetamol 500mg S.O.S. NKDA (No Known Drug Allergies).');
-  const [examinationFindings, setExaminationFindings] = useState('Chest: Clear bilateral breath sounds. Abdomen: Soft.');
-  const [provisionalDiagnosis, setProvisionalDiagnosis] = useState('Acute Upper Respiratory Tract Infection (URTI)');
-  const [differentialDiagnosis, setDifferentialDiagnosis] = useState('1. Viral Bronchitis  2. Influenza A');
-  const [specificAdviceText, setSpecificAdviceText] = useState('Take medications strictly after meals. Return if fever persists >3 days.');
+  const [chiefComplaints, setChiefComplaints] = useState('');
+  const [signsSymptoms, setSignsSymptoms] = useState('');
+  const [clinicalHistory, setClinicalHistory] = useState('');
+  const [familyHistory, setFamilyHistory] = useState('');
+  const [drugHistory, setDrugHistory] = useState('');
+  const [examinationFindings, setExaminationFindings] = useState('');
+  const [provisionalDiagnosis, setProvisionalDiagnosis] = useState('');
+  const [differentialDiagnosis, setDifferentialDiagnosis] = useState('');
+  const [specificAdviceText, setSpecificAdviceText] = useState('');
 
   // Surgical Procedures, Maneuvers & Non-Drug Care State
   const [selectedProcedures, setSelectedProcedures] = useState<string[]>([]);
@@ -768,14 +1019,38 @@ export default function UserWorkspacePage() {
   // Pharmacopeia Selector Modal State
   const [isPharmacopeiaModalOpen, setIsPharmacopeiaModalOpen] = useState<boolean>(false);
 
-  // Doctor Profile State (Name, Regd No, Qualification, Designation)
-  const [doctorProfile, setDoctorProfile] = useState({
+  // Doctor Profile State (Name, Regd No, Qualification, Designation, RegNo Format Preferences)
+  const [doctorProfile, setDoctorProfile] = useState<{
+    name: string;
+    regNo: string;
+    qualification: string;
+    designation: string;
+    regNoMode?: 'blank' | 'custom_prefix' | 'auto_year';
+    customRegNoPrefix?: string;
+  }>({
     name: 'Dr. Alexander Fleming',
     regNo: 'MCI-REG-89472',
     qualification: 'MBBS, MD (Internal Medicine)',
     designation: 'Senior Consultant Physician & Diabetologist',
+    regNoMode: 'blank',
+    customRegNoPrefix: '',
   });
   const [isDoctorProfileModalOpen, setIsDoctorProfileModalOpen] = useState(false);
+
+  // Past Patients / History Modal State (with Date Filter)
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [historyDateFilter, setHistoryDateFilter] = useState<'all' | 'today' | '7days' | '30days' | 'custom'>('all');
+  const [historyCustomDate, setHistoryCustomDate] = useState('');
+  const [historySearchTerm, setHistorySearchTerm] = useState('');
+  const [allHistoryRecords, setAllHistoryRecords] = useState<SavedPrescriptionRecord[]>([]);
+
+  useEffect(() => {
+    if (isHistoryModalOpen) {
+      getAllPrescriptionsFromSqlite().then((records) => {
+        setAllHistoryRecords(records);
+      });
+    }
+  }, [isHistoryModalOpen]);
 
   // SQLite Prescription History Timeline State
   const [sqliteHistory, setSqliteHistory] = useState<SavedPrescriptionRecord[]>([]);
@@ -927,6 +1202,7 @@ export default function UserWorkspacePage() {
       if (specs.length > 0) setSelectedSpecialtyId(specs[0].id);
 
       setDrugCatalog(getDrugCatalog());
+      setProtocols(getClinicalProtocols());
 
       const savedDocProfile = localStorage.getItem('prescribepro_doctor_profile');
       if (savedDocProfile) {
@@ -1681,7 +1957,7 @@ export default function UserWorkspacePage() {
         </button>
 
         {/* SECTION 1 (LEFT COLUMN - 3 COLS): PATIENT REGISTRATION & INPUT SUB-PANES */}
-        <section className={`fixed lg:static inset-0 z-50 w-full max-w-full lg:w-auto lg:col-span-3 rounded-none lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full shadow-2xl lg:shadow-none transition-transform duration-300 ${cardBg} ${mobileDrawer === 'left' ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <section className={`fixed lg:static inset-x-0 top-[38px] bottom-0 z-50 w-full max-w-full lg:w-auto lg:col-span-3 rounded-none lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-[calc(100vh-38px)] lg:h-full shadow-2xl lg:shadow-none transition-transform duration-300 ${cardBg} ${mobileDrawer === 'left' ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
           <div className="flex flex-col h-full space-y-3">
             
             <div className={`flex items-center justify-between border-b pb-2 shrink-0 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800/80'}`}>
@@ -1771,7 +2047,7 @@ export default function UserWorkspacePage() {
               {/* TAB 1: PATIENT REGISTRATION */}
               {activeLeftTab === 'patient' && (
                 <div className="space-y-3 text-xs">
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5">
                     <input
                       type="text"
                       value={searchQuery}
@@ -1781,11 +2057,20 @@ export default function UserWorkspacePage() {
                     />
                     <button
                       onClick={handleLookupPatient}
-                      className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold ${
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold shrink-0 ${
                         theme === 'day' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-200'
                       }`}
                     >
                       Lookup
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsHistoryModalOpen(true)}
+                      className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow shrink-0 flex items-center gap-1 transition active:scale-95"
+                      title="Open Past Patients & Prescriptions History with Date Filter"
+                    >
+                      <History className="h-3.5 w-3.5" />
+                      <span>History</span>
                     </button>
                   </div>
 
@@ -2970,6 +3255,14 @@ export default function UserWorkspacePage() {
                                 {d}
                               </span>
                               <button
+                                type="button"
+                                onClick={() => handleOpenBrandPickerForItem(i, d)}
+                                className="text-[8.5px] bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold px-1.5 py-0.5 rounded shadow opacity-0 group-hover:opacity-100 transition print:hidden shrink-0 flex items-center gap-0.5 cursor-pointer"
+                                title="Find & choose brand name for this medication (e.g. Calpol, Dolo, Pan-40)"
+                              >
+                                🏷️ <span>Choose Brand</span>
+                              </button>
+                              <button
                                 onClick={() => handleRemoveDrugItem(i)}
                                 className="text-red-500 hover:text-red-700 font-bold text-[10px] opacity-0 group-hover:opacity-100 transition px-1 print:hidden shrink-0"
                                 title="Delete line"
@@ -3154,7 +3447,7 @@ export default function UserWorkspacePage() {
         </section>
 
         {/* SECTION 3 (RIGHT COLUMN - 3 COLS): SPECIALTIES, TEMPLATES & DRUGS CATALOG */}
-        <section className={`fixed lg:static inset-0 z-50 w-full max-w-full lg:w-auto lg:col-span-3 rounded-none lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full shadow-2xl lg:shadow-none transition-transform duration-300 ${cardBg} ${mobileDrawer === 'right' ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
+        <section className={`fixed lg:static inset-x-0 top-[38px] bottom-0 z-50 w-full max-w-full lg:w-auto lg:col-span-3 rounded-none lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-[calc(100vh-38px)] lg:h-full shadow-2xl lg:shadow-none transition-transform duration-300 ${cardBg} ${mobileDrawer === 'right' ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
             
             {/* Header */}
@@ -3189,6 +3482,15 @@ export default function UserWorkspacePage() {
               >
                 <FolderPlus className="h-4 w-4" />
                 Manage Specialties & Templates
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsProtocolsModalOpen(true)}
+                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 hover:brightness-110 text-white text-xs font-bold shadow flex items-center justify-center gap-2 transition"
+              >
+                <span>📜</span>
+                <span>Clinical Protocols & ER Order Sets</span>
               </button>
 
               <button
@@ -3295,7 +3597,7 @@ export default function UserWorkspacePage() {
               </div>
 
               {/* SEARCH & AGE/WEIGHT SMART SUGGESTION STRIP */}
-              <div className="space-y-1 shrink-0">
+              <div className="space-y-1.5 shrink-0">
                 <div className="relative">
                   <Search className="h-3 w-3 text-slate-400 absolute left-2 top-1.5" />
                   <input
@@ -3306,12 +3608,63 @@ export default function UserWorkspacePage() {
                     className={`w-full rounded-lg pl-7 pr-2 py-0.5 text-[10px] ${inputBg}`}
                   />
                 </div>
+
+                {/* FORMULATION FILTER PILLS (ALL, INJ, TAB, CAP, SYP, DROPS, TOPICAL) */}
+                <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[10px] shrink-0 no-scrollbar">
+                  {[
+                    { key: 'all', label: 'All' },
+                    { key: 'inj', label: '💉 Inj' },
+                    { key: 'tab', label: '💊 Tab' },
+                    { key: 'cap', label: '💊 Cap' },
+                    { key: 'syp', label: '🧪 Syp' },
+                    { key: 'drops', label: '💧 Drops' },
+                    { key: 'topical', label: '🧴 Topical' },
+                  ].map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => setDrugFormulationFilter(item.key as any)}
+                      className={`px-2 py-0.5 rounded-lg font-extrabold transition shrink-0 text-[9.5px] ${
+                        drugFormulationFilter === item.key
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : (theme === 'day' ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'bg-gray-800 text-gray-300 hover:bg-gray-700')
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* 2-TIER ALPHABETICALLY SORTED SPECIALTY DRUGS CHECKLIST */}
               <div className="flex-1 overflow-y-auto space-y-3 pr-1">
                 {(() => {
-                  const matched = searchClinicalDrugs(drugSearchQuery, drugCatalog);
+                  let matched = searchClinicalDrugs(drugSearchQuery, drugCatalog);
+
+                  if (drugFormulationFilter !== 'all') {
+                    matched = matched.filter((drug) => {
+                      const text = `${drug.genericName} ${drug.dosage} ${drug.keywords || ''}`.toLowerCase();
+                      if (drugFormulationFilter === 'inj') {
+                        return text.includes('inj') || text.includes('injection') || text.includes('infusion') || text.includes('vial') || text.includes('ampoule') || text.includes('iv') || text.includes('im');
+                      }
+                      if (drugFormulationFilter === 'tab') {
+                        return text.includes('tablet') || text.includes('tab ') || text.includes(' dt') || text.includes(' md') || text.includes('dispersible');
+                      }
+                      if (drugFormulationFilter === 'cap') {
+                        return text.includes('capsule') || text.includes('cap ') || text.includes('softgel');
+                      }
+                      if (drugFormulationFilter === 'syp') {
+                        return text.includes('syrup') || text.includes('suspension') || text.includes('syp') || text.includes('linctus') || text.includes('expectorant') || text.includes('solution') || text.includes('elixir');
+                      }
+                      if (drugFormulationFilter === 'drops') {
+                        return text.includes('drop') || text.includes('ophthalmic') || text.includes('otic');
+                      }
+                      if (drugFormulationFilter === 'topical') {
+                        return text.includes('cream') || text.includes('ointment') || text.includes('gel') || text.includes('lotion') || text.includes('shampoo') || text.includes('mouthwash') || text.includes('gargle') || text.includes('spray') || text.includes('patch');
+                      }
+                      return true;
+                    });
+                  }
 
                   const w = parseFloat(vitals.weight) || 0;
                   const ageNum = parseFloat(patient.age) || 30;
@@ -3483,13 +3836,22 @@ export default function UserWorkspacePage() {
                         {sp.templates.length} Templates
                       </span>
                     </h4>
-                    <button
-                      onClick={() => handleDeleteSpecialty(sp.id)}
-                      className="p-1 text-slate-400 hover:text-red-600 transition"
-                      title="Delete Specialty"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenNewTemplateEditor(sp.id)}
+                        className="px-2 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[10px] shadow transition flex items-center gap-1"
+                      >
+                        <Plus className="h-3 w-3" /> Add Template
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSpecialty(sp.id)}
+                        className="p-1 text-slate-400 hover:text-red-600 transition"
+                        title="Delete Specialty"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* TEMPLATES UNDER THIS SPECIALTY */}
@@ -3502,16 +3864,25 @@ export default function UserWorkspacePage() {
                             Tests: {tpl.tests?.length || 0} • Drugs: {tpl.drugs?.length || 0} • Advice: {tpl.advice?.length || 0}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => { applyTemplate(tpl); setIsTemplateModalOpen(false); }}
-                            className="px-2.5 py-1 rounded-md bg-emerald-600 text-white text-[10px] font-bold"
+                            className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow transition"
                           >
                             Apply Now
                           </button>
                           <button
+                            type="button"
+                            onClick={() => handleOpenEditTemplateEditor(sp.id, tpl)}
+                            className="px-2 py-1 rounded-md bg-amber-500 hover:bg-amber-600 text-slate-950 text-[10px] font-extrabold shadow transition flex items-center gap-0.5"
+                            title="Edit Template"
+                          >
+                            <span>✏️ Edit</span>
+                          </button>
+                          <button
                             onClick={() => handleDeleteTemplate(sp.id, tpl.id)}
-                            className="p-1 text-slate-400 hover:text-red-600"
+                            className="p-1 text-slate-400 hover:text-red-600 transition"
+                            title="Delete Template"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -3693,8 +4064,33 @@ export default function UserWorkspacePage() {
                 />
               </div>
 
+              <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 space-y-2">
+                <label className="block font-bold text-blue-950">5. Patient Reg. No. Default Format Preference</label>
+                <select
+                  value={doctorProfile.regNoMode || 'blank'}
+                  onChange={(e: any) => setDoctorProfile({ ...doctorProfile, regNoMode: e.target.value })}
+                  className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-slate-900 font-semibold outline-none text-xs"
+                >
+                  <option value="blank">Blank / Custom Free Typing (No Auto Prefix)</option>
+                  <option value="custom_prefix">Custom Prefix (e.g. OPD-)</option>
+                  <option value="auto_year">Auto Year Format (e.g. OPD-2026-)</option>
+                </select>
+                {doctorProfile.regNoMode === 'custom_prefix' && (
+                  <input
+                    type="text"
+                    value={doctorProfile.customRegNoPrefix || ''}
+                    onChange={(e) => setDoctorProfile({ ...doctorProfile, customRegNoPrefix: e.target.value })}
+                    placeholder="Enter Custom Prefix (e.g. OPD- or CLINIC/)"
+                    className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-xs font-mono"
+                  />
+                )}
+                <p className="text-[10px] text-slate-500 italic">
+                  Allows complete freedom to type registration numbers in any custom format (OPD-2026-001, 2026/08/101, etc.)
+                </p>
+              </div>
+
               <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-2">
-                <label className="block font-bold text-emerald-950">5. Digital Pad Header Banner / Logo (Optional)</label>
+                <label className="block font-bold text-emerald-950">6. Digital Pad Header Banner / Logo (Optional)</label>
                 <div className="flex items-center gap-3">
                   <label className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shadow transition flex items-center gap-1">
                     <span>🖼️ Upload Logo File</span>
@@ -3720,7 +4116,7 @@ export default function UserWorkspacePage() {
               </div>
 
               <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 space-y-2">
-                <label className="block font-bold text-purple-950">6. Digital Pad Footer Banner (Optional)</label>
+                <label className="block font-bold text-purple-950">7. Digital Pad Footer Banner (Optional)</label>
                 <div className="flex items-center gap-2 flex-wrap">
                   <label className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs cursor-pointer shadow transition flex items-center gap-1">
                     <span>🖼️ Upload Custom Footer</span>
@@ -3772,6 +4168,251 @@ export default function UserWorkspacePage() {
         </div>
       )}
 
+      {/* PAST PATIENTS HISTORY & PRESCRIPTIONS MODAL POPUP */}
+      {isHistoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden text-slate-900">
+            {/* MODAL HEADER */}
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800 font-extrabold text-base">
+                  📋
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900">
+                    Past Patients & Prescription Records
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Filter by date or search by Reg No, Mobile, or Name
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="p-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {/* CONTROLS: SEARCH BAR & DATE FILTERS */}
+            <div className="p-4 border-b border-slate-200 bg-slate-100/60 space-y-3">
+              <div className="flex gap-2 items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={historySearchTerm}
+                    onChange={(e) => setHistorySearchTerm(e.target.value)}
+                    placeholder="Search Reg No, Mobile, Name, or Diagnosis..."
+                    className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 font-medium focus:ring-2 focus:ring-emerald-500 outline-none"
+                  />
+                </div>
+                {historySearchTerm && (
+                  <button
+                    onClick={() => setHistorySearchTerm('')}
+                    className="text-xs text-slate-500 hover:text-slate-700 font-bold px-2 py-1 bg-slate-200 rounded-lg"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              {/* DATE FILTER BUTTONS */}
+              <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                <div className="flex items-center gap-1.5 bg-slate-200 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setHistoryDateFilter('all')}
+                    className={`px-3 py-1 rounded-lg font-bold transition text-[11px] ${
+                      historyDateFilter === 'all' ? 'bg-emerald-600 text-white shadow' : 'text-slate-700 hover:bg-slate-300'
+                    }`}
+                  >
+                    All Time ({allHistoryRecords.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHistoryDateFilter('today')}
+                    className={`px-3 py-1 rounded-lg font-bold transition text-[11px] ${
+                      historyDateFilter === 'today' ? 'bg-emerald-600 text-white shadow' : 'text-slate-700 hover:bg-slate-300'
+                    }`}
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHistoryDateFilter('7days')}
+                    className={`px-3 py-1 rounded-lg font-bold transition text-[11px] ${
+                      historyDateFilter === '7days' ? 'bg-emerald-600 text-white shadow' : 'text-slate-700 hover:bg-slate-300'
+                    }`}
+                  >
+                    Past 7 Days
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHistoryDateFilter('30days')}
+                    className={`px-3 py-1 rounded-lg font-bold transition text-[11px] ${
+                      historyDateFilter === '30days' ? 'bg-emerald-600 text-white shadow' : 'text-slate-700 hover:bg-slate-300'
+                    }`}
+                  >
+                    Past 30 Days
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHistoryDateFilter('custom')}
+                    className={`px-3 py-1 rounded-lg font-bold transition text-[11px] ${
+                      historyDateFilter === 'custom' ? 'bg-emerald-600 text-white shadow' : 'text-slate-700 hover:bg-slate-300'
+                    }`}
+                  >
+                    Custom Date
+                  </button>
+                </div>
+
+                {historyDateFilter === 'custom' && (
+                  <input
+                    type="date"
+                    value={historyCustomDate}
+                    onChange={(e) => setHistoryCustomDate(e.target.value)}
+                    className="px-2.5 py-1 rounded-xl border border-slate-300 text-xs font-mono bg-white"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* LIST OF FILTERED RECORDS */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[55vh]">
+              {(() => {
+                const now = new Date();
+                const todayStr = now.toISOString().slice(0, 10);
+                const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+                const filtered = allHistoryRecords.filter((rec) => {
+                  const searchMatch = !historySearchTerm.trim() || 
+                    (rec.patientName || '').toLowerCase().includes(historySearchTerm.toLowerCase()) ||
+                    (rec.patientRegNo || '').toLowerCase().includes(historySearchTerm.toLowerCase()) ||
+                    (rec.patientMobile || '').includes(historySearchTerm) ||
+                    (rec.clinicalExamJson || '').toLowerCase().includes(historySearchTerm.toLowerCase());
+
+                  if (!searchMatch) return false;
+
+                  const recDate = new Date(rec.createdAt);
+                  if (historyDateFilter === 'today') {
+                    return rec.createdAt.slice(0, 10) === todayStr;
+                  } else if (historyDateFilter === '7days') {
+                    return recDate >= sevenDaysAgo;
+                  } else if (historyDateFilter === '30days') {
+                    return recDate >= thirtyDaysAgo;
+                  } else if (historyDateFilter === 'custom') {
+                    if (!historyCustomDate) return true;
+                    return rec.createdAt.slice(0, 10) === historyCustomDate;
+                  }
+                  return true;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center py-12 text-slate-400 space-y-2">
+                      <FileText className="h-10 w-10 mx-auto text-slate-300 animate-bounce" />
+                      <p className="font-bold text-xs text-slate-600">No prescription records match the selected filter.</p>
+                    </div>
+                  );
+                }
+
+                return filtered.map((rec) => {
+                  let drugs: string[] = [];
+                  let diag = '';
+                  try {
+                    if (rec.selectedDrugsJson) drugs = JSON.parse(rec.selectedDrugsJson);
+                    if (rec.clinicalExamJson) diag = JSON.parse(rec.clinicalExamJson).provisionalDiagnosis || '';
+                  } catch (e) {}
+
+                  return (
+                    <div
+                      key={rec.prescriptionId}
+                      className="p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-emerald-500 hover:shadow-md transition flex items-start justify-between gap-3 text-xs"
+                    >
+                      <div className="space-y-1 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-extrabold text-slate-900 text-sm">{rec.patientName || 'Unnamed Patient'}</span>
+                          {rec.patientRegNo && (
+                            <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-mono font-bold text-[10px] border border-blue-200">
+                              Reg: {rec.patientRegNo}
+                            </span>
+                          )}
+                          {rec.patientMobile && (
+                            <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono font-medium text-[10px]">
+                              📱 {rec.patientMobile}
+                            </span>
+                          )}
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-mono text-[10px] ml-auto">
+                            {new Date(rec.createdAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}
+                          </span>
+                        </div>
+
+                        {diag && (
+                          <p className="text-slate-700 font-medium text-[11px]">
+                            <strong className="text-slate-900">Diagnosis:</strong> {diag}
+                          </p>
+                        )}
+
+                        {drugs.length > 0 && (
+                          <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                            <span className="text-[10px] font-bold text-slate-500">Drugs:</span>
+                            {drugs.slice(0, 3).map((d, i) => (
+                              <span key={i} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px] font-medium">
+                                {d}
+                              </span>
+                            ))}
+                            {drugs.length > 3 && (
+                              <span className="text-[10px] text-emerald-600 font-bold">+{drugs.length - 3} more</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPatient({
+                            regNo: rec.patientRegNo || '',
+                            mobile: rec.patientMobile || '',
+                            name: rec.patientName || '',
+                            age: rec.patientAge || '',
+                            gender: rec.patientGender || 'Male',
+                            careOf: '',
+                            address: '',
+                            allergies: '',
+                          });
+                          handleRestoreSqlitePrescription(rec);
+                          setIsHistoryModalOpen(false);
+                        }}
+                        className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition shrink-0 self-center"
+                      >
+                        Restore to Pad
+                      </button>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* FOOTER */}
+            <div className="p-3 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-xs">
+              <span className="text-slate-500 text-[11px]">Total Prescriptions Saved: {allHistoryRecords.length}</span>
+              <button
+                type="button"
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="px-4 py-1.5 rounded-xl bg-slate-200 text-slate-800 font-bold text-xs hover:bg-slate-300 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* FULL PHARMACOPEIA GENERIC DRUG SELECTOR MODAL POPUP */}
       {isPharmacopeiaModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
@@ -3811,6 +4452,33 @@ export default function UserWorkspacePage() {
                   className="w-full rounded-xl pl-9 pr-4 py-2.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-semibold shadow-inner focus:ring-2 focus:ring-emerald-500 outline-none"
                   autoFocus
                 />
+              </div>
+
+              {/* FORMULATION FILTER PILLS (INJ, TAB, CAP, SYP, DROPS, TOPICAL) */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                <span className="text-slate-500 font-bold shrink-0 text-[11px]">Formulation:</span>
+                {[
+                  { key: 'all', label: 'All Formulations' },
+                  { key: 'inj', label: '💉 Injectables / IV' },
+                  { key: 'tab', label: '💊 Tablets' },
+                  { key: 'cap', label: '💊 Capsules' },
+                  { key: 'syp', label: '🧪 Syrups / Liquid' },
+                  { key: 'drops', label: '💧 Drops' },
+                  { key: 'topical', label: '🧴 Ointments & Creams' },
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setDrugFormulationFilter(item.key as any)}
+                    className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition text-[11px] ${
+                      drugFormulationFilter === item.key
+                        ? 'bg-emerald-600 text-white shadow-md'
+                        : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
 
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
@@ -3904,45 +4572,73 @@ export default function UserWorkspacePage() {
 
             {/* MODAL DRUGS CARDS GRID BODY */}
             <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-950">
-              {searchClinicalDrugs(drugSearchQuery, drugCatalog).map((drug) => {
-                const doseLabel = `${drug.genericName} - ${drug.dosage} for ${drug.duration}`;
-                const isChecked = selectedDrugs.includes(doseLabel);
-                return (
-                  <div
-                    key={drug.id}
-                    onClick={() => toggleDrugSelection(doseLabel)}
-                    className={`p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between space-y-2 ${
-                      isChecked
-                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 shadow-md ring-2 ring-emerald-400'
-                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:bg-emerald-50/50'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-1.5 mb-1">
-                        <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-snug">
-                          {drug.genericName}
-                        </h4>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold shrink-0 ${
-                          isChecked ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                        }`}>
-                          {isChecked ? '✓ Added' : '+ Add'}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-                        Dose: <strong className="text-slate-800 dark:text-slate-200">{drug.dosage}</strong>
-                      </p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-500">
-                        Standard Duration: {drug.duration}
-                      </p>
-                    </div>
+              {(() => {
+                let matched = searchClinicalDrugs(drugSearchQuery, drugCatalog);
+                if (drugFormulationFilter !== 'all') {
+                  matched = matched.filter((drug) => {
+                    const text = `${drug.genericName} ${drug.dosage} ${drug.keywords || ''}`.toLowerCase();
+                    if (drugFormulationFilter === 'inj') {
+                      return text.includes('inj') || text.includes('injection') || text.includes('infusion') || text.includes('vial') || text.includes('ampoule') || text.includes('iv') || text.includes('im');
+                    }
+                    if (drugFormulationFilter === 'tab') {
+                      return text.includes('tablet') || text.includes('tab ') || text.includes(' dt') || text.includes(' md') || text.includes('dispersible');
+                    }
+                    if (drugFormulationFilter === 'cap') {
+                      return text.includes('capsule') || text.includes('cap ') || text.includes('softgel');
+                    }
+                    if (drugFormulationFilter === 'syp') {
+                      return text.includes('syrup') || text.includes('suspension') || text.includes('syp') || text.includes('linctus') || text.includes('expectorant') || text.includes('solution') || text.includes('elixir');
+                    }
+                    if (drugFormulationFilter === 'drops') {
+                      return text.includes('drop') || text.includes('ophthalmic') || text.includes('otic');
+                    }
+                    if (drugFormulationFilter === 'topical') {
+                      return text.includes('cream') || text.includes('ointment') || text.includes('gel') || text.includes('lotion') || text.includes('shampoo') || text.includes('mouthwash') || text.includes('gargle') || text.includes('spray') || text.includes('patch');
+                    }
+                    return true;
+                  });
+                }
 
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-400">
-                      <span className="uppercase font-bold tracking-wider">{drug.category}</span>
-                      <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">100% Pure Generic</span>
+                return matched.map((drug) => {
+                  const doseLabel = `${drug.genericName} - ${drug.dosage} for ${drug.duration}`;
+                  const isChecked = selectedDrugs.includes(doseLabel);
+                  return (
+                    <div
+                      key={drug.id}
+                      onClick={() => toggleDrugSelection(doseLabel)}
+                      className={`p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between space-y-2 ${
+                        isChecked
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 shadow-md ring-2 ring-emerald-400'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:bg-emerald-50/50'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-1.5 mb-1">
+                          <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-snug">
+                            {drug.genericName}
+                          </h4>
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold shrink-0 ${
+                            isChecked ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                          }`}>
+                            {isChecked ? '✓ Added' : '+ Add'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                          Dose: <strong className="text-slate-800 dark:text-slate-200">{drug.dosage}</strong>
+                        </p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-500">
+                          Standard Duration: {drug.duration}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-400">
+                        <span className="uppercase font-bold tracking-wider">{drug.category}</span>
+                        <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">100% Pure Generic</span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
 
             {/* MODAL FOOTER */}
@@ -3957,6 +4653,480 @@ export default function UserWorkspacePage() {
                 Done / Back to Prescription Pad
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* TEMPLATE EDITOR POPUP MODAL */}
+      {isTemplateEditorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white text-slate-900 rounded-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+            <div className="p-4 border-b border-slate-200 bg-blue-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">✏️</span>
+                <h3 className="font-extrabold text-sm">
+                  {editingTemplate.id ? 'Edit Prescription Template' : 'Create New Prescription Template'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTemplateEditorOpen(false)}
+                className="p-1 rounded-lg bg-blue-800 hover:bg-blue-700 text-white font-bold text-xs"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTemplateEditor} className="p-4 flex-1 overflow-y-auto space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Target Specialty</label>
+                <select
+                  value={templateEditorSpecialtyId}
+                  onChange={(e) => setTemplateEditorSpecialtyId(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 p-2 font-semibold bg-white text-slate-900"
+                  required
+                >
+                  <option value="" disabled>Select Specialty...</option>
+                  {specialties.map((sp) => (
+                    <option key={sp.id} value={sp.id}>{sp.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Template Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editingTemplate.name}
+                  onChange={(e) => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
+                  placeholder="e.g. Acute Gastroenteritis, Dengue OPD, Toothache, Follow-Up..."
+                  className="w-full rounded-xl border border-slate-300 p-2 font-semibold bg-white text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Chief Complaints (Comma-separated)</label>
+                <input
+                  type="text"
+                  value={editingTemplate.complaints}
+                  onChange={(e) => setEditingTemplate({ ...editingTemplate, complaints: e.target.value })}
+                  placeholder="e.g. High fever, Loose stools, Vomiting, Abdominal pain"
+                  className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Provisional Diagnosis</label>
+                <input
+                  type="text"
+                  value={editingTemplate.diagnosis}
+                  onChange={(e) => setEditingTemplate({ ...editingTemplate, diagnosis: e.target.value })}
+                  placeholder="e.g. Acute Gastroenteritis with Mild Dehydration"
+                  className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Prescribed Medications (Rx) - One per line</label>
+                <textarea
+                  rows={4}
+                  value={editingTemplate.drugsText}
+                  onChange={(e) => setEditingTemplate({ ...editingTemplate, drugsText: e.target.value })}
+                  placeholder="e.g.&#10;Tab Ofloxacin 200mg (1-0-1 after food) x 5 days&#10;Tab Paracetamol 650mg (1-0-1) S.O.S&#10;Cap Pantoprazole 40mg (1-0-0 on empty stomach)"
+                  className="w-full rounded-xl border border-slate-300 p-2 font-mono text-xs bg-white text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Prescribed Diagnostic & Lab Tests (Comma-separated)</label>
+                <input
+                  type="text"
+                  value={editingTemplate.testsText}
+                  onChange={(e) => setEditingTemplate({ ...editingTemplate, testsText: e.target.value })}
+                  placeholder="e.g. Complete Blood Count (CBC), Stool Routine & Microscopy, Widal Test"
+                  className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Diet & Specific Patient Advice</label>
+                <textarea
+                  rows={2}
+                  value={editingTemplate.advice}
+                  onChange={(e) => setEditingTemplate({ ...editingTemplate, advice: e.target.value })}
+                  placeholder="e.g. Drink 3L fluids daily (ORS, coconut water). Avoid oily and spicy foods."
+                  className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
+                />
+              </div>
+
+              <div className="pt-3 border-t flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsTemplateEditorOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md"
+                >
+                  Save Template
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CLINICAL PROTOCOLS & ER ORDER SETS LIST VIEW MODAL */}
+      {isProtocolsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden text-slate-900">
+            {/* HEADER */}
+            <div className="p-4 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-indigo-600 text-white font-extrabold text-base">
+                  📜
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-white">
+                    Clinical Practice Protocols & ER Order Sets
+                  </h3>
+                  <p className="text-xs text-slate-300 font-medium">
+                    Evidence-based clinical protocols, emergency guidelines, and 1-click prescription order sets
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleOpenNewProtocolEditor}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow flex items-center gap-1"
+                >
+                  <Plus className="h-4 w-4" /> + Create New Protocol
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsProtocolsModalOpen(false)}
+                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs"
+                >
+                  ✕ Close
+                </button>
+              </div>
+            </div>
+
+            {/* SEARCH & CATEGORY FILTER STRIP */}
+            <div className="p-4 border-b border-slate-200 bg-slate-100/70 space-y-3">
+              <div className="flex gap-2 items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={protocolSearchTerm}
+                    onChange={(e) => setProtocolSearchTerm(e.target.value)}
+                    placeholder="Search clinical protocols by disease, symptom, or keyword..."
+                    className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* CATEGORY FILTER PILLS */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                {[
+                  { key: 'all', label: 'All Protocols' },
+                  { key: 'infectious', label: '🦠 Infectious Disease' },
+                  { key: 'pediatric', label: '👶 Pediatric' },
+                  { key: 'respiratory', label: '🫁 Respiratory Care' },
+                  { key: 'cardio', label: '❤️ Cardiovascular' },
+                  { key: 'gastro', label: '🤢 Gastroenterology' },
+                  { key: 'emergency', label: '🚨 Emergency / ER' },
+                ].map((cat) => (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => setProtocolCategoryFilter(cat.key)}
+                    className={`px-3 py-1 rounded-xl font-bold shrink-0 transition text-[11px] ${
+                      protocolCategoryFilter === cat.key
+                        ? 'bg-indigo-600 text-white shadow'
+                        : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* PROTOCOLS LIST CARDS */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[60vh]">
+              {(() => {
+                const filtered = protocols.filter((p) => {
+                  const matchesCat = protocolCategoryFilter === 'all' || p.category === protocolCategoryFilter;
+                  const matchesSearch = !protocolSearchTerm.trim() ||
+                    p.title.toLowerCase().includes(protocolSearchTerm.toLowerCase()) ||
+                    p.diagnosis.toLowerCase().includes(protocolSearchTerm.toLowerCase()) ||
+                    p.guidelinesSummary.toLowerCase().includes(protocolSearchTerm.toLowerCase());
+                  return matchesCat && matchesSearch;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center py-12 text-slate-400 space-y-2">
+                      <FileText className="h-10 w-10 mx-auto text-slate-300 animate-bounce" />
+                      <p className="font-bold text-xs text-slate-600">No clinical protocols found for this filter.</p>
+                    </div>
+                  );
+                }
+
+                return filtered.map((proto) => (
+                  <div
+                    key={proto.id}
+                    className="p-4 rounded-2xl border border-slate-200 bg-white hover:border-indigo-500 hover:shadow-lg transition space-y-3 text-xs"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <h4 className="font-black text-sm text-slate-900">{proto.title}</h4>
+                          <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[10px] uppercase">
+                            {proto.category}
+                          </span>
+                          {proto.targetGroup && (
+                            <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold text-[10px]">
+                              👥 {proto.targetGroup}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-slate-600 font-medium text-xs leading-relaxed">
+                          {proto.guidelinesSummary}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleApplyProtocol(proto)}
+                          className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1"
+                        >
+                          <span>⚡ Apply to Pad</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditProtocolEditor(proto)}
+                          className="px-2.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shadow transition"
+                          title="Edit Protocol"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProtocol(proto.id)}
+                          className="px-2.5 py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs transition"
+                          title="Delete Protocol"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* RED FLAGS ALERT BAR */}
+                    {proto.redFlags && (
+                      <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-950 font-medium text-[11px] flex items-start gap-2">
+                        <span className="font-extrabold text-red-600 text-sm leading-none">⚠️ RED FLAGS:</span>
+                        <span>{proto.redFlags}</span>
+                      </div>
+                    )}
+
+                    {/* PRESCRIBED ORDER SET DETAILS */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px]">
+                      <div>
+                        <strong className="text-slate-900 block mb-0.5">💊 Order Set Medications:</strong>
+                        <ul className="list-disc pl-4 text-slate-700 space-y-0.5 font-mono text-[10.5px]">
+                          {proto.drugs.map((d, idx) => (
+                            <li key={idx}>{d}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <strong className="text-slate-900 block mb-0.5">🧪 Diagnostic Tests & Advice:</strong>
+                        {proto.tests.length > 0 && (
+                          <p className="text-slate-700 font-medium mb-1">
+                            <span className="font-bold text-slate-900">Tests:</span> {proto.tests.join(', ')}
+                          </p>
+                        )}
+                        {proto.advice && (
+                          <p className="text-slate-700 italic">
+                            <span className="font-bold text-slate-900">Advice:</span> {proto.advice}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+
+            {/* FOOTER */}
+            <div className="p-3 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-xs">
+              <span className="text-slate-500 font-semibold">Total Protocols Loaded: {protocols.length}</span>
+              <button
+                type="button"
+                onClick={() => setIsProtocolsModalOpen(false)}
+                className="px-4 py-1.5 rounded-xl bg-slate-200 text-slate-800 font-bold text-xs hover:bg-slate-300"
+              >
+                Close Screen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PROTOCOL EDITOR POPUP MODAL */}
+      {isProtocolEditorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white text-slate-900 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+            <div className="p-4 border-b border-slate-200 bg-indigo-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📜</span>
+                <h3 className="font-extrabold text-sm">
+                  {editingProtocol.id ? 'Edit Clinical Protocol' : 'Create New Clinical Protocol'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsProtocolEditorOpen(false)}
+                className="p-1 rounded-lg bg-indigo-800 hover:bg-indigo-700 text-white font-bold text-xs"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProtocolEditor} className="p-4 flex-1 overflow-y-auto space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Protocol Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingProtocol.title}
+                    onChange={(e) => setEditingProtocol({ ...editingProtocol, title: e.target.value })}
+                    placeholder="e.g. Typhoid Fever Protocol, Dengue Outpatient..."
+                    className="w-full rounded-xl border border-slate-300 p-2 font-semibold bg-white text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Category</label>
+                  <select
+                    value={editingProtocol.category}
+                    onChange={(e: any) => setEditingProtocol({ ...editingProtocol, category: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 p-2 font-semibold bg-white text-slate-900"
+                  >
+                    <option value="general">General Medicine</option>
+                    <option value="infectious">Infectious Disease</option>
+                    <option value="pediatric">Pediatric</option>
+                    <option value="respiratory">Respiratory Care</option>
+                    <option value="cardio">Cardiovascular</option>
+                    <option value="gastro">Gastroenterology</option>
+                    <option value="emergency">Emergency / ER</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Target Group / Age</label>
+                  <input
+                    type="text"
+                    value={editingProtocol.targetGroup}
+                    onChange={(e) => setEditingProtocol({ ...editingProtocol, targetGroup: e.target.value })}
+                    placeholder="e.g. Adult & Pediatric, Infants < 2 yrs..."
+                    className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Provisional Diagnosis</label>
+                  <input
+                    type="text"
+                    value={editingProtocol.diagnosis}
+                    onChange={(e) => setEditingProtocol({ ...editingProtocol, diagnosis: e.target.value })}
+                    placeholder="e.g. Enteric Fever (Typhoid)"
+                    className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Clinical Guidelines Summary</label>
+                <textarea
+                  rows={2}
+                  value={editingProtocol.guidelinesSummary}
+                  onChange={(e) => setEditingProtocol({ ...editingProtocol, guidelinesSummary: e.target.value })}
+                  placeholder="e.g. Hydration management guidelines, dosage schedule and monitoring timeline..."
+                  className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-red-950 mb-1">🚨 Danger Signs & Emergency Red Flags</label>
+                <textarea
+                  rows={2}
+                  value={editingProtocol.redFlags}
+                  onChange={(e) => setEditingProtocol({ ...editingProtocol, redFlags: e.target.value })}
+                  placeholder="e.g. Persistent vomiting, cold extremities, mucosal bleeding, SpO2 < 90%..."
+                  className="w-full rounded-xl border border-red-300 bg-red-50/50 p-2 font-medium text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Prescribed Order Set Medications (Rx) - One per line</label>
+                <textarea
+                  rows={4}
+                  value={editingProtocol.drugs ? editingProtocol.drugs.join('\n') : ''}
+                  onChange={(e) => setEditingProtocol({ ...editingProtocol, drugs: e.target.value.split('\n').filter(Boolean) })}
+                  placeholder="e.g.&#10;Tab Cefixime 200mg (1-0-1) x 10 days&#10;Tab Paracetamol 650mg (1-0-1) S.O.S"
+                  className="w-full rounded-xl border border-slate-300 p-2 font-mono text-xs bg-white text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Diagnostic / Lab Tests (Comma-separated)</label>
+                <input
+                  type="text"
+                  value={editingProtocol.tests ? editingProtocol.tests.join(', ') : ''}
+                  onChange={(e) => setEditingProtocol({ ...editingProtocol, tests: e.target.value.split(',').map(s=>s.trim()).filter(Boolean) })}
+                  placeholder="e.g. TyphiDot IgM, CBC with ESR, Blood Culture"
+                  className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Patient Advice & Follow-Up Instructions</label>
+                <textarea
+                  rows={2}
+                  value={editingProtocol.advice}
+                  onChange={(e) => setEditingProtocol({ ...editingProtocol, advice: e.target.value })}
+                  placeholder="e.g. Boiled water, light diet, recheck after 3 days..."
+                  className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
+                />
+              </div>
+
+              <div className="pt-3 border-t flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsProtocolEditorOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-md"
+                >
+                  Save Protocol
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -4464,9 +5634,21 @@ export default function UserWorkspacePage() {
                     <div
                       onClick={() => {
                         const label = `${brandItem.brandName} (${brandItem.calculatedDose} • ${brandItem.frequency})`;
-                        toggleDrugSelection(label);
-                        setIsBrandPickerModalOpen(false);
-                        setActiveGenericDrugForBrands(null);
+                        if (activeItemIndexForBrand !== null && activeItemIndexForBrand >= 0) {
+                          const original = selectedDrugs[activeItemIndexForBrand] || '';
+                          const matchInst = original.match(/\(.*\)/);
+                          const inst = matchInst ? ` ${matchInst[0]}` : '';
+                          const updated = [...selectedDrugs];
+                          updated[activeItemIndexForBrand] = `${brandItem.brandName}${inst}`;
+                          setSelectedDrugs(updated);
+                          setIsBrandPickerModalOpen(false);
+                          setActiveGenericDrugForBrands(null);
+                          setActiveItemIndexForBrand(null);
+                        } else {
+                          toggleDrugSelection(label);
+                          setIsBrandPickerModalOpen(false);
+                          setActiveGenericDrugForBrands(null);
+                        }
                       }}
                       className="flex-1 cursor-pointer min-w-0 space-y-0.5"
                     >
@@ -4495,13 +5677,25 @@ export default function UserWorkspacePage() {
                         type="button"
                         onClick={() => {
                           const label = `${brandItem.brandName} (${brandItem.calculatedDose} • ${brandItem.frequency})`;
-                          toggleDrugSelection(label);
-                          setIsBrandPickerModalOpen(false);
-                          setActiveGenericDrugForBrands(null);
+                          if (activeItemIndexForBrand !== null && activeItemIndexForBrand >= 0) {
+                            const original = selectedDrugs[activeItemIndexForBrand] || '';
+                            const matchInst = original.match(/\(.*\)/);
+                            const inst = matchInst ? ` ${matchInst[0]}` : '';
+                            const updated = [...selectedDrugs];
+                            updated[activeItemIndexForBrand] = `${brandItem.brandName}${inst}`;
+                            setSelectedDrugs(updated);
+                            setIsBrandPickerModalOpen(false);
+                            setActiveGenericDrugForBrands(null);
+                            setActiveItemIndexForBrand(null);
+                          } else {
+                            toggleDrugSelection(label);
+                            setIsBrandPickerModalOpen(false);
+                            setActiveGenericDrugForBrands(null);
+                          }
                         }}
                         className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] shadow"
                       >
-                        + Add Brand
+                        {activeItemIndexForBrand !== null ? '✓ Select Brand' : '+ Add Brand'}
                       </button>
                       <button
                         type="button"

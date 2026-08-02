@@ -1,10 +1,12 @@
 export interface PrescriptionTemplate {
   id: string;
   name: string;
+  complaints?: string[];
+  diagnosis?: string;
   tests: string[];
   advice: string[];
   drugs: string[];
-  notes: string;
+  notes?: string;
 }
 
 export interface Specialty {
@@ -171,6 +173,7 @@ export function searchClinicalDrugs(query: string, catalog: DrugItem[]): DrugIte
   const q = query.trim().toLowerCase();
   if (!q) return catalog;
 
+  const tokens = q.split(/\s+/).filter(Boolean);
   const aliasKeywords = CLINICAL_SYMPTOM_MAP[q] || [q];
 
   return catalog.filter((drug) => {
@@ -178,6 +181,11 @@ export function searchClinicalDrugs(query: string, catalog: DrugItem[]): DrugIte
     const dosage = drug.dosage.toLowerCase();
     const cat = drug.category.toLowerCase();
     const kw = (drug.keywords || '').toLowerCase();
+    const fullText = `${name} ${dosage} ${cat} ${kw}`;
+
+    if (tokens.every((t) => fullText.includes(t))) {
+      return true;
+    }
 
     if (name.includes(q) || dosage.includes(q) || cat.includes(q) || kw.includes(q)) {
       return true;
@@ -513,6 +521,44 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'gen_niftran100', genericName: 'Nitrofurantoin 100mg SR Capsule', category: 'adult', dosage: '1 capsule twice daily with meals', duration: '7 days', keywords: 'nitrofurantoin niftran uti cystitis urinary tract infection', minAge: 12 },
   { id: 'gen_bactrim', genericName: 'Trimethoprim 160mg + Sulfamethoxazole 800mg Tablet', category: 'adult', dosage: '1 tablet twice daily after meals', duration: '5 days', keywords: 'bactrim septra cotrimoxazole uti skin infection pneumonia', minAge: 12 },
   { id: 'gen_forcan150', genericName: 'Fluconazole 150mg Tablet', category: 'adult', dosage: '1 tablet single dose (repeat after 1 week if needed)', duration: 'Single dose', keywords: 'fluconazole forcan zocon fungal candidiasis ringworm yeast infection' },
+
+  // ==========================================
+  // ESSENTIAL IV / IM INJECTABLES & INFUSIONS
+  // ==========================================
+  { id: 'inj_oflox200_100ml', genericName: 'Inj Ofloxacin 200mg / 100ml IV Infusion', category: 'adult', dosage: '100ml IV infusion slow over 30 mins twice daily', duration: '5 days', keywords: 'inj ofloxacin oflox 200mg 100ml iv infusion injection antibiotic zanocin gastro uti typhoid', minAge: 18 },
+  { id: 'inj_panto40_iv', genericName: 'Inj Pantoprazole 40mg IV Vial', category: 'all', dosage: '40mg IV reconstituted in 10ml NS slow push over 2 mins once daily', duration: '5 days', keywords: 'inj pantoprazole pan 40 iv injection ppi acidity gas gerd stomach ulcer GI bleed' },
+  { id: 'inj_ondansetron_4mg', genericName: 'Inj Ondansetron 4mg / 2ml IV/IM', category: 'all', dosage: '4mg (2ml) slow IV/IM stat S.O.S', duration: '3 days', keywords: 'inj ondansetron emeset 4mg 2ml iv im injection vomiting nausea emesis' },
+  { id: 'inj_pcm1000_100ml', genericName: 'Inj Paracetamol 1000mg / 100ml IV Infusion', category: 'adult', dosage: '100ml (1000mg) IV infusion over 15 mins S.O.S (max 4g/day)', duration: '3 days', keywords: 'inj paracetamol pcm 1000mg 100ml iv infusion injection fever pain postop high temperature fever' },
+  { id: 'inj_pcm150_2ml', genericName: 'Inj Paracetamol 150mg / 2ml IM/IV', category: 'all', dosage: '2ml deep IM / slow IV S.O.S', duration: '3 days', keywords: 'inj paracetamol pcm 150mg 2ml im iv injection fever pain' },
+  { id: 'inj_diclo75_1ml', genericName: 'Inj Diclofenac Sodium 75mg / 1ml (Voveran AQ IM)', category: 'adult', dosage: '75mg (1ml) deep IM in gluteal region stat S.O.S', duration: '2 days', keywords: 'inj diclofenac voveran aq 75mg 1ml im injection acute pain renal colic trauma backache', minAge: 12 },
+  { id: 'inj_trama100_2ml', genericName: 'Inj Tramadol 100mg / 2ml IV/IM', category: 'adult', dosage: '100mg (2ml) slow IV in 100ml NS over 20 mins or deep IM', duration: '3 days', keywords: 'inj tramadol 100mg 2ml iv im injection severe pain postop pain traumatic pain', minAge: 18 },
+  { id: 'inj_amikacin500_2ml', genericName: 'Inj Amikacin 500mg / 2ml IV/IM', category: 'adult', dosage: '500mg (2ml) in 100ml NS IV infusion once daily', duration: '5 days', keywords: 'inj amikacin 500mg 2ml iv im injection aminoglycoside antibiotic severe infection uti', minAge: 12 },
+  { id: 'inj_genta80_2ml', genericName: 'Inj Gentamicin 80mg / 2ml IV/IM', category: 'all', dosage: '80mg (2ml) slow IV / IM twice daily', duration: '5 days', keywords: 'inj gentamicin 80mg 2ml iv im injection aminoglycoside antibiotic sepsis uti' },
+  { id: 'inj_ceftri1g_vial', genericName: 'Inj Ceftriaxone 1g IV Vial (Monocef 1g)', category: 'adult', dosage: '1g IV reconstituted in 10ml sterile water slow push / in 100ml NS once daily', duration: '5 days', keywords: 'inj ceftriaxone monocef 1g iv vial injection antibiotic fever typhoid pneumonia sepsis meningitis', minAge: 12 },
+  { id: 'inj_ceftri500mg_vial', genericName: 'Inj Ceftriaxone 500mg IV/IM Vial (Monocef 500mg)', category: 'all', dosage: '500mg IV/IM once daily', duration: '5 days', keywords: 'inj ceftriaxone monocef 500mg iv im vial injection antibiotic' },
+  { id: 'inj_cipro200_100ml', genericName: 'Inj Ciprofloxacin 200mg / 100ml IV Infusion', category: 'adult', dosage: '100ml IV infusion over 30 mins twice daily', duration: '5 days', keywords: 'inj ciprofloxacin ciplox 200mg 100ml iv infusion injection antibiotic gastroenteritis dysentery uti', minAge: 18 },
+  { id: 'inj_metro500_100ml', genericName: 'Inj Metronidazole 500mg / 100ml IV Infusion (Metrogyl)', category: 'all', dosage: '100ml (500mg) IV infusion over 20 mins 3 times daily', duration: '5 days', keywords: 'inj metronidazole metrogyl 500mg 100ml iv infusion injection anaerobic diarrhea dysentery intra-abdominal' },
+  { id: 'inj_artesunate60_vial', genericName: 'Inj Artesunate 60mg IV/IM Vial', category: 'all', dosage: '2.4 mg/kg IV reconstituted at 0, 12h, and 24h, then daily', duration: '3 days', keywords: 'inj artesunate 60mg iv im vial injection falciparum severe malaria fever' },
+  { id: 'inj_hydrocort100_vial', genericName: 'Inj Hydrocortisone 100mg IV Vial (Efcorlin / Cort-S)', category: 'all', dosage: '100mg IV reconstituted slow push stat', duration: '3 days', keywords: 'inj hydrocortisone efcorlin 100mg iv vial injection steroid asthma anaphylaxis shock severe allergy' },
+  { id: 'inj_dexa8_2ml', genericName: 'Inj Dexamethasone 8mg / 2ml IV/IM (Decadron)', category: 'all', dosage: '4mg to 8mg IV/IM stat', duration: '3 days', keywords: 'inj dexamethasone decadron 8mg 2ml iv im injection steroid cerebral edema allergy airway croup' },
+  { id: 'inj_rani50_2ml', genericName: 'Inj Ranitidine 50mg / 2ml IV/IM (Aciloc / Rantac)', category: 'all', dosage: '50mg (2ml) slow IV / IM twice daily', duration: '5 days', keywords: 'inj ranitidine aciloc rantac 50mg 2ml iv im injection acidity gas h2 blocker heartburn' },
+  { id: 'inj_metoclop10_2ml', genericName: 'Inj Metoclopramide 10mg / 2ml IV/IM (Perinorm)', category: 'all', dosage: '10mg (2ml) IM / slow IV 3 times daily', duration: '3 days', keywords: 'inj metoclopramide perinorm 10mg 2ml iv im injection nausea vomiting gastroparesis' },
+  { id: 'inj_deriphyllin2ml', genericName: 'Inj Etofylline + Theophylline 2ml IV/IM (Deriphyllin)', category: 'all', dosage: '2ml slow IV in 100ml NS or IM twice daily', duration: '3 days', keywords: 'inj deriphyllin etofylline theophylline 2ml iv im injection asthma bronchospasm COPD wheezing breathlessness' },
+  { id: 'inj_furo20_2ml', genericName: 'Inj Furosemide 20mg / 2ml IV (Lasix)', category: 'all', dosage: '20mg to 40mg slow IV push over 2 mins S.O.S', duration: '3 days', keywords: 'inj furosemide frusemide lasix 20mg 2ml iv injection diuretic pulmonary edema fluid overload hypertension acute renal' },
+  { id: 'inj_ironsucrose100_5ml', genericName: 'Inj Iron Sucrose 100mg / 5ml IV Infusion (Encifer / Orofer)', category: 'adult', dosage: '100mg (5ml) in 100ml NS IV infusion over 30 mins alternate days', duration: '5 doses', keywords: 'inj iron sucrose encifer orofer 100mg 5ml iv infusion injection severe anemia pregnancy iron deficiency', minAge: 15 },
+  { id: 'inj_drota40_2ml', genericName: 'Inj Drotaverine 40mg / 2ml IV/IM (Drotin)', category: 'all', dosage: '40mg (2ml) slow IV / IM stat S.O.S', duration: '2 days', keywords: 'inj drotaverine drotin 40mg 2ml iv im injection antispasmodic abdominal colic renal colic dysmenorrhea pain' },
+  { id: 'inj_dicyclo20_2ml', genericName: 'Inj Dicyclomine 20mg / 2ml IM (Cyclopam)', category: 'all', dosage: '20mg (2ml) deep IM stat S.O.S', duration: '2 days', keywords: 'inj dicyclomine cyclopam 20mg 2ml im injection antispasmodic stomach pain cramp abdominal colic' },
+  { id: 'inj_ns500ml', genericName: 'Inj Normal Saline 0.9% 500ml IV Infusion (NS)', category: 'all', dosage: '500ml IV infusion at 75-100 ml/hr as clinically indicated', duration: 'Maintenance / Resuscitation', keywords: 'inj normal saline ns 0.9% 500ml iv infusion IV fluids hydration dilution maintenance' },
+  { id: 'inj_rl500ml', genericName: 'Inj Ringer Lactate 500ml IV Infusion (RL)', category: 'all', dosage: '500ml IV infusion rapidly or at maintenance rate', duration: 'Resuscitation / Dehydration', keywords: 'inj ringer lactate rl 500ml iv infusion IV fluids resuscitation trauma burn diarrhea dehydration' },
+  { id: 'inj_d5w_500ml', genericName: 'Inj Dextrose 5% 500ml IV Infusion (D5W)', category: 'all', dosage: '500ml IV infusion at 75-100 ml/hr', duration: 'IV Fluids', keywords: 'inj dextrose 5% d5w d5 500ml iv infusion IV fluids hypoglycemia energy hydration' },
+  { id: 'inj_d10w_500ml', genericName: 'Inj Dextrose 10% 500ml IV Infusion (D10W)', category: 'all', dosage: '500ml IV infusion slow', duration: 'IV Fluids', keywords: 'inj dextrose 10% d10w d10 500ml iv infusion IV fluids hypoglycemia energy' },
+  { id: 'inj_d25w_100ml', genericName: 'Inj Dextrose 25% 100ml IV Bolus (D25W Ampoule / Vial)', category: 'all', dosage: '50ml to 100ml IV stat bolus for acute hypoglycemia', duration: 'Stat Hypoglycemia', keywords: 'inj dextrose 25% d25w d25 100ml iv bolus injection hypoglycemia low sugar emergency stat' },
+  { id: 'inj_d50w_100ml', genericName: 'Inj Dextrose 50% 100ml IV Bolus (D50W)', category: 'all', dosage: '50ml IV stat push', duration: 'Severe Hypoglycemia Emergency', keywords: 'inj dextrose 50% d50w d50 100ml iv bolus injection hypoglycemia' },
+  { id: 'inj_dns_500ml', genericName: 'Inj Dextrose Normal Saline 500ml IV Infusion (DNS)', category: 'all', dosage: '500ml IV infusion at maintenance rate', duration: 'IV Fluids', keywords: 'inj dextrose normal saline dns 500ml iv infusion IV fluids maintenance fluids' },
+  { id: 'inj_isolyte_p_500ml', genericName: 'Inj Isolyte-P Pediatric Maintenance Fluid 500ml', category: 'pediatric', dosage: 'IV infusion as per pediatric maintenance calculation', duration: 'Pediatric Maintenance', keywords: 'inj isolyte-p isolyte p pediatric IV fluids maintenance electrolyte' },
+  { id: 'inj_isolyte_m_500ml', genericName: 'Inj Isolyte-M Adult Maintenance Fluid 500ml', category: 'adult', dosage: '500ml IV infusion', duration: 'Maintenance Fluids', keywords: 'inj isolyte-m isolyte m adult IV fluids electrolyte maintenance' },
+  { id: 'inj_mannitol_20_100ml', genericName: 'Inj Mannitol 20% 100ml IV Infusion (Osmitrol)', category: 'adult', dosage: '100ml IV rapid infusion over 30 mins (repeat 6-8 hourly)', duration: 'Cerebral Edema / Raised ICP', keywords: 'inj mannitol 20% osmitrol 100ml iv infusion osmotic diuretic cerebral edema raised icp glaucoma' },
+  { id: 'inj_saline_3_100ml', genericName: 'Inj Hypertonic Saline 3% 100ml IV Infusion', category: 'all', dosage: '100ml IV infusion over 30-60 mins for acute hyponatremia', duration: 'Severe Hyponatremia Stat', keywords: 'inj hypertonic saline 3% NaCl 100ml iv infusion hyponatremia sodium shift raised icp' },
   { id: 'gen_iver12', genericName: 'Ivermectin 12mg Tablet', category: 'adult', dosage: '1 tablet single dose on empty stomach at bedtime', duration: 'Single dose', keywords: 'ivermectin ivermectol scabies worms antiparasitic lice', minAge: 12 },
   { id: 'gen_zentel400', genericName: 'Albendazole 400mg Chewable Tablet', category: 'all', dosage: '1 tablet chewed thoroughly at bedtime', duration: 'Single dose', keywords: 'albendazole zentel bandy deworming roundworm hookworm pinworm' },
 
@@ -981,8 +1027,132 @@ const DEFAULT_SPECIALTIES: Specialty[] = [
   },
 ];
 
+export interface ClinicalProtocol {
+  id: string;
+  title: string;
+  category: 'emergency' | 'general' | 'pediatric' | 'gastro' | 'cardio' | 'respiratory' | 'infectious' | 'endocrine';
+  targetGroup: string;
+  guidelinesSummary: string;
+  redFlags: string;
+  diagnosis: string;
+  chiefComplaints: string[];
+  drugs: string[];
+  tests: string[];
+  advice: string;
+}
+
+export const DEFAULT_CLINICAL_PROTOCOLS: ClinicalProtocol[] = [
+  {
+    id: 'proto_dengue',
+    title: 'Dengue Fever Outpatient Management Protocol',
+    category: 'infectious',
+    targetGroup: 'Adult & Pediatric',
+    guidelinesSummary: 'Daily fluid therapy (maintain oral fluids at 2-3L/day or NS/RL infusion), daily CBC monitoring for PCV rise & platelet drop. Avoid NSAIDs/Aspirin.',
+    redFlags: 'Persistent vomiting, severe abdominal pain, mucosal bleeding, lethargy/restlessness, cold clammy extremities, sudden drop in BP.',
+    diagnosis: 'Dengue Fever (Non-severe)',
+    chiefComplaints: ['High fever with retro-orbital pain', 'Severe bodyache and joint pain', 'Nausea and loss of appetite'],
+    drugs: [
+      'Tab Paracetamol 650mg (1-0-1 after food) for fever S.O.S max 4g/day',
+      'Inj / Tab Ondansetron 4mg (1-0-1 before food) S.O.S',
+      'Cap Pantoprazole 40mg (1-0-0 on empty stomach)',
+      'ORS (Oral Rehydration Salts) 1 sachet in 1L water drink throughout day',
+    ],
+    tests: ['Dengue NS1 Antigen & IgM/IgG', 'Complete Blood Count (CBC) daily', 'Liver Function Test (LFT)', 'Serum Electrolytes'],
+    advice: 'Strict bed rest. Drink 2.5 to 3 Liters of fluid daily (ORS, Coconut water, Fresh juices). DO NOT take Combiflam, Voveran, or Aspirin.',
+  },
+  {
+    id: 'proto_dehydration_ped',
+    title: 'Pediatric Acute Diarrhea & Dehydration (WHO Plan B)',
+    category: 'pediatric',
+    targetGroup: 'Pediatric (< 5 years)',
+    guidelinesSummary: 'Administer WHO low-osmolarity ORS 75 ml/kg over 4 hours plus Zinc 20mg daily for 14 days. Avoid anti-motility agents in infants.',
+    redFlags: 'Sunken eyes, lethargy, skin pinch goes back very slowly (>2s), inability to drink, persistent high fever or blood in stool.',
+    diagnosis: 'Acute Gastroenteritis with Moderate Dehydration',
+    chiefComplaints: ['Watery stools 5-8 times/day', 'Vomiting 3-4 episodes', 'Decreased urine frequency'],
+    drugs: [
+      'WHO ORS Solution 75ml/kg over 4 hours + 50-100ml after each loose stool',
+      'Syrup Zinc Sulfate 20mg/5ml (5ml once daily) for 14 days',
+      'Syrup Ondansetron 2mg/5ml (2.5ml stat 15 mins before ORS)',
+      'Sachet Racecadotril 10mg (1 sachet 3 times daily in water) x 3 days',
+    ],
+    tests: ['Stool Routine & Microscopy', 'Serum Electrolytes'],
+    advice: 'Continue breastfeeding and normal feeding. Prepare ORS in clean boiled water. Watch for danger signs.',
+  },
+  {
+    id: 'proto_asthma_exacerbation',
+    title: 'Acute Asthma Exacerbation OPD Protocol',
+    category: 'respiratory',
+    targetGroup: 'Adult & Adolescent',
+    guidelinesSummary: 'Nebulization with Salbutamol + Ipratropium 3 doses at 20-minute intervals. Short course oral Prednisolone 40mg daily for 5 days.',
+    redFlags: 'SpO2 < 90% on room air, inability to complete full sentences, accessory muscle usage, silent chest, cyanosis.',
+    diagnosis: 'Acute Bronchial Asthma Exacerbation',
+    chiefComplaints: ['Acute breathlessness & wheezing', 'Dry cough worsening at night', 'Chest tightness'],
+    drugs: [
+      'Nebulization Levosalbutamol 1.25mg + Ipratropium 500mcg stat (repeat x 3 if needed)',
+      'Tab Prednisolone 40mg (1-0-0 after breakfast) x 5 days',
+      'Inhaler Budesonide + Formoterol 200/6 (2 puffs twice daily with spacer)',
+      'Tab Montelukast 10mg + Levocetirizine 5mg (0-0-1 at bedtime) x 10 days',
+    ],
+    tests: ['Pulse Oximetry (SpO2 monitoring)', 'Peak Expiratory Flow Rate (PEFR)', 'Chest X-Ray PA View'],
+    advice: 'Rinse mouth with water after inhaler use. Avoid cold drinks, dust, smoke, and allergen exposure.',
+  },
+  {
+    id: 'proto_typhoid',
+    title: 'Enteric (Typhoid) Fever Protocol',
+    category: 'infectious',
+    targetGroup: 'Adult & Adolescent',
+    guidelinesSummary: 'Cefixime 400mg BD or Azithromycin 500mg OD for 7-14 days. For severe inpatient cases: Inj Ceftriaxone 2g IV OD.',
+    redFlags: 'Severe abdominal distension or guarding (perforation risk), high stepping fever, GI bleed (melena), confusion.',
+    diagnosis: 'Enteric (Typhoid) Fever',
+    chiefComplaints: ['Step-ladder high fever x 5 days', 'Headache & abdominal discomfort', 'Constipation / diarrhea'],
+    drugs: [
+      'Tab Cefixime 200mg (1-0-1 after food) x 10 days',
+      'Tab Azithromycin 500mg (1-0-0 after food) x 7 days',
+      'Tab Paracetamol 650mg (1-0-1 after food) S.O.S',
+      'Cap Pantoprazole 40mg (1-0-0 on empty stomach)',
+    ],
+    tests: ['TyphiDot IgM / Widal Test', 'Blood Culture & Sensitivity', 'CBC with ESR'],
+    advice: 'Drink boiled/filtered water. Soft, easily digestible diet (khichdi, curd rice). Avoid spicy & fried food.',
+  },
+  {
+    id: 'proto_hypertension_urgency',
+    title: 'Hypertensive Urgency OPD Protocol',
+    category: 'cardio',
+    targetGroup: 'Adult (>18 yrs)',
+    guidelinesSummary: 'BP > 180/120 mmHg without acute target organ damage. Reduce BP gradually over 24-48 hours using oral antihypertensives. Avoid sublingual Nifedipine.',
+    redFlags: 'Chest pain, shortness of breath, severe headache, visual disturbances, neurological deficit (stroke signs), confusion.',
+    diagnosis: 'Hypertensive Urgency (Controlled OPD)',
+    chiefComplaints: ['Occipital headache & dizziness', 'Palpitations', 'High blood pressure reading'],
+    drugs: [
+      'Tab Amlodipine 5mg (1-0-0 morning)',
+      'Tab Telmisartan 40mg (0-0-1 night)',
+      'Tab Clonidine 0.1mg (1 stat dose if SBP > 180 mmHg)',
+    ],
+    tests: ['ECG 12-Lead', 'Serum Creatinine & Blood Urea', 'Urine Routine for Albumin', 'Fundoscopy'],
+    advice: 'Rest in quiet room for 30 mins. Restrict salt intake to < 5g/day. Recheck BP in 24 hours.',
+  },
+  {
+    id: 'proto_uti',
+    title: 'Acute Uncomplicated Urinary Tract Infection (UTI)',
+    category: 'infectious',
+    targetGroup: 'Adult Females',
+    guidelinesSummary: 'Nitrofurantoin 100mg SR BD x 7 days or Ciprofloxacin 500mg BD x 5 days plus alkalinizing agent.',
+    redFlags: 'High fever with chills/rigors, flank pain (CVA tenderness indicating pyelonephritis), nausea/vomiting, pregnancy.',
+    diagnosis: 'Acute Uncomplicated Cystitis (UTI)',
+    chiefComplaints: ['Dysuria & burning micturition', 'Urinary frequency & urgency', 'Lower abdominal pain'],
+    drugs: [
+      'Cap Nitrofurantoin 100mg SR (1-0-1 after meals) x 7 days',
+      'Syp Disodium Hydrogen Citrate 10ml in 1 glass water (1-1-1) x 5 days',
+      'Tab Paracetamol 500mg (1-0-1) S.O.S for lower pain',
+    ],
+    tests: ['Urine Routine & Microscopy', 'Urine Culture & Sensitivity'],
+    advice: 'Drink 3 Liters of water daily. Complete 7-day antibiotic course. Void after intercourse.',
+  },
+];
+
 const SPECIALTIES_STORAGE_KEY = 'prescribepro_specialties_v1';
 const DRUGS_STORAGE_KEY = 'prescribepro_drugs_v1';
+const PROTOCOLS_STORAGE_KEY = 'prescribepro_custom_protocols_v1';
 
 export function getSpecialties(): Specialty[] {
   if (typeof window !== 'undefined') {
@@ -999,6 +1169,24 @@ export function getSpecialties(): Specialty[] {
 export function saveSpecialties(data: Specialty[]): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem(SPECIALTIES_STORAGE_KEY, JSON.stringify(data));
+  }
+}
+
+export function getClinicalProtocols(): ClinicalProtocol[] {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(PROTOCOLS_STORAGE_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+  }
+  return DEFAULT_CLINICAL_PROTOCOLS;
+}
+
+export function saveClinicalProtocols(data: ClinicalProtocol[]): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(PROTOCOLS_STORAGE_KEY, JSON.stringify(data));
   }
 }
 

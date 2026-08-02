@@ -165,9 +165,68 @@ export async function savePrescriptionToSqlite(rec: SavedPrescriptionRecord): Pr
   }
 }
 
+export async function getAllPrescriptionsFromSqlite(): Promise<SavedPrescriptionRecord[]> {
+  try {
+    const db = await getSqliteDb();
+    const res = db.exec(`SELECT * FROM patient_prescriptions ORDER BY id DESC`);
+    let sqliteResults: SavedPrescriptionRecord[] = [];
+    if (res.length > 0) {
+      const columns = res[0].columns;
+      const values = res[0].values;
+      sqliteResults = values.map((row) => {
+        const obj: any = {};
+        columns.forEach((col, idx) => {
+          obj[col] = row[idx];
+        });
+        return {
+          id: obj.id,
+          prescriptionId: obj.prescription_id,
+          patientRegNo: obj.patient_reg_no,
+          patientName: obj.patient_name,
+          patientMobile: obj.patient_mobile,
+          patientAge: obj.patient_age,
+          patientGender: obj.patient_gender,
+          actionSource: obj.action_source,
+          createdAt: obj.created_at,
+          vitalsJson: obj.vitals_json,
+          clinicalExamJson: obj.clinical_exam_json,
+          selectedDrugsJson: obj.selected_drugs_json,
+          selectedTestsJson: obj.selected_tests_json,
+          testResultsText: obj.test_results_text,
+          selectedAdviceJson: obj.selected_advice_json,
+          customAdviceText: obj.custom_advice_text,
+          selectedProceduresJson: obj.selected_procedures_json,
+          doctorProfileJson: obj.doctor_profile_json,
+          padMode: obj.pad_mode,
+          pageSize: obj.page_size,
+        };
+      });
+    }
+
+    let backupResults: SavedPrescriptionRecord[] = [];
+    if (typeof window !== 'undefined') {
+      backupResults = JSON.parse(localStorage.getItem(PRESCRIPTIONS_BACKUP_KEY) || '[]');
+    }
+
+    const map = new Map<string, SavedPrescriptionRecord>();
+    [...sqliteResults, ...backupResults].forEach((item) => {
+      if (item && item.prescriptionId && !map.has(item.prescriptionId)) map.set(item.prescriptionId, item);
+    });
+
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  } catch (err) {
+    if (typeof window !== 'undefined') {
+      return JSON.parse(localStorage.getItem(PRESCRIPTIONS_BACKUP_KEY) || '[]');
+    }
+    return [];
+  }
+}
+
 export async function getPatientPrescriptionsFromSqlite(queryKey: string): Promise<SavedPrescriptionRecord[]> {
   const q = queryKey.trim().toLowerCase();
-  if (!q) return [];
+  if (!q) return getAllPrescriptionsFromSqlite();
 
   try {
     const db = await getSqliteDb();
