@@ -40,10 +40,22 @@ const PRESCRIPTIONS_BACKUP_KEY = 'prescribepro_sqlite_prescriptions_backup_v1';
 export async function getSqliteDb(): Promise<Database> {
   if (dbInstance) return dbInstance;
 
-  // Initialize sql.js WASM
-  const SQL = await initSqlJs({
-    locateFile: (file) => `https://sql.js.org/dist/${file}`,
-  });
+  let SQL: any = null;
+  try {
+    SQL = await initSqlJs({
+      locateFile: (file) => `/${file}`,
+    });
+  } catch (e1) {
+    console.warn('Local WASM initialization failed, trying CDN fallback...', e1);
+    try {
+      SQL = await initSqlJs({
+        locateFile: (file) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`,
+      });
+    } catch (e2) {
+      console.error('Failed to load sql.js WASM:', e2);
+      throw new Error('SQLite WASM engine failed to load. Please check network connection or reload.');
+    }
+  }
 
   // Try loading saved SQLite database binary from local storage
   const savedData = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
@@ -61,6 +73,10 @@ export async function getSqliteDb(): Promise<Database> {
   }
 
   // Ensure tables exist
+  if (!dbInstance) {
+    throw new Error('Failed to create SQLite Database instance.');
+  }
+
   dbInstance.run(`
     CREATE TABLE IF NOT EXISTS pwa_tasks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
