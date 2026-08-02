@@ -130,9 +130,21 @@ export function checkPrescriptionSafety(
       const drugA = parsedDrugs[i];
       const drugB = parsedDrugs[j];
 
-      // Find common active ingredient keywords (excluding dosage/form stop words)
+      // Exempt Rabies Biologicals: Immunoglobulin (ERIG/HRIG/rMAb) + Vaccine (ARV) are synergistic co-prescriptions, not duplicates!
+      const isA_Immunoglobulin = drugA.keywords.some((k) => ['erig', 'hrig', 'immunoglobulin', 'rmab', 'rabishield', 'twinrab', 'equirab'].includes(k));
+      const isB_Immunoglobulin = drugB.keywords.some((k) => ['erig', 'hrig', 'immunoglobulin', 'rmab', 'rabishield', 'twinrab', 'equirab'].includes(k));
+      const isA_Vaccine = drugA.keywords.some((k) => ['arv', 'vaccine', 'rabipur', 'abhayrab', 'rabivax'].includes(k));
+      const isB_Vaccine = drugB.keywords.some((k) => ['arv', 'vaccine', 'rabipur', 'abhayrab', 'rabivax'].includes(k));
+
+      if ((isA_Immunoglobulin && isB_Vaccine) || (isB_Immunoglobulin && isA_Vaccine)) {
+        continue; // Synergistic rabies post-exposure prophylaxis combination
+      }
+
+      const EXEMPT_WORDS = new Set(['rabies', 'vaccine', 'immunoglobulin', 'toxoid', 'antivenom', 'saline', 'dextrose', 'solution', 'infusion', 'syrup', 'suspension']);
+
+      // Find common active ingredient keywords (excluding dosage/form & biological stop words)
       const commonGenerics = drugA.keywords.filter(
-        (k) => drugB.keywords.includes(k) && !NON_GENERIC_STOP_WORDS.has(k) && k.length > 3
+        (k) => drugB.keywords.includes(k) && !NON_GENERIC_STOP_WORDS.has(k) && !EXEMPT_WORDS.has(k) && k.length > 3
       );
 
       if (commonGenerics.length > 0) {

@@ -663,8 +663,7 @@ export default function UserWorkspacePage() {
     if (proto.diagnosis) setProvisionalDiagnosis(proto.diagnosis);
     if (proto.chiefComplaints && proto.chiefComplaints.length > 0) setChiefComplaints(proto.chiefComplaints.join(', '));
     if (proto.drugs && proto.drugs.length > 0) {
-      const formattedDrugs = proto.drugs.map((d) => applyBrandToPrescribedLine(d, d));
-      setSelectedDrugs(formattedDrugs);
+      setSelectedDrugs(proto.drugs);
     }
     if (proto.tests && proto.tests.length > 0) setSelectedTests(proto.tests);
     if (proto.advice) setSpecificAdviceText(proto.advice);
@@ -1529,11 +1528,8 @@ export default function UserWorkspacePage() {
   };
 
   const handleClearForm = () => {
-    const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const randNum = Math.floor(1000 + Math.random() * 9000);
-
     setPatient({
-      regNo: `REG-${todayStr}-${randNum}`,
+      regNo: '',
       mobile: '',
       name: '',
       age: '',
@@ -1576,7 +1572,7 @@ export default function UserWorkspacePage() {
     setMedicalHistory([]);
     setSearchQuery('');
 
-    setSaveStatus('Wiped prescription pad & generated new Reg No for consultation.');
+    setSaveStatus('Cleared prescription pad for new consultation.');
     setTimeout(() => setSaveStatus(null), 3000);
   };
 
@@ -2074,45 +2070,8 @@ export default function UserWorkspacePage() {
         </div>
       </header>
 
-      {/* MOBILE 3-SECTION SEGMENTED TAB NAVIGATION BAR */}
-      <div className="lg:hidden bg-slate-900 border-b border-slate-800 p-1.5 flex items-center justify-around gap-1 shrink-0 z-30 shadow-md">
-        <button
-          type="button"
-          onClick={() => setMobileDrawer('left')}
-          className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-extrabold flex items-center justify-center gap-1 transition ${
-            mobileDrawer === 'left'
-              ? 'bg-blue-600 text-white shadow'
-              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-          }`}
-        >
-          <span>📋 Sec 1: Inputs</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setMobileDrawer('none')}
-          className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-extrabold flex items-center justify-center gap-1 transition ${
-            mobileDrawer === 'none'
-              ? 'bg-emerald-600 text-white shadow'
-              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-          }`}
-        >
-          <span>📄 Sec 2: Rx Pad</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setMobileDrawer('right')}
-          className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-extrabold flex items-center justify-center gap-1 transition ${
-            mobileDrawer === 'right'
-              ? 'bg-purple-600 text-white shadow'
-              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-          }`}
-        >
-          <span>💊 Sec 3: Catalog</span>
-        </button>
-      </div>
-
       {/* 2. THREE VERTICAL SECTIONS (WITH RESPONSIVE MOBILE DRAWERS) */}
-      <main className="flex-1 p-2.5 grid grid-cols-1 lg:grid-cols-12 gap-2.5 overflow-hidden h-[calc(100vh-38px)] relative">
+      <main className="flex-1 p-2.5 grid grid-cols-1 lg:grid-cols-12 gap-2.5 overflow-hidden h-[calc(100vh-42px)] relative">
         
         {/* MOBILE BACKDROP OVERLAY FOR SLIDE-OVER DRAWERS */}
         {mobileDrawer !== 'none' && (
@@ -2157,7 +2116,7 @@ export default function UserWorkspacePage() {
         </button>
 
         {/* SECTION 1 (LEFT COLUMN - 3 COLS): PATIENT REGISTRATION & INPUT SUB-PANES */}
-        <section className={`fixed lg:static inset-x-0 top-[38px] bottom-0 z-50 w-full max-w-full lg:w-auto lg:col-span-3 rounded-none lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-[calc(100vh-38px)] lg:h-full shadow-2xl lg:shadow-none transition-transform duration-300 ${cardBg} ${mobileDrawer === 'left' ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <section className={`fixed lg:static inset-y-0 left-0 z-50 w-[88vw] max-w-[360px] sm:max-w-[380px] lg:w-auto lg:col-span-3 rounded-none lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full shadow-2xl lg:shadow-none transition-transform duration-300 ease-in-out ${cardBg} ${mobileDrawer === 'left' ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
           <div className="flex flex-col h-full space-y-3">
             
             <div className={`flex items-center justify-between border-b pb-2 shrink-0 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800/80'}`}>
@@ -2818,7 +2777,7 @@ export default function UserWorkspacePage() {
         </section>
 
         {/* SECTION 2 (CENTER COLUMN - 6 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
-        <section className={`lg:col-span-6 rounded-none lg:rounded-2xl p-2 sm:p-3.5 flex-col justify-between overflow-hidden h-full w-full ${cardBg} ${mobileDrawer !== 'none' ? 'hidden lg:flex' : 'flex'}`}>
+        <section className={`lg:col-span-6 rounded-none lg:rounded-2xl p-2 sm:p-3.5 flex flex-col justify-between overflow-hidden h-full w-full ${cardBg}`}>
           
           {/* LIVE DRUG SAFETY & INTERACTION ALERT BANNER (VERY TOP OF SECTION 2) */}
           {detectedSafetyWarnings.length > 0 && (
@@ -3653,7 +3612,7 @@ export default function UserWorkspacePage() {
         </section>
 
         {/* SECTION 3 (RIGHT COLUMN - 3 COLS): SPECIALTIES, TEMPLATES & DRUGS CATALOG */}
-        <section className={`fixed lg:static inset-x-0 top-[38px] bottom-0 z-50 w-full max-w-full lg:w-auto lg:col-span-3 rounded-none lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-[calc(100vh-38px)] lg:h-full shadow-2xl lg:shadow-none transition-transform duration-300 ${cardBg} ${mobileDrawer === 'right' ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
+        <section className={`fixed lg:static inset-y-0 right-0 z-50 w-[88vw] max-w-[360px] sm:max-w-[380px] lg:w-auto lg:col-span-3 rounded-none lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full shadow-2xl lg:shadow-none transition-transform duration-300 ease-in-out ${cardBg} ${mobileDrawer === 'right' ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
             
             {/* Header */}
@@ -3663,11 +3622,6 @@ export default function UserWorkspacePage() {
                 Section 3: Clinical Templates & Drugs
               </div>
               <div className="flex items-center gap-1.5">
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
-                  theme === 'day' ? 'bg-pink-100 text-pink-800 border border-pink-300' : 'bg-cyan-950 text-cyan-400 border border-cyan-500/30'
-                }`}>
-                  Module 3
-                </span>
                 <button
                   type="button"
                   onClick={() => setMobileDrawer('none')}
@@ -5062,6 +5016,8 @@ export default function UserWorkspacePage() {
                   { key: 'all', label: 'All Protocols' },
                   { key: 'personal', label: '⭐ My Personal Templates' },
                   { key: 'bites', label: '🐾 Rabies & Animal Bites' },
+                  { key: 'toxicology', label: '🧪 Toxicology & Poisoning' },
+                  { key: 'trauma', label: '⚡ Trauma & Burns' },
                   { key: 'gynae', label: '🤰 Gynaecology' },
                   { key: 'ortho', label: '🦴 Orthopedics' },
                   { key: 'ent', label: '👂 ENT' },
@@ -5170,8 +5126,7 @@ export default function UserWorkspacePage() {
                               if (tpl.complaints && tpl.complaints.length > 0) setChiefComplaints(tpl.complaints.join(', '));
                               if (tpl.diagnosis) setProvisionalDiagnosis(tpl.diagnosis);
                               if (tpl.drugs && tpl.drugs.length > 0) {
-                                const formattedDrugs = tpl.drugs.map((d) => applyBrandToPrescribedLine(d, d));
-                                setSelectedDrugs(formattedDrugs);
+                                setSelectedDrugs(tpl.drugs);
                               }
                               if (tpl.tests && tpl.tests.length > 0) setSelectedTests(tpl.tests);
                               if (tpl.advice) setSpecificAdviceText(Array.isArray(tpl.advice) ? tpl.advice.join('\n') : tpl.advice);
