@@ -24,11 +24,14 @@ export function resolveDrugKeywords(drugStr: string): string[] {
     if (w.length > 2) keywords.add(w);
   });
 
-  // Check Indian Brand Resolution Map
+  // Check Indian Brand Resolution Map (use whole word regex to avoid substring false matches)
   for (const [brand, generics] of Object.entries(INDIAN_BRAND_TO_GENERIC_MAP)) {
-    if (normalized.includes(brand)) {
-      keywords.add(brand);
-      generics.forEach((g) => keywords.add(g));
+    if (brand.length >= 3) {
+      const regex = new RegExp(`\\b${brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (regex.test(normalized)) {
+        keywords.add(brand);
+        generics.forEach((g) => keywords.add(g));
+      }
     }
   }
 
