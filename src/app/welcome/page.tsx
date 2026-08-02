@@ -661,7 +661,10 @@ export default function UserWorkspacePage() {
   const handleApplyProtocol = (proto: ClinicalProtocol) => {
     if (proto.diagnosis) setProvisionalDiagnosis(proto.diagnosis);
     if (proto.chiefComplaints && proto.chiefComplaints.length > 0) setChiefComplaints(proto.chiefComplaints.join(', '));
-    if (proto.drugs && proto.drugs.length > 0) setSelectedDrugs(proto.drugs);
+    if (proto.drugs && proto.drugs.length > 0) {
+      const formattedDrugs = proto.drugs.map((d) => applyBrandToPrescribedLine(d, d));
+      setSelectedDrugs(formattedDrugs);
+    }
     if (proto.tests && proto.tests.length > 0) setSelectedTests(proto.tests);
     if (proto.advice) setSpecificAdviceText(proto.advice);
     setIsProtocolsModalOpen(false);
@@ -1681,11 +1684,23 @@ export default function UserWorkspacePage() {
     }
   };
 
-  const toggleDrugSelection = (drugLabel: string) => {
-    if (selectedDrugs.includes(drugLabel)) {
-      setSelectedDrugs(selectedDrugs.filter((d) => d !== drugLabel));
+  const toggleDrugSelection = (label: string) => {
+    const formatted = applyBrandToPrescribedLine(label, label);
+    const cleanGeneric = label.split('(')[0].trim().replace(/^(inj\.|tab\.|cap\.|syp\.|drops\.|oint\.|inj|tab|cap|syp|drops|oint)\s+/i, '').toLowerCase();
+
+    const existingIndex = selectedDrugs.findIndex((s) => {
+      if (s === formatted || s === label) return true;
+      if (cleanGeneric.length >= 4) {
+        const cleanS = s.split('(')[0].trim().replace(/^(inj\.|tab\.|cap\.|syp\.|drops\.|oint\.)\s*/i, '').toLowerCase();
+        return cleanS.includes(cleanGeneric) || cleanGeneric.includes(cleanS);
+      }
+      return false;
+    });
+
+    if (existingIndex >= 0) {
+      setSelectedDrugs(selectedDrugs.filter((_, idx) => idx !== existingIndex));
     } else {
-      setSelectedDrugs([...selectedDrugs, drugLabel]);
+      setSelectedDrugs([...selectedDrugs, formatted]);
     }
   };
 
@@ -2057,6 +2072,43 @@ export default function UserWorkspacePage() {
         </div>
       </header>
 
+      {/* MOBILE 3-SECTION SEGMENTED TAB NAVIGATION BAR */}
+      <div className="lg:hidden bg-slate-900 border-b border-slate-800 p-1.5 flex items-center justify-around gap-1 shrink-0 z-30 shadow-md">
+        <button
+          type="button"
+          onClick={() => setMobileDrawer('left')}
+          className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-extrabold flex items-center justify-center gap-1 transition ${
+            mobileDrawer === 'left'
+              ? 'bg-blue-600 text-white shadow'
+              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+          }`}
+        >
+          <span>📋 Sec 1: Inputs</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileDrawer('none')}
+          className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-extrabold flex items-center justify-center gap-1 transition ${
+            mobileDrawer === 'none'
+              ? 'bg-emerald-600 text-white shadow'
+              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+          }`}
+        >
+          <span>📄 Sec 2: Rx Pad</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileDrawer('right')}
+          className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-extrabold flex items-center justify-center gap-1 transition ${
+            mobileDrawer === 'right'
+              ? 'bg-purple-600 text-white shadow'
+              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+          }`}
+        >
+          <span>💊 Sec 3: Catalog</span>
+        </button>
+      </div>
+
       {/* 2. THREE VERTICAL SECTIONS (WITH RESPONSIVE MOBILE DRAWERS) */}
       <main className="flex-1 p-2.5 grid grid-cols-1 lg:grid-cols-12 gap-2.5 overflow-hidden h-[calc(100vh-38px)] relative">
         
@@ -2127,13 +2179,13 @@ export default function UserWorkspacePage() {
             </div>
 
             {/* Quick Sub-Tab Selector */}
-            <div className={`grid grid-cols-5 p-1 rounded-xl text-[10px] shrink-0 border ${
+            <div className={`grid grid-cols-5 gap-0.5 p-0.5 rounded-xl text-[9px] sm:text-[10px] shrink-0 border min-w-0 overflow-hidden ${
               theme === 'day' ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-950 border-gray-800'
             }`}>
               <button
                 type="button"
                 onClick={() => setActiveLeftTab('patient')}
-                className={`py-1 rounded-lg font-semibold transition ${
+                className={`py-1 px-0.5 rounded-lg font-bold transition truncate text-center ${
                   activeLeftTab === 'patient' 
                     ? (theme === 'day' ? 'bg-blue-600 text-white shadow' : 'bg-emerald-500 text-gray-950')
                     : (theme === 'day' ? 'text-slate-600' : 'text-gray-400')
@@ -2144,7 +2196,7 @@ export default function UserWorkspacePage() {
               <button
                 type="button"
                 onClick={() => setActiveLeftTab('vitals')}
-                className={`py-1 rounded-lg font-semibold transition ${
+                className={`py-1 px-0.5 rounded-lg font-bold transition truncate text-center ${
                   activeLeftTab === 'vitals' 
                     ? (theme === 'day' ? 'bg-blue-600 text-white shadow' : 'bg-emerald-500 text-gray-950')
                     : (theme === 'day' ? 'text-slate-600' : 'text-gray-400')
@@ -2155,29 +2207,29 @@ export default function UserWorkspacePage() {
               <button
                 type="button"
                 onClick={() => setActiveLeftTab('clinical')}
-                className={`py-1 rounded-lg font-semibold transition ${
+                className={`py-1 px-0.5 rounded-lg font-bold transition truncate text-center ${
                   activeLeftTab === 'clinical' 
                     ? (theme === 'day' ? 'bg-blue-600 text-white shadow' : 'bg-emerald-500 text-gray-950')
                     : (theme === 'day' ? 'text-slate-600' : 'text-gray-400')
                 }`}
               >
-                Exam & Hx
+                Exam/Hx
               </button>
               <button
                 type="button"
                 onClick={() => setActiveLeftTab('procedures')}
-                className={`py-1 rounded-lg font-semibold transition ${
+                className={`py-1 px-0.5 rounded-lg font-bold transition truncate text-center ${
                   activeLeftTab === 'procedures' 
                     ? (theme === 'day' ? 'bg-blue-600 text-white shadow' : 'bg-emerald-500 text-gray-950')
                     : (theme === 'day' ? 'text-slate-600' : 'text-gray-400')
                 }`}
               >
-                Procedures
+                Proc
               </button>
               <button
                 type="button"
                 onClick={() => setActiveLeftTab('tests')}
-                className={`py-1 rounded-lg font-semibold transition ${
+                className={`py-1 px-0.5 rounded-lg font-bold transition truncate text-center ${
                   activeLeftTab === 'tests' 
                     ? (theme === 'day' ? 'bg-blue-600 text-white shadow' : 'bg-emerald-500 text-gray-950')
                     : (theme === 'day' ? 'text-slate-600' : 'text-gray-400')
@@ -2193,22 +2245,25 @@ export default function UserWorkspacePage() {
               {/* TAB 1: PATIENT REGISTRATION */}
               {activeLeftTab === 'patient' && (
                 <div className="space-y-3 text-xs">
-                  <div className="flex gap-1.5">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Lookup Reg No / Mobile..."
-                      className={`flex-1 rounded-xl px-3 py-1.5 text-xs ${inputBg}`}
-                    />
-                    <button
-                      onClick={handleLookupPatient}
-                      className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold shrink-0 ${
-                        theme === 'day' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-200'
-                      }`}
-                    >
-                      Lookup
-                    </button>
+                  <div className="flex items-center gap-1.5">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleLookupPatient(); }}
+                        placeholder="Lookup Reg No / Mobile..."
+                        className={`w-full rounded-xl pl-3 pr-8 py-1.5 text-xs ${inputBg}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleLookupPatient}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-blue-100 text-blue-600 dark:hover:bg-slate-700 dark:text-blue-400 transition"
+                        title="Search Patient Record"
+                      >
+                        <Search className="h-4 w-4" />
+                      </button>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setIsHistoryModalOpen(true)}
@@ -2761,7 +2816,7 @@ export default function UserWorkspacePage() {
         </section>
 
         {/* SECTION 2 (CENTER COLUMN - 6 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
-        <section className={`lg:col-span-6 rounded-none lg:rounded-2xl p-2 sm:p-3.5 flex flex-col justify-between overflow-hidden h-full w-full ${cardBg}`}>
+        <section className={`lg:col-span-6 rounded-none lg:rounded-2xl p-2 sm:p-3.5 flex-col justify-between overflow-hidden h-full w-full ${cardBg} ${mobileDrawer !== 'none' ? 'hidden lg:flex' : 'flex'}`}>
           
           {/* LIVE DRUG SAFETY & INTERACTION ALERT BANNER (VERY TOP OF SECTION 2) */}
           {detectedSafetyWarnings.length > 0 && (
@@ -3619,33 +3674,15 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
-            {/* MODAL POPUP LAUNCHER BUTTONS */}
-            <div className="space-y-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsTemplateModalOpen(true)}
-                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 text-white text-xs font-bold shadow flex items-center justify-center gap-2 transition"
-              >
-                <FolderPlus className="h-4 w-4" />
-                Manage Specialties & Templates
-              </button>
-
+            {/* MODAL POPUP LAUNCHER BUTTON */}
+            <div className="space-y-1.5 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsProtocolsModalOpen(true)}
-                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 hover:brightness-110 text-white text-xs font-bold shadow flex items-center justify-center gap-2 transition"
+                className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 hover:brightness-110 text-white text-xs font-black shadow-md flex items-center justify-center gap-2 transition transform active:scale-98"
               >
                 <span>📜</span>
-                <span>Clinical Protocols & ER Order Sets</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsDrugModalOpen(true)}
-                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:brightness-110 text-white text-xs font-bold shadow flex items-center justify-center gap-2 transition"
-              >
-                <Pill className="h-4 w-4" />
-                Manage Additional Drugs Catalog
+                <span>Clinical Protocols & Specialty Templates Library</span>
               </button>
             </div>
 
@@ -5038,12 +5075,19 @@ export default function UserWorkspacePage() {
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
                 {[
                   { key: 'all', label: 'All Protocols' },
-                  { key: 'infectious', label: '🦠 Infectious Disease' },
+                  { key: 'personal', label: '⭐ My Personal Templates' },
+                  { key: 'bites', label: '🐾 Rabies & Animal Bites' },
+                  { key: 'gynae', label: '🤰 Gynaecology' },
+                  { key: 'ortho', label: '🦴 Orthopedics' },
+                  { key: 'ent', label: '👂 ENT' },
+                  { key: 'ophthalmology', label: '👁️ Ophthalmology' },
+                  { key: 'dermatology', label: '🧴 Dermatology' },
+                  { key: 'infectious', label: '🦠 Infectious' },
                   { key: 'pediatric', label: '👶 Pediatric' },
-                  { key: 'respiratory', label: '🫁 Respiratory Care' },
-                  { key: 'cardio', label: '❤️ Cardiovascular' },
-                  { key: 'gastro', label: '🤢 Gastroenterology' },
-                  { key: 'emergency', label: '🚨 Emergency / ER' },
+                  { key: 'respiratory', label: '🫁 Respiratory' },
+                  { key: 'cardio', label: '❤️ Cardio' },
+                  { key: 'gastro', label: '🤢 Gastro' },
+                  { key: 'emergency', label: '🚨 ER / Emergency' },
                 ].map((cat) => (
                   <button
                     key={cat.key}
@@ -5061,9 +5105,128 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
-            {/* PROTOCOLS LIST CARDS */}
+            {/* PROTOCOLS & PERSONAL TEMPLATES LIST CARDS */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[60vh]">
               {(() => {
+                if (protocolCategoryFilter === 'personal') {
+                  const personalList: Array<{
+                    id: string;
+                    name: string;
+                    specialtyId: string;
+                    specialtyName: string;
+                    complaints?: string[];
+                    diagnosis?: string;
+                    drugs: string[];
+                    tests: string[];
+                    advice: string[];
+                  }> = [];
+
+                  specialties.forEach((sp) => {
+                    sp.templates.forEach((tpl) => {
+                      personalList.push({
+                        ...tpl,
+                        specialtyId: sp.id,
+                        specialtyName: sp.name,
+                        advice: Array.isArray(tpl.advice) ? tpl.advice : [tpl.advice || ''],
+                      });
+                    });
+                  });
+
+                  const filteredPersonal = personalList.filter((p) => {
+                    if (!protocolSearchTerm.trim()) return true;
+                    const q = protocolSearchTerm.toLowerCase();
+                    return (
+                      p.name.toLowerCase().includes(q) ||
+                      (p.diagnosis || '').toLowerCase().includes(q) ||
+                      p.specialtyName.toLowerCase().includes(q)
+                    );
+                  });
+
+                  if (filteredPersonal.length === 0) {
+                    return (
+                      <div className="text-center py-12 text-slate-400 space-y-2">
+                        <FileText className="h-10 w-10 mx-auto text-slate-300 animate-bounce" />
+                        <p className="font-bold text-xs text-slate-600">No personal templates saved yet.</p>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenNewTemplateEditor(specialties[0]?.id || 'spec-1')}
+                          className="px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow"
+                        >
+                          + Create Custom Template
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return filteredPersonal.map((tpl) => (
+                    <div
+                      key={tpl.id}
+                      className="p-4 rounded-2xl border border-amber-300/80 bg-amber-50/40 hover:border-amber-500 hover:shadow-lg transition space-y-3 text-xs"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <h4 className="font-black text-sm text-slate-900">{tpl.name}</h4>
+                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-extrabold text-[10px] uppercase border border-amber-300">
+                              ⭐ Personal Template • {tpl.specialtyName}
+                            </span>
+                          </div>
+                          {tpl.diagnosis && (
+                            <p className="text-slate-700 font-bold text-xs">
+                              Diagnosis: <span className="text-blue-900">{tpl.diagnosis}</span>
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (tpl.complaints && tpl.complaints.length > 0) setChiefComplaints(tpl.complaints.join(', '));
+                              if (tpl.diagnosis) setProvisionalDiagnosis(tpl.diagnosis);
+                              if (tpl.drugs && tpl.drugs.length > 0) {
+                                const formattedDrugs = tpl.drugs.map((d) => applyBrandToPrescribedLine(d, d));
+                                setSelectedDrugs(formattedDrugs);
+                              }
+                              if (tpl.tests && tpl.tests.length > 0) setSelectedTests(tpl.tests);
+                              if (tpl.advice) setSpecificAdviceText(Array.isArray(tpl.advice) ? tpl.advice.join('\n') : tpl.advice);
+                              setIsProtocolsModalOpen(false);
+                              setSaveStatus(`Applied Template: "${tpl.name}"`);
+                              setTimeout(() => setSaveStatus(null), 3500);
+                            }}
+                            className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1"
+                          >
+                            <span>⚡ Apply to Pad</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-white/80 p-2.5 rounded-xl border border-slate-200 text-[11px]">
+                        <div>
+                          <strong className="text-slate-900 block mb-0.5">💊 Prescribed Medications:</strong>
+                          <ul className="list-disc pl-4 text-slate-700 space-y-0.5 font-mono text-[10.5px]">
+                            {tpl.drugs.map((d, idx) => (
+                              <li key={idx}>{d}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          {tpl.tests && tpl.tests.length > 0 && (
+                            <p className="text-slate-700 font-medium mb-1">
+                              <span className="font-bold text-slate-900">Diagnostic Tests:</span> {tpl.tests.join(', ')}
+                            </p>
+                          )}
+                          {tpl.advice && tpl.advice.length > 0 && (
+                            <p className="text-slate-700 italic">
+                              <span className="font-bold text-slate-900">Advice:</span> {Array.isArray(tpl.advice) ? tpl.advice.join(' ') : tpl.advice}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ));
+                }
+
                 const filtered = protocols.filter((p) => {
                   const matchesCat = protocolCategoryFilter === 'all' || p.category === protocolCategoryFilter;
                   const matchesSearch = !protocolSearchTerm.trim() ||
