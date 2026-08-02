@@ -106,6 +106,7 @@ function saveSqliteDb() {
     const data = dbInstance.export();
     const array = Array.from(data);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(array));
+    syncSqliteToConnectedFolder();
   } catch (err) {
     console.error('Error saving SQLite database binary locally:', err);
   }
@@ -386,4 +387,84 @@ export async function importSqliteBackupFile(file: File): Promise<void> {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(uInt8Array)));
   }
   window.location.reload();
+}
+
+// ----------------------------------------------------
+// HARD DRIVE FOLDER AUTO-SYNC & GITHUB UPDATE CHECKER
+// ----------------------------------------------------
+
+let dirHandleInstance: any = null;
+
+export async function connectLocalHardDriveFolder(): Promise<string | null> {
+  if (typeof window === 'undefined' || !('showDirectoryPicker' in window)) {
+    alert('File System Access API is supported in Chrome, Edge, and Brave desktop browsers.');
+    return null;
+  }
+  try {
+    const handle = await (window as any).showDirectoryPicker({
+      mode: 'readwrite',
+    });
+    dirHandleInstance = handle;
+    const folderName = handle.name || 'Connected Folder';
+    localStorage.setItem('prescribepro_connected_folder_name', folderName);
+    await syncSqliteToConnectedFolder();
+    return folderName;
+  } catch (err: any) {
+    if (err.name !== 'AbortError') {
+      console.error('Error connecting hard drive folder:', err);
+    }
+    return null;
+  }
+}
+
+export async function syncSqliteToConnectedFolder(): Promise<void> {
+  if (!dirHandleInstance) return;
+  try {
+    const db = await getSqliteDb();
+    const binary = db.export();
+    const fileHandle = await dirHandleInstance.getFileHandle('prescribepro_database.sqlite', { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(binary);
+    await writable.close();
+  } catch (err) {
+    console.error('Failed syncing SQLite to connected folder:', err);
+  }
+}
+
+export interface GitHubReleaseInfo {
+  tagName: string;
+  name: string;
+  publishedAt: string;
+  htmlUrl: string;
+  downloadUrl?: string;
+  hasUpdate: boolean;
+}
+
+export async function checkForGitHubUpdates(currentVersion = '1.0.0'): Promise<GitHubReleaseInfo | null> {
+  try {
+    const res = await fetch('https://api.github.com/repos/g2intouch-prog/PrescribePro/releases/latest');
+    if (!res.ok) return null;
+    const data = await res.json();
+    const latestTag = data.tag_name || data.name || 'v1.0.0';
+    const cleanTag = latestTag.replace(/^v/, '');
+    const hasUpdate = cleanTag !== currentVersion;
+    
+    let downloadUrl = data.html_url;
+    if (data.assets && data.assets.length > 0) {
+      const exeAsset = data.assets.find((a: any) => a.name.endsWith('.exe') || a.name.endsWith('.msi'));
+      if (exeAsset) downloadUrl = exeAsset.browser_download_url;
+    }
+
+    return {
+      tagName: latestTag,
+      name: data.name || latestTag,
+      publishedAt: data.published_at || '',
+      htmlUrl: data.html_url,
+      downloadUrl,
+      hasUpdate,
+    };
+  } catch (e) {
+    console.error('Failed checking for GitHub updates:', e);
+    return null;
+  }
 }

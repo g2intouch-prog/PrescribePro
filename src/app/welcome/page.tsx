@@ -55,6 +55,9 @@ import {
   getAllPrescriptionsFromSqlite,
   downloadSqliteBackupFile,
   importSqliteBackupFile,
+  connectLocalHardDriveFolder,
+  checkForGitHubUpdates,
+  GitHubReleaseInfo,
   SavedPrescriptionRecord 
 } from '@/lib/db/sqlite';
 import { 
@@ -817,6 +820,12 @@ export default function UserWorkspacePage() {
     'mannitol': ['Osmitrol 20% 100ml', 'Mannitol 20% Infusion'],
   });
 
+  // Hard Drive Folder & GitHub Updates State
+  const [connectedFolderName, setConnectedFolderName] = useState<string | null>(null);
+  const [githubReleaseInfo, setGithubReleaseInfo] = useState<GitHubReleaseInfo | null>(null);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [updateStatusMsg, setUpdateStatusMsg] = useState<string | null>(null);
+
   useEffect(() => {
     const savedPref = localStorage.getItem('prescribepro_erig_pref');
     if (savedPref) setPreferredErigKey(savedPref);
@@ -834,7 +843,38 @@ export default function UserWorkspacePage() {
         console.error(e);
       }
     }
+
+    if (typeof window !== 'undefined') {
+      const folder = localStorage.getItem('prescribepro_connected_folder_name');
+      if (folder) setConnectedFolderName(folder);
+    }
   }, []);
+
+  const handleConnectFolder = async () => {
+    const folder = await connectLocalHardDriveFolder();
+    if (folder) {
+      setConnectedFolderName(folder);
+      setSaveStatus(`Connected Local HDD Folder: "${folder}"`);
+      setTimeout(() => setSaveStatus(null), 4000);
+    }
+  };
+
+  const handleCheckGitHubRelease = async () => {
+    setIsCheckingUpdate(true);
+    setUpdateStatusMsg('Checking GitHub repository for updates...');
+    const release = await checkForGitHubUpdates('1.0.0');
+    setIsCheckingUpdate(false);
+    if (release) {
+      setGithubReleaseInfo(release);
+      if (release.hasUpdate) {
+        setUpdateStatusMsg(`✨ New update available: ${release.tagName}!`);
+      } else {
+        setUpdateStatusMsg(`You are using the latest version (${release.tagName})!`);
+      }
+    } else {
+      setUpdateStatusMsg('Unable to reach GitHub. Please check internet connection.');
+    }
+  };
 
   const handleSetPrescribingMode = (mode: 'generic' | 'brand') => {
     setPrescribingMode(mode);
@@ -4151,22 +4191,30 @@ export default function UserWorkspacePage() {
               </div>
 
               <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
-                <label className="block font-bold text-amber-950">8. Offline Database Safeguard & Backup (.sqlite)</label>
+                <label className="block font-bold text-amber-950">8. Offline Database Safeguards & Hard Drive Sync</label>
                 <p className="text-[11px] text-slate-600">
-                  Download a 1-click backup file of your entire SQLite prescription database onto your computer hard drive to protect against browser cache clearing or browser reinstalls.
+                  Option 1: Connect a folder on your hard drive (e.g. <code>D:\Clinic_Data\</code>) to silently auto-sync your <code>.sqlite</code> database file every time you prescribe, or download manual backups.
                 </p>
                 <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <button
+                    type="button"
+                    onClick={handleConnectFolder}
+                    className="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                  >
+                    <span>📁</span>
+                    <span>{connectedFolderName ? `Connected: ${connectedFolderName}` : 'Connect Hard Drive Storage Folder'}</span>
+                  </button>
                   <button
                     type="button"
                     onClick={downloadSqliteBackupFile}
                     className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
                   >
                     <span>💾</span>
-                    <span>Download SQLite Backup File (.sqlite)</span>
+                    <span>Download Backup (.sqlite)</span>
                   </button>
                   <label className="px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs shadow transition cursor-pointer flex items-center gap-1.5">
                     <span>📥</span>
-                    <span>Restore Database File</span>
+                    <span>Restore Database</span>
                     <input
                       type="file"
                       accept=".sqlite,.db,.json"
@@ -4178,6 +4226,53 @@ export default function UserWorkspacePage() {
                     />
                   </label>
                 </div>
+                {connectedFolderName && (
+                  <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 pt-1">
+                    <span>✓</span> Live Auto-Sync Active: Saving prescriptions updates <code>{connectedFolderName}/prescribepro_database.sqlite</code> automatically.
+                  </p>
+                )}
+              </div>
+
+              {/* SECTION 9: SOFTWARE UPDATES FROM GITHUB RELEASES */}
+              <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-indigo-950">9. Software Updates & GitHub Release Checker</label>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-200 text-indigo-900 font-bold">
+                    Current Version: v1.0.0
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600">
+                  Option 2: Manually check your GitHub repository (<code>g2intouch-prog/PrescribePro</code>) for new software updates, drug database updates, or desktop installer releases.
+                </p>
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <button
+                    type="button"
+                    onClick={handleCheckGitHubRelease}
+                    disabled={isCheckingUpdate}
+                    className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                  >
+                    <span>🔄</span>
+                    <span>{isCheckingUpdate ? 'Checking GitHub...' : 'Check for GitHub Updates'}</span>
+                  </button>
+
+                  {githubReleaseInfo && githubReleaseInfo.downloadUrl && (
+                    <a
+                      href={githubReleaseInfo.downloadUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                    >
+                      <span>⚡ Download Release ({githubReleaseInfo.tagName})</span>
+                    </a>
+                  )}
+                </div>
+
+                {updateStatusMsg && (
+                  <div className="p-2 rounded-lg bg-white border border-indigo-200 text-[11px] font-semibold text-indigo-900 flex items-center gap-1.5">
+                    <span>📢</span>
+                    <span>{updateStatusMsg}</span>
+                  </div>
+                )}
               </div>
 
               <div className="pt-3 border-t flex items-center justify-end gap-2">
