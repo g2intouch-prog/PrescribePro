@@ -50,6 +50,14 @@ import { createClient } from '@/lib/supabase/client';
 import { getAdminPresets, saveAdminPresets, AdminPresets } from '@/lib/db/admin-presets';
 import { checkPrescriptionSafety, DetectedInteraction } from '@/lib/data/interaction-checker';
 import { 
+  getInteractionRules, 
+  addCustomInteractionRule, 
+  deleteCustomInteractionRule,
+  resetRulesToDefault, 
+  importRulesFromCSVText, 
+  DrugInteractionRule 
+} from '@/lib/data/drug-interactions-db';
+import { 
   savePrescriptionToSqlite, 
   getPatientPrescriptionsFromSqlite, 
   getAllPrescriptionsFromSqlite,
@@ -561,6 +569,55 @@ export default function UserWorkspacePage() {
   const [pharmaCategoryFilter, setPharmaCategoryFilter] = useState<string | null>(null);
   const [isPediatricModalOpen, setIsPediatricModalOpen] = useState(false);
   const [pediatricSearchQuery, setPediatricSearchQuery] = useState('');
+
+  // Offline Drug Safety Rules Modal State
+  const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
+  const [rulesList, setRulesList] = useState<DrugInteractionRule[]>([]);
+  const [searchRuleQuery, setSearchRuleQuery] = useState('');
+  const [newRuleA, setNewRuleA] = useState('');
+  const [newRuleB, setNewRuleB] = useState('');
+  const [newRuleTitle, setNewRuleTitle] = useState('');
+  const [newRuleDesc, setNewRuleDesc] = useState('');
+  const [newRuleRec, setNewRuleRec] = useState('');
+  const [newRuleSource, setNewRuleSource] = useState('Physician Custom Rule');
+  const [newRuleSeverity, setNewRuleSeverity] = useState<'high' | 'moderate'>('high');
+
+  const refreshRulesList = () => {
+    setRulesList(getInteractionRules());
+  };
+
+  const handleOpenRulesModal = () => {
+    refreshRulesList();
+    setIsRulesModalOpen(true);
+  };
+
+  const handleAddCustomRuleInWorkspace = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRuleA.trim() || !newRuleB.trim() || !newRuleTitle.trim()) {
+      alert('Please fill in Drug A, Drug B, and Warning Title.');
+      return;
+    }
+
+    addCustomInteractionRule({
+      drugA: newRuleA.split(',').map((s) => s.trim().toLowerCase()),
+      drugB: newRuleB.split(',').map((s) => s.trim().toLowerCase()),
+      title: newRuleTitle.trim(),
+      description: newRuleDesc.trim() || 'Custom drug interaction warning.',
+      recommendation: newRuleRec.trim() || 'Exercise clinical judgment.',
+      severity: newRuleSeverity,
+      source: newRuleSource.trim() || 'Physician Custom Rule',
+      category: 'CDSCO Alert'
+    });
+
+    setNewRuleA('');
+    setNewRuleB('');
+    setNewRuleTitle('');
+    setNewRuleDesc('');
+    setNewRuleRec('');
+    refreshRulesList();
+    setSaveStatus('Custom interaction rule saved successfully!');
+    setTimeout(() => setSaveStatus(null), 3000);
+  };
 
   // Clinical Protocols & Order Sets State
   const [protocols, setProtocols] = useState<ClinicalProtocol[]>(getClinicalProtocols());
@@ -3599,9 +3656,19 @@ export default function UserWorkspacePage() {
                           <ShieldAlert className="h-4 w-4 text-red-600 shrink-0" />
                           <span>🚨 DRUG SAFETY & INTERACTION ALERT ({detectedSafetyWarnings.length})</span>
                         </div>
-                        <span className="text-[7.5px] bg-red-600 text-white font-mono px-1.5 py-0.5 rounded font-bold uppercase">
-                          Physician Judgment Mode
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleOpenRulesModal}
+                            className="text-[8px] bg-red-700 hover:bg-red-800 text-white font-bold px-2 py-0.5 rounded flex items-center gap-1 shadow transition"
+                            title="Add, edit or import custom drug safety rules"
+                          >
+                            <span>🛡️ Manage Safety Rules</span>
+                          </button>
+                          <span className="text-[7.5px] bg-red-600 text-white font-mono px-1.5 py-0.5 rounded font-bold uppercase">
+                            Physician Judgment Mode
+                          </span>
+                        </div>
                       </div>
 
                       <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
@@ -3892,15 +3959,25 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
-            {/* MODAL POPUP LAUNCHER BUTTON */}
-            <div className="space-y-1.5 shrink-0">
+            {/* MODAL POPUP LAUNCHER BUTTONS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsProtocolsModalOpen(true)}
-                className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 hover:brightness-110 text-white text-xs font-black shadow-md flex items-center justify-center gap-2 transition transform active:scale-98"
+                className="w-full py-2 px-2.5 rounded-xl bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 hover:brightness-110 text-white text-[11px] font-black shadow-md flex items-center justify-center gap-1.5 transition transform active:scale-98"
               >
                 <span>📜</span>
-                <span>Clinical Protocols & Specialty Templates Library</span>
+                <span>Clinical Protocols</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleOpenRulesModal}
+                className="w-full py-2 px-2.5 rounded-xl bg-gradient-to-r from-red-700 via-amber-700 to-rose-700 hover:brightness-110 text-white text-[11px] font-black shadow-md flex items-center justify-center gap-1.5 transition transform active:scale-98"
+                title="Add, edit or import custom drug safety rules"
+              >
+                <span>🛡️</span>
+                <span>Safety Rules Manager</span>
               </button>
             </div>
 
@@ -5239,6 +5316,279 @@ export default function UserWorkspacePage() {
                 className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition"
               >
                 Done / Back to Prescription Pad
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DRUG SAFETY & INTERACTION RULES MANAGER MODAL POPUP (DOCTOR WORKSPACE) */}
+      {isRulesModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
+            {/* HEADER */}
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-red-950 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-red-600 text-white font-extrabold text-base shadow">
+                  🛡️
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-white">
+                    Drug Safety & Offline Interaction Rules Manager
+                  </h3>
+                  <p className="text-xs text-red-200 font-medium">
+                    Add custom interaction alerts, import CSV rules or review pre-bundled CDSCO/WHO databases ({rulesList.length} active rules)
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow flex items-center gap-1 cursor-pointer transition shrink-0">
+                  <span>📥 Import CSV</span>
+                  <input
+                    type="file"
+                    accept=".csv,.json"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const text = event.target?.result as string;
+                        if (text) {
+                          const res = importRulesFromCSVText(text);
+                          refreshRulesList();
+                          alert(`Imported ${res.successCount} custom rules successfully!`);
+                        }
+                      };
+                      reader.readAsText(file);
+                    }}
+                    className="hidden"
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm('Reset custom rules and restore default pre-bundled medical dataset?')) {
+                      resetRulesToDefault();
+                      refreshRulesList();
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition shrink-0"
+                  title="Restore default pre-bundled open dataset"
+                >
+                  <span>🔄 Reset to Default</span>
+                </button>
+                <button
+                  onClick={() => setIsRulesModalOpen(false)}
+                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition"
+                >
+                  ✕ Close
+                </button>
+              </div>
+            </div>
+
+            {/* BODY */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950">
+              {/* ADD CUSTOM RULE FORM */}
+              <form onSubmit={handleAddCustomRuleInWorkspace} className="p-4 rounded-xl border border-red-200 dark:border-red-950 bg-red-50/40 dark:bg-red-950/20 space-y-3">
+                <h4 className="text-xs font-extrabold text-red-800 dark:text-red-300 uppercase tracking-wider flex items-center gap-1.5">
+                  ➕ Add Custom Drug Interaction / Safety Alert Rule
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      Drug A Keywords (Comma Separated)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. diazepam, valium, calmpose"
+                      value={newRuleA}
+                      onChange={(e) => setNewRuleA(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      Drug B Keywords (or 'all' for single drug safety alert)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. clonazepam, clonotril, petril"
+                      value={newRuleB}
+                      onChange={(e) => setNewRuleB(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      Warning Title
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Dual Benzodiazepine Sedation Hazard"
+                      value={newRuleTitle}
+                      onChange={(e) => setNewRuleTitle(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      Medical Source Citation
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. CDSCO / NLEM India, Physician Custom Rule"
+                      value={newRuleSource}
+                      onChange={(e) => setNewRuleSource(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      Severity Level
+                    </label>
+                    <select
+                      value={newRuleSeverity}
+                      onChange={(e) => setNewRuleSeverity(e.target.value as 'high' | 'moderate')}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-bold"
+                    >
+                      <option value="high">🔴 High Severity</option>
+                      <option value="moderate">🟡 Moderate Severity</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      Clinical Conflict Explanation
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Detailed mechanism explanation..."
+                      value={newRuleDesc}
+                      onChange={(e) => setNewRuleDesc(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      Clinical Recommendation
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Recommended physician action..."
+                      value={newRuleRec}
+                      onChange={(e) => setNewRuleRec(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md transition flex items-center gap-1"
+                  >
+                    ➕ Save Custom Rule
+                  </button>
+                </div>
+              </form>
+
+              {/* SEARCHABLE ACTIVE RULES TABLE */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Active Safety Rules Database Table
+                  </span>
+                  <div className="relative w-72">
+                    <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="Filter rules by drug, title or source..."
+                      value={searchRuleQuery}
+                      onChange={(e) => setSearchRuleQuery(e.target.value)}
+                      className="w-full rounded-xl pl-9 pr-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="max-h-[320px] overflow-y-auto space-y-2 pr-1">
+                  {rulesList
+                    .filter(
+                      (r) =>
+                        !searchRuleQuery ||
+                        r.title.toLowerCase().includes(searchRuleQuery.toLowerCase()) ||
+                        r.drugA.some((d) => d.includes(searchRuleQuery.toLowerCase())) ||
+                        r.drugB.some((d) => d.includes(searchRuleQuery.toLowerCase())) ||
+                        r.source.toLowerCase().includes(searchRuleQuery.toLowerCase())
+                    )
+                    .map((r) => (
+                      <div
+                        key={r.id}
+                        className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs space-y-1 shadow-sm"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                            {r.severity === 'high' ? '🔴' : '🟡'} {r.title}
+                            {r.isCustom ? (
+                              <span className="text-[9px] bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 px-1.5 py-0.5 rounded font-extrabold border border-purple-300 dark:border-purple-800">
+                                Custom Rule
+                              </span>
+                            ) : (
+                              <span className="text-[9px] bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 px-1.5 py-0.5 rounded font-mono">
+                                Pre-bundled
+                              </span>
+                            )}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {r.isCustom && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  deleteCustomInteractionRule(r.id);
+                                  refreshRulesList();
+                                }}
+                                className="px-2 py-0.5 bg-red-100 hover:bg-red-200 text-red-800 dark:bg-red-950 dark:text-red-200 border border-red-300 dark:border-red-800 text-[10px] font-bold rounded-lg transition"
+                                title="Delete this custom rule"
+                              >
+                                🗑️ Delete
+                              </button>
+                            )}
+                            <span className="text-[10px] bg-amber-50 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 font-mono px-2 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800 font-semibold">
+                              🏛️ {r.source}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-slate-700 dark:text-slate-300 text-[11px] font-medium">
+                          <strong className="text-slate-900 dark:text-slate-100">Conflict:</strong> [{r.drugA.join(', ')}] ↔ [{r.drugB.join(', ')}]
+                        </p>
+                        <p className="text-slate-600 dark:text-slate-400 text-[10.5px] italic leading-snug">{r.description}</p>
+                        <div className="bg-emerald-50 dark:bg-emerald-950/40 p-2 rounded-lg border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-[10.5px]">
+                          <strong>Recommendation:</strong> {r.recommendation}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            {/* FOOTER */}
+            <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between">
+              <span className="text-xs text-slate-500 font-bold">
+                {rulesList.filter((r) => r.isCustom).length} custom physician rules configured
+              </span>
+              <button
+                onClick={() => setIsRulesModalOpen(false)}
+                className="px-5 py-2 rounded-xl bg-slate-800 text-white hover:bg-slate-700 font-bold text-xs shadow transition"
+              >
+                Close Manager
               </button>
             </div>
           </div>

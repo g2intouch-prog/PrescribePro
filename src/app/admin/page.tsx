@@ -40,6 +40,7 @@ import { getAdminPresets, saveAdminPresets, AdminPresets } from '@/lib/db/admin-
 import { 
   getInteractionRules, 
   addCustomInteractionRule, 
+  deleteCustomInteractionRule,
   resetRulesToDefault, 
   importRulesFromCSVText, 
   DrugInteractionRule 
@@ -778,9 +779,25 @@ export default function AdminDashboardPage() {
                         {r.severity === 'high' ? '🔴' : '🟡'} {r.title}
                         {r.isCustom && <span className="text-[9px] bg-purple-950 text-purple-300 px-1.5 py-0.2 rounded border border-purple-800">Custom</span>}
                       </span>
-                      <span className="text-[10px] bg-amber-950/80 text-amber-300 font-mono px-2 py-0.5 rounded border border-amber-800">
-                        🏛️ {r.source}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {r.isCustom && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              deleteCustomInteractionRule(r.id);
+                              refreshRules();
+                              setStatusMsg({ type: 'success', text: 'Custom interaction rule deleted.' });
+                            }}
+                            className="px-1.5 py-0.5 bg-red-950 text-red-400 hover:bg-red-900 border border-red-800 text-[10px] font-bold rounded transition"
+                            title="Delete this custom rule"
+                          >
+                            🗑️ Delete
+                          </button>
+                        )}
+                        <span className="text-[10px] bg-amber-950/80 text-amber-300 font-mono px-2 py-0.5 rounded border border-amber-800">
+                          🏛️ {r.source}
+                        </span>
+                      </div>
                     </div>
                     <p className="text-gray-400 text-[11px]">
                       <strong className="text-gray-300">Conflict:</strong> [{r.drugA.join(', ')}] ↔ [{r.drugB.join(', ')}]

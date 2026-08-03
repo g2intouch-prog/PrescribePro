@@ -462,6 +462,17 @@ export const DEFAULT_OFFLINE_DRUG_INTERACTIONS: DrugInteractionRule[] = [
     category: 'Psychiatry'
   },
   {
+    id: 'ddi-duplicate-benzodiazepine-warning',
+    drugA: ['diazepam', 'valium', 'calmpose', 'clonazepam', 'clonotril', 'zapiz', 'petril', 'alprazolam', 'alprax', 'restyl', 'lorazepam', 'ativan', 'clobazam', 'frisium', 'benzodiazepine'],
+    drugB: ['diazepam', 'valium', 'calmpose', 'clonazepam', 'clonotril', 'zapiz', 'petril', 'alprazolam', 'alprax', 'restyl', 'lorazepam', 'ativan', 'clobazam', 'frisium', 'benzodiazepine'],
+    severity: 'high',
+    title: 'Duplicate Benzodiazepine Therapy & Severe Sedation Hazard',
+    description: 'Co-prescribing multiple Benzodiazepines (e.g. Diazepam + Clonazepam, Alprazolam + Lorazepam) causes redundant GABAA receptor stimulation, excessive CNS depression, profound psychomotor impairment, severe ataxia, and elevated respiratory depression risk.',
+    recommendation: 'Select a single Benzodiazepine formulation at the lowest effective dose. Avoid dual benzodiazepine co-prescribing.',
+    source: 'USFDA Boxed Warning & IPC / PvPI Alert',
+    category: 'Psychiatry'
+  },
+  {
     id: 'ddi-benzo-alcohol-cns',
     drugA: ['alprazolam', 'alprax', 'clonazepam', 'clonotril', 'diazepam', 'valium', 'lorazepam', 'ativan', 'benzodiazepine'],
     drugB: ['alcohol', 'ethanol', 'zolpidem', 'zolfresh'],
@@ -618,6 +629,34 @@ export function addCustomInteractionRule(rule: Omit<DrugInteractionRule, 'id' | 
   }
   
   return newRule;
+}
+
+// UPDATE EXISTING CUSTOM RULE
+export function updateCustomInteractionRule(updatedRule: DrugInteractionRule): void {
+  if (typeof window !== 'undefined') {
+    try {
+      const existingStr = localStorage.getItem(LOCAL_STORAGE_RULES_KEY);
+      const existing: DrugInteractionRule[] = existingStr ? JSON.parse(existingStr) : [];
+      const updated = existing.map((r) => (r.id === updatedRule.id ? updatedRule : r));
+      localStorage.setItem(LOCAL_STORAGE_RULES_KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to update custom rule', e);
+    }
+  }
+}
+
+// DELETE CUSTOM RULE
+export function deleteCustomInteractionRule(ruleId: string): void {
+  if (typeof window !== 'undefined') {
+    try {
+      const existingStr = localStorage.getItem(LOCAL_STORAGE_RULES_KEY);
+      const existing: DrugInteractionRule[] = existingStr ? JSON.parse(existingStr) : [];
+      const updated = existing.filter((r) => r.id !== ruleId);
+      localStorage.setItem(LOCAL_STORAGE_RULES_KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to delete custom rule', e);
+    }
+  }
 }
 
 // RESET RULES TO DEFAULT OPEN DATASET

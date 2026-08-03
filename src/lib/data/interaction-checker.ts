@@ -137,13 +137,25 @@ export function checkPrescriptionSafety(
     // Check pair interactions (Drug A + Drug B)
     for (let i = 0; i < parsedDrugs.length; i++) {
       const drugItemA = parsedDrugs[i];
-      const matchesRuleA = rule.drugA.some((k) => drugItemA.keywords.includes(k));
+      const matchesRuleA = rule.drugA.some((k) => {
+        const kNorm = k.toLowerCase().replace(/[-_]/g, ' ').trim();
+        return drugItemA.keywords.some((kw) => {
+          const kwNorm = kw.toLowerCase().replace(/[-_]/g, ' ').trim();
+          return kwNorm === kNorm || kwNorm.includes(kNorm) || kNorm.includes(kwNorm);
+        });
+      });
 
       if (matchesRuleA) {
         for (let j = 0; j < parsedDrugs.length; j++) {
           if (i === j) continue;
           const drugItemB = parsedDrugs[j];
-          const matchesRuleB = rule.drugB.some((k) => drugItemB.keywords.includes(k));
+          const matchesRuleB = rule.drugB.some((k) => {
+            const kNorm = k.toLowerCase().replace(/[-_]/g, ' ').trim();
+            return drugItemB.keywords.some((kw) => {
+              const kwNorm = kw.toLowerCase().replace(/[-_]/g, ' ').trim();
+              return kwNorm === kNorm || kwNorm.includes(kNorm) || kNorm.includes(kwNorm);
+            });
+          });
 
           if (matchesRuleB) {
             // Avoid duplicate reverse pair reports for the same rule
