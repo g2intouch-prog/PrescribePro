@@ -229,29 +229,29 @@ export const CLINICAL_PROCEDURES_PRESETS: string[] = [
 ];
 
 export function normalizeDrugItem(drug: DrugItem): DrugItem & { formulation: FormulationType; specialties: ClinicalSpecialty[] } {
-  // 1. Determine formulation
-  let formulation: FormulationType = drug.formulation || 'tab';
-  if (!drug.formulation) {
-    const name = (drug.genericName || '').toLowerCase();
-    const dose = (drug.dosage || '').toLowerCase();
-    const full = `${name} ${dose}`;
+  // 1. Determine formulation dynamically (ALWAYS recompute to purge any stale/corrupted values from localStorage)
+  const name = (drug.genericName || '').toLowerCase();
+  const dose = (drug.dosage || '').toLowerCase();
+  const kw = (drug.keywords || '').toLowerCase();
+  const full = `${name} ${dose} ${kw}`;
 
-    if (
-      name.startsWith('inj') ||
-      /\b(inj|inj\.|injection|infusion|vial|ampoule|amp|iv|im|iv\/im|sc|s\.c\.|subcutaneous|pen|cartridge|syringe|auto-injector|iu\/ml|units\/ml|insulin|glargine|lantus|basalog|humalog|novorapid|actrapid|mixtard|victoza|trulicity|ozempic|mounjaro|clexane|enoxaparin|heparin|epo|erythropoietin|tetanus|arv|erig|hrig|asv)\b/i.test(full)
-    ) {
-      formulation = 'inj';
-    } else if (name.startsWith('cap') || /\b(cap|cap\.|capsule|capsules|softgel)\b/i.test(full)) {
-      formulation = 'cap';
-    } else if (name.startsWith('syp') || /\b(syp|syp\.|syrup|suspension|linctus|expectorant|elixir|liquid|solution|oral solution|ors)\b/i.test(full)) {
-      formulation = 'syp';
-    } else if (/\b(drop|drops|drop\.|drops\.|eyedrop|eardrop|nasaldrop)\b/i.test(full) || full.includes('eye drop') || full.includes('ear drop') || full.includes('nasal drop')) {
-      formulation = 'drops';
-    } else if (/\b(cream|ointment|oint|oint\.|gel|lotion|shampoo|mouthwash|gargle|spray|patch|paste|toothpaste)\b/i.test(full)) {
-      formulation = 'topical';
-    } else {
-      formulation = 'tab';
-    }
+  let formulation: FormulationType = 'tab';
+
+  if (
+    name.startsWith('inj') ||
+    /\b(inj|inj\.|injection|infusion|vial|ampoule|amp|iv|im|iv\/im|sc|s\.c\.|subcutaneous|pen|cartridge|syringe|auto-injector|iu\/ml|units\/ml|insulin|glargine|lantus|basalog|humalog|novorapid|actrapid|mixtard|victoza|trulicity|ozempic|mounjaro|clexane|enoxaparin|heparin|epo|erythropoietin|tetanus|arv|erig|hrig|asv)\b/i.test(full)
+  ) {
+    formulation = 'inj';
+  } else if (name.startsWith('cap') || /\b(cap|cap\.|capsule|capsules|softgel)\b/i.test(full)) {
+    formulation = 'cap';
+  } else if (name.startsWith('syp') || /\b(syp|syp\.|syrup|suspension|linctus|expectorant|elixir|liquid|solution|oral solution|ors|respules)\b/i.test(full)) {
+    formulation = 'syp';
+  } else if (/\b(drop|drops|drop\.|drops\.|eyedrop|eardrop|nasaldrop)\b/i.test(full) || full.includes('eye drop') || full.includes('ear drop') || full.includes('nasal drop')) {
+    formulation = 'drops';
+  } else if (/\b(cream|ointment|oint|oint\.|gel|lotion|shampoo|mouthwash|gargle|spray|patch|paste|toothpaste)\b/i.test(full)) {
+    formulation = 'topical';
+  } else {
+    formulation = 'tab';
   }
 
   // 2. Determine specialties
@@ -349,7 +349,7 @@ export function searchClinicalDrugs(
   const specFilter = specialtyFilter ? specialtyFilter.trim().toLowerCase() : '';
   const formFilter = formulationFilter ? formulationFilter.trim().toLowerCase() : '';
 
-  return catalog.filter((rawDrug) => {
+  const filtered = catalog.filter((rawDrug) => {
     const drug = normalizeDrugItem(rawDrug);
 
     // 1. Specialty Filter check
@@ -398,6 +398,20 @@ export function searchClinicalDrugs(
       return pattern.test(name) || pattern.test(kw) || pattern.test(brand);
     });
   });
+
+  // Deduplicate by normalized genericName & dosage
+  const seen = new Set<string>();
+  const deduplicated: DrugItem[] = [];
+  for (const rawItem of filtered) {
+    const item = normalizeDrugItem(rawItem);
+    const key = `${item.genericName.trim().toLowerCase()}_${item.dosage.trim().toLowerCase()}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      deduplicated.push(item);
+    }
+  }
+
+  return deduplicated;
 }
 
 export interface CalculatedPediatricDose {
@@ -4646,18 +4660,49 @@ export function getDrugCatalog(): DrugItem[] {
       try {
         const parsed: DrugItem[] = JSON.parse(saved);
         const map = new Map<string, DrugItem>();
-        COMPREHENSIVE_GENERIC_DRUGS.forEach((item) => map.set(item.id, item));
+        COMPREHENSIVE_GENERIC_DRUGS.forEach((item) => map.set(item.id, normalizeDrugItem(item)));
         parsed.forEach((item) => {
           if (item && item.id) {
             const defaultItem = COMPREHENSIVE_GENERIC_DRUGS.find((d) => d.id === item.id);
-            map.set(item.id, defaultItem ? { ...item, genericName: defaultItem.genericName } : item);
+            if (defaultItem) {
+              map.set(
+                item.id,
+                normalizeDrugItem({
+                  ...defaultItem,
+                  dosage: item.dosage || defaultItem.dosage,
+                  duration: item.duration || defaultItem.duration,
+                })
+              );
+            } else {
+              map.set(item.id, normalizeDrugItem(item));
+            }
           }
         });
-        return Array.from(map.values());
+
+        // Deduplicate map values by normalized genericName & dosage
+        const deduplicatedMap = new Map<string, DrugItem>();
+        for (const item of map.values()) {
+          const key = `${item.genericName.trim().toLowerCase()}_${item.dosage.trim().toLowerCase()}`;
+          if (!deduplicatedMap.has(key)) {
+            deduplicatedMap.set(key, item);
+          }
+        }
+
+        return Array.from(deduplicatedMap.values());
       } catch (e) {}
     }
   }
-  return COMPREHENSIVE_GENERIC_DRUGS;
+
+  // Fallback default catalog deduplicated
+  const deduplicatedMap = new Map<string, DrugItem>();
+  for (const item of COMPREHENSIVE_GENERIC_DRUGS) {
+    const norm = normalizeDrugItem(item);
+    const key = `${norm.genericName.trim().toLowerCase()}_${norm.dosage.trim().toLowerCase()}`;
+    if (!deduplicatedMap.has(key)) {
+      deduplicatedMap.set(key, norm);
+    }
+  }
+  return Array.from(deduplicatedMap.values());
 }
 
 export function saveDrugCatalog(data: DrugItem[]): void {
