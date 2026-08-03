@@ -3920,8 +3920,21 @@ export default function UserWorkspacePage() {
                     value={drugSearchQuery}
                     onChange={(e) => setDrugSearchQuery(e.target.value)}
                     placeholder="Search specialty drugs (A-Z)..."
-                    className={`w-full rounded-lg pl-7 pr-2 py-0.5 text-[10px] ${inputBg}`}
+                    className={`w-full rounded-lg pl-7 pr-12 py-0.5 text-[10px] ${inputBg}`}
                   />
+                  {(drugSearchQuery || drugFormulationFilter !== 'all') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDrugSearchQuery('');
+                        setDrugFormulationFilter('all');
+                      }}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 font-extrabold text-[8.5px] hover:bg-red-200 transition"
+                      title="Clear search and formulation filters"
+                    >
+                      ✕ Reset
+                    </button>
+                  )}
                 </div>
 
                 {/* FORMULATION FILTER PILLS (ALL, INJ, TAB, CAP, SYP, DROPS, TOPICAL) */}

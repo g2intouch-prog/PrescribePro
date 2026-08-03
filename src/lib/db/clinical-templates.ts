@@ -236,15 +236,18 @@ export function normalizeDrugItem(drug: DrugItem): DrugItem & { formulation: For
     const dose = (drug.dosage || '').toLowerCase();
     const full = `${name} ${dose}`;
 
-    if (name.startsWith('inj') || /\b(inj|inj\.|injection|infusion|vial|ampoule|amp|iv|im|iv\/im)\b/i.test(full)) {
+    if (
+      name.startsWith('inj') ||
+      /\b(inj|inj\.|injection|infusion|vial|ampoule|amp|iv|im|iv\/im|sc|s\.c\.|subcutaneous|pen|cartridge|syringe|auto-injector|iu\/ml|units\/ml|insulin|glargine|lantus|basalog|humalog|novorapid|actrapid|mixtard|victoza|trulicity|ozempic|mounjaro|clexane|enoxaparin|heparin|epo|erythropoietin|tetanus|arv|erig|hrig|asv)\b/i.test(full)
+    ) {
       formulation = 'inj';
     } else if (name.startsWith('cap') || /\b(cap|cap\.|capsule|capsules|softgel)\b/i.test(full)) {
       formulation = 'cap';
-    } else if (name.startsWith('syp') || /\b(syp|syp\.|syrup|suspension|linctus|expectorant|elixir|liquid)\b/i.test(full)) {
+    } else if (name.startsWith('syp') || /\b(syp|syp\.|syrup|suspension|linctus|expectorant|elixir|liquid|solution|oral solution|ors)\b/i.test(full)) {
       formulation = 'syp';
     } else if (/\b(drop|drops|drop\.|drops\.|eyedrop|eardrop|nasaldrop)\b/i.test(full) || full.includes('eye drop') || full.includes('ear drop') || full.includes('nasal drop')) {
       formulation = 'drops';
-    } else if (/\b(cream|ointment|oint|oint\.|gel|lotion|shampoo|mouthwash|gargle|spray|patch|paste)\b/i.test(full)) {
+    } else if (/\b(cream|ointment|oint|oint\.|gel|lotion|shampoo|mouthwash|gargle|spray|patch|paste|toothpaste)\b/i.test(full)) {
       formulation = 'topical';
     } else {
       formulation = 'tab';
@@ -956,9 +959,9 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'gen_dapa_met500', genericName: 'Dapagliflozin 10mg + Metformin 500mg SR Tablet (Forxiga-M 10/500)', category: 'adult', dosage: '1 tablet once daily after breakfast (1-0-0)', duration: '30 days', keywords: 'dapagliflozin metformin forxiga m dapa m sglt2 biguanide diabetes t2dm', minAge: 18 },
   { id: 'gen_empagliflozin25', genericName: 'Empagliflozin 25mg Tablet (Jardiance 25)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'empagliflozin jardiance sglt2 inhibitor heart failure ckd diabetes t2dm', minAge: 18 },
   { id: 'gen_semaglutide_oral', genericName: 'Semaglutide 7mg Oral Tablet (Rybelsus 7mg)', category: 'adult', dosage: '1 tablet once daily strictly empty stomach morning with 120ml water 30 mins before tea/food', duration: '30 days', keywords: 'semaglutide rybelsus glp1 agonist weight loss obesity diabetes sugar t2dm', minAge: 18 },
-  { id: 'gen_tirzepatide_pen', genericName: 'Tirzepatide 5mg Subcutaneous Pen Injection (Mounjaro 5mg)', category: 'adult', dosage: '0.5ml subcutaneous injection once weekly in abdomen/thigh', duration: '4 weeks (4 pens)', keywords: 'tirzepatide mounjaro zepbound glp1 gip dual agonist weight loss obesity diabetes', minAge: 18 },
+  { id: 'gen_tirzepatide_pen', genericName: 'Tirzepatide 5mg Subcutaneous Pen Injection (Mounjaro 5mg)', category: 'adult', formulation: 'inj', dosage: '0.5ml subcutaneous injection once weekly in abdomen/thigh', duration: '4 weeks (4 pens)', keywords: 'tirzepatide mounjaro zepbound glp1 gip dual agonist weight loss obesity diabetes', minAge: 18 },
   { id: 'gen_saroglitazar4', genericName: 'Saroglitazar 4mg Tablet (Lipaglyn 4mg)', category: 'adult', dosage: '1 tablet once daily at bedtime (0-0-1)', duration: '30 days', keywords: 'saroglitazar lipaglyn ppar agonist diabetic dyslipidemia hypertriglyceridemia fatty liver nafld', minAge: 18 },
-  { id: 'gen_lantus_pen', genericName: 'Insulin Glargine 100 IU/ml Subcutaneous Pen 3ml (Lantus / Basalog Pen)', category: 'all', dosage: 'Subcutaneous injection once daily at fixed bedtime hour (0-0-1)', duration: '30 days', keywords: 'insulin glargine lantus basalog basal insulin pen long acting diabetes t1dm t2dm' },
+  { id: 'gen_lantus_pen', genericName: 'Insulin Glargine 100 IU/ml Subcutaneous Pen 3ml (Lantus / Basalog Pen)', category: 'all', formulation: 'inj', dosage: 'Subcutaneous injection once daily at fixed bedtime hour (0-0-1)', duration: '30 days', keywords: 'insulin glargine lantus basalog basal insulin pen long acting diabetes t1dm t2dm' },
 
   // ==========================================
   // HYPERTENSION & CARDIAC DRUGS
@@ -1281,9 +1284,9 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'gen_novonorm1', genericName: 'Repaglinide 1mg Tablet (Novonorm 1 / Eurepa)', category: 'adult', dosage: '1 tablet 3 times daily 15 mins before main meals', duration: '30 days', keywords: 'repaglinide novonorm eurepa meglitinide postprandial diabetes', minAge: 18 },
   { id: 'gen_rybelsus7', genericName: 'Semaglutide 7mg Tablet (Rybelsus 7)', category: 'adult', dosage: '1 tablet once daily on empty stomach 30 mins before food', duration: '30 days', keywords: 'semaglutide rybelsus glp-1 agonist oral semaglutide weight loss diabetes Ozempic', minAge: 18 },
   { id: 'gen_rybelsus14', genericName: 'Semaglutide 14mg Tablet (Rybelsus 14)', category: 'adult', dosage: '1 tablet once daily on empty stomach 30 mins before food', duration: '30 days', keywords: 'semaglutide rybelsus glp-1 agonist weight loss obesity diabetes', minAge: 18 },
-  { id: 'gen_lantus_pen', genericName: 'Insulin Glargine 100 IU/ml Cartridge / Pen (Lantus / Basalog)', category: 'all', dosage: 'Subcutaneous injection once daily at bedtime', duration: '30 days', keywords: 'insulin glargine lantus basalog long acting basal insulin diabetes' },
-  { id: 'gen_mixtard3070', genericName: 'Biphasic Isophane Insulin 30/70 40 IU/ml Vial (Mixtard 30/70)', category: 'all', dosage: 'Subcutaneous injection 30 mins before breakfast and dinner', duration: '30 days', keywords: 'insulin mixtard 30/70 premixed insulin diabetes 40iu vial' },
-  { id: 'gen_actrapid_vial', genericName: 'Human Regular Insulin 40 IU/ml Vial (Actrapid)', category: 'all', dosage: 'Subcutaneous / IV injection 30 mins before main meals', duration: '30 days', keywords: 'insulin actrapid regular short acting insulin dka emergency diabetes' },
+  { id: 'gen_lantus_pen', genericName: 'Insulin Glargine 100 IU/ml Cartridge / Pen (Lantus / Basalog)', category: 'all', formulation: 'inj', dosage: 'Subcutaneous injection once daily at bedtime', duration: '30 days', keywords: 'insulin glargine lantus basalog long acting basal insulin diabetes' },
+  { id: 'gen_mixtard3070', genericName: 'Biphasic Isophane Insulin 30/70 40 IU/ml Vial (Mixtard 30/70)', category: 'all', formulation: 'inj', dosage: 'Subcutaneous injection 30 mins before breakfast and dinner', duration: '30 days', keywords: 'insulin mixtard 30/70 premixed insulin diabetes 40iu vial' },
+  { id: 'gen_actrapid_vial', genericName: 'Human Regular Insulin 40 IU/ml Vial (Actrapid)', category: 'all', formulation: 'inj', dosage: 'Subcutaneous / IV injection 30 mins before main meals', duration: '30 days', keywords: 'insulin actrapid regular short acting insulin dka emergency diabetes' },
   { id: 'gen_thyronorm25', genericName: 'Levothyroxine Sodium 25mcg Tablet (Thyronorm 25)', category: 'all', dosage: '1 tablet once daily on empty stomach in morning', duration: '90 days', keywords: 'levothyroxine thyronorm 25 hypothyroidism thyroid eltroxin' },
   { id: 'gen_thyronorm50', genericName: 'Levothyroxine Sodium 50mcg Tablet (Thyronorm 50)', category: 'all', dosage: '1 tablet once daily on empty stomach in morning', duration: '90 days', keywords: 'levothyroxine thyronorm 50 hypothyroidism thyroid eltroxin' },
   { id: 'gen_thyronorm75', genericName: 'Levothyroxine Sodium 75mcg Tablet (Thyronorm 75)', category: 'all', dosage: '1 tablet once daily on empty stomach in morning', duration: '90 days', keywords: 'levothyroxine thyronorm 75 hypothyroidism thyroid' },
