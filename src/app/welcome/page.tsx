@@ -4933,10 +4933,7 @@ export default function UserWorkspacePage() {
             {/* MODAL DRUGS CARDS GRID BODY */}
             <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-950">
               {(() => {
-                let matched = searchClinicalDrugs(drugSearchQuery, drugCatalog);
-                if (drugFormulationFilter !== 'all') {
-                  matched = matched.filter((drug) => matchDrugFormulation(drug, drugFormulationFilter));
-                }
+                const matched = searchClinicalDrugs(drugSearchQuery, drugCatalog, '', drugFormulationFilter);
 
                 return matched.map((drug) => {
                   const doseLabel = `${drug.genericName} - ${drug.dosage} for ${drug.duration}`;

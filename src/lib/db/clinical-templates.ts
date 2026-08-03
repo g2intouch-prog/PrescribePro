@@ -15,6 +15,31 @@ export interface Specialty {
   templates: PrescriptionTemplate[];
 }
 
+export type FormulationType = 'tab' | 'cap' | 'inj' | 'syp' | 'drops' | 'topical';
+
+export type ClinicalSpecialty =
+  | 'endocrinology'
+  | 'diabetes'
+  | 'thyroid'
+  | 'cardiology'
+  | 'hypertension'
+  | 'neurology'
+  | 'psychiatry'
+  | 'gastroenterology'
+  | 'pulmonology'
+  | 'nephrology'
+  | 'urology'
+  | 'dermatology'
+  | 'orthopedics'
+  | 'gynecology'
+  | 'dental'
+  | 'ent'
+  | 'ophthalmology'
+  | 'hepatology'
+  | 'emergency'
+  | 'pediatric'
+  | 'general';
+
 export interface DrugItem {
   id: string;
   genericName: string;
@@ -23,6 +48,8 @@ export interface DrugItem {
   dosage: string;
   duration: string;
   keywords?: string; // Search aliases (e.g. cough, alkaliser, acidity, pain, fever)
+  formulation?: FormulationType;
+  specialties?: ClinicalSpecialty[];
   minAge?: number;
   maxAge?: number;
   minWeight?: number;
@@ -201,39 +228,162 @@ export const CLINICAL_PROCEDURES_PRESETS: string[] = [
   'Postural Correction & Core Stability Exercises'
 ];
 
-export function searchClinicalDrugs(query: string, catalog: DrugItem[]): DrugItem[] {
+export function normalizeDrugItem(drug: DrugItem): DrugItem & { formulation: FormulationType; specialties: ClinicalSpecialty[] } {
+  // 1. Determine formulation
+  let formulation: FormulationType = drug.formulation || 'tab';
+  if (!drug.formulation) {
+    const name = (drug.genericName || '').toLowerCase();
+    const dose = (drug.dosage || '').toLowerCase();
+    const full = `${name} ${dose}`;
+
+    if (name.startsWith('inj') || /\b(inj|inj\.|injection|infusion|vial|ampoule|amp|iv|im|iv\/im)\b/i.test(full)) {
+      formulation = 'inj';
+    } else if (name.startsWith('cap') || /\b(cap|cap\.|capsule|capsules|softgel)\b/i.test(full)) {
+      formulation = 'cap';
+    } else if (name.startsWith('syp') || /\b(syp|syp\.|syrup|suspension|linctus|expectorant|elixir|liquid)\b/i.test(full)) {
+      formulation = 'syp';
+    } else if (/\b(drop|drops|drop\.|drops\.|eyedrop|eardrop|nasaldrop)\b/i.test(full) || full.includes('eye drop') || full.includes('ear drop') || full.includes('nasal drop')) {
+      formulation = 'drops';
+    } else if (/\b(cream|ointment|oint|oint\.|gel|lotion|shampoo|mouthwash|gargle|spray|patch|paste)\b/i.test(full)) {
+      formulation = 'topical';
+    } else {
+      formulation = 'tab';
+    }
+  }
+
+  // 2. Determine specialties
+  let specialties: ClinicalSpecialty[] = drug.specialties ? [...drug.specialties] : [];
+  if (specialties.length === 0) {
+    const name = (drug.genericName || '').toLowerCase();
+    const kw = (drug.keywords || '').toLowerCase();
+    const text = `${name} ${kw}`;
+
+    const addIf = (spec: ClinicalSpecialty, ...patterns: (string | RegExp)[]) => {
+      const match = patterns.some((p) => (typeof p === 'string' ? text.includes(p) : p.test(text)));
+      if (match && !specialties.includes(spec)) {
+        specialties.push(spec);
+      }
+    };
+
+    // Diuretics
+    addIf('cardiology', /\b(furosemide|frusemide|lasix|torsemide|torsem|spironolactone|lasilactone)\b/i);
+    addIf('hypertension', /\b(furosemide|frusemide|lasix|torsemide|torsem|spironolactone|lasilactone)\b/i);
+    addIf('nephrology', /\b(furosemide|frusemide|lasix|torsemide|torsem|spironolactone|lasilactone)\b/i);
+    addIf('emergency', /\b(furosemide|frusemide|lasix|torsemide)\b/i);
+    addIf('general', /\b(furosemide|frusemide|lasix|torsemide)\b/i);
+
+    // Antidiabetics
+    addIf('endocrinology', /\b(metformin|glimepiride|gliclazide|vildagliptin|teneligliptin|sitagliptin|dapagliflozin|empagliflozin|voglibose|pioglitazone|semaglutide|tirzepatide|insulin|lantus|saroglitazar|glibenclamide|glipizide)\b/i);
+    addIf('diabetes', /\b(metformin|glimepiride|gliclazide|vildagliptin|teneligliptin|sitagliptin|dapagliflozin|empagliflozin|voglibose|pioglitazone|semaglutide|tirzepatide|insulin|lantus|saroglitazar|glibenclamide|glipizide)\b/i);
+    addIf('nephrology', /\b(dapagliflozin|empagliflozin)\b/i); // SGLT2i renal protection
+    addIf('cardiology', /\b(dapagliflozin|empagliflozin)\b/i); // SGLT2i heart failure
+
+    // Thyroid
+    addIf('endocrinology', /\b(thyroid|levothyroxine|thyronorm|eltroxin|carbimazole|neomercazole|methimazole|propylthiouracil)\b/i);
+    addIf('thyroid', /\b(thyroid|levothyroxine|thyronorm|eltroxin|carbimazole|neomercazole|methimazole|propylthiouracil)\b/i);
+
+    // Antihypertensives & Cardiac
+    addIf('hypertension', /\b(telmisartan|amlodipine|cilnidipine|benidipine|enalapril|ramipril|atenolol|metoprolol|nebivolol|methyldopa|sacubitril|valsartan|chlorthalidone|hydrochlorothiazide|nifedipine|prazosin|clonidine|losartan)\b/i);
+    addIf('cardiology', /\b(telmisartan|amlodipine|cilnidipine|benidipine|enalapril|ramipril|atenolol|metoprolol|nebivolol|sacubitril|valsartan|chlorthalidone|hydrochlorothiazide|aspirin|clopidogrel|rosuvastatin|atorvastatin|amiodarone|nitroglycerin|isosorbide|digoxin|diltiazem|verapamil|fenofibrate)\b/i);
+    addIf('nephrology', /\b(telmisartan|amlodipine|cilnidipine|benidipine|enalapril|ramipril|losartan)\b/i); // Diabetic nephropathy & BP control
+
+    // Neurology & Nerve Pain
+    addIf('neurology', /\b(levetiracetam|phenytoin|valproate|divalproex|carbamazepine|clobazam|clonazepam|oxcarbazepine|pregabalin|gabapentin|flunarizine|sumatriptan|methylcobalamin|donepezil|trihexyphenidyl|l-dopa|baclofen|tizanidine)\b/i);
+    addIf('endocrinology', /\b(pregabalin|gabapentin|methylcobalamin|alpha lipoic)\b/i); // Diabetic neuropathy
+    addIf('orthopedics', /\b(pregabalin|gabapentin|methylcobalamin|baclofen|tizanidine)\b/i); // Spine & nerve pain
+
+    // Psychiatry
+    addIf('psychiatry', /\b(alprazolam|clonazepam|diazepam|lorazepam|zolpidem|escitalopram|sertraline|fluoxetine|duloxetine|amitriptyline|quetiapine|olanzapine|risperidone|valproate|divalproex|lithium|lamotrigine|mirtazapine|haloperidol|trihexyphenidyl|melatonin)\b/i);
+
+    // Gastroenterology & Hepatology
+    addIf('gastroenterology', /\b(pantoprazole|rabeprazole|omeprazole|esomeprazole|sucralfate|ranitidine|famotidine|dicyclomine|drotaverine|ondansetron|domperidone|metoclopramide|bacillus clausii|saccharomyces|ors|racecadotril|loperamide|lactulose|peg 3350|itopride|l-ornithine|silymarin|ursodeoxycholic|udca|rifaximin)\b/i);
+    addIf('hepatology', /\b(silymarin|l-ornithine|ornithine|ursodeoxycholic|udca|same|metadoxine|lactulose|rifaximin|tenofovir|entecavir|vitamin k|silybon|hepamerz|ursocol|spironolactone)\b/i);
+
+    // Pulmonology & Allergy
+    addIf('pulmonology', /\b(salbutamol|budesonide|formoterol|fluticasone|ipratropium|duolin|foracort|seretide|montelukast|acebrophylline|doxofylline|dextromethorphan|ambroxol|terbutaline|guaifenesin|codeine|astalin|deriphylline)\b/i);
+
+    // Dermatology
+    addIf('dermatology', /\b(mupirocin|fusidic|silver sulfadiazine|clobetasol|momethasone|clotrimazole|luliconazole|terbinafine|ketoconazole|permethrin|calamine|adapalene|benzoyl peroxide|burnol)\b/i);
+
+    // Orthopedics & Rheumatology
+    addIf('orthopedics', /\b(aceclofenac|diclofenac|etoricoxib|thiocolchicoside|chymoral|tramadol|glucosamine|diacerein|methotrexate|sulfasalazine|hydroxychloroquine|calcium carbonate|calcium citrate|calcitriol|zerodol)\b/i);
+
+    // Gynecology & OBGYN
+    addIf('gynecology', /\b(dydrogesterone|progesterone|tranexamic|norethisterone|ferrous ascorbate|folic acid|clomiphene|cabergoline|isoxsuprine|candid v|clindamycin vaginal|miconazole|oxytocin)\b/i);
+
+    // Dental
+    addIf('dental', /\b(ketorolac|amoxicillin|metronidazole|chlorhexidine|mouthwash|kenacort|oral gel|lignocaine gel|toothpaste|toothache)\b/i);
+
+    // ENT
+    addIf('ent', /\b(ear drop|eardrop|nasal spray|nasal drop|gargle|mouthwash|waxpol|candibiotic|fluticasone|otrivin|betadine|chlorhexidine|xylometazoline|oxymetazoline|nasivion)\b/i);
+
+    // Ophthalmology
+    addIf('ophthalmology', /\b(eye drop|eyedrop|opthalmic|ophthalmic|moxifloxacin|tobramycin|ofloxacin eye|carboxymethylcellulose|olopatadine|timolol|brimonidine|atropine|nepafenac)\b/i);
+
+    // Emergency & Critical Care
+    addIf('emergency', /\b(adrenaline|epinephrine|atropine|dextrose|hydrocortisone|avil|pheniramine|noradrenaline|dopamine|furosemide|lasix|tramadol|ondansetron|deriphylline|normal saline|ringer lactate|ors|diazepam|artesunate|anti-snake|asv|hrig|erig|arv|tetanus|colistin|meropenem|vancomycin)\b/i);
+
+    // Default general fallback if no specific specialty matched
+    if (specialties.length === 0) {
+      specialties.push('general');
+    }
+  }
+
+  return {
+    ...drug,
+    formulation,
+    specialties,
+  };
+}
+
+export function searchClinicalDrugs(
+  query: string,
+  catalog: DrugItem[],
+  specialtyFilter?: string,
+  formulationFilter?: string
+): DrugItem[] {
   const q = query.trim().toLowerCase();
-  if (!q) return catalog;
+  const specFilter = specialtyFilter ? specialtyFilter.trim().toLowerCase() : '';
+  const formFilter = formulationFilter ? formulationFilter.trim().toLowerCase() : '';
 
-  const tokens = q.split(/\s+/).filter(Boolean);
-  const isSpecialtyKey = Object.prototype.hasOwnProperty.call(CLINICAL_SYMPTOM_MAP, q);
+  return catalog.filter((rawDrug) => {
+    const drug = normalizeDrugItem(rawDrug);
 
-  if (isSpecialtyKey) {
-    const targetAliases = CLINICAL_SYMPTOM_MAP[q] || [];
-    return catalog.filter((drug) => {
+    // 1. Specialty Filter check
+    if (specFilter && specFilter !== 'all') {
+      const matchesSpec = drug.specialties.some((s) => s.toLowerCase() === specFilter);
+      if (!matchesSpec) return false;
+    }
+
+    // 2. Formulation Filter check
+    if (formFilter && formFilter !== 'all') {
+      if (drug.formulation !== formFilter) return false;
+    }
+
+    // 3. Search text query check (if user typed something)
+    if (!q) return true;
+
+    // Check if query matches specialty key directly (e.g. user typed "dental" or "ortho" into text box)
+    if (specFilter === '' && Object.prototype.hasOwnProperty.call(CLINICAL_SYMPTOM_MAP, q)) {
+      const targetAliases = CLINICAL_SYMPTOM_MAP[q] || [];
       const name = drug.genericName.toLowerCase();
       const kw = (drug.keywords || '').toLowerCase();
-
       return targetAliases.some((alias) => {
         const escaped = alias.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
         const pattern = new RegExp(`\\b${escaped}\\b`, 'i');
         return pattern.test(name) || pattern.test(kw);
       });
-    });
-  }
+    }
 
-  return catalog.filter((drug) => {
     const name = drug.genericName.toLowerCase();
     const dosage = drug.dosage.toLowerCase();
     const cat = drug.category.toLowerCase();
     const kw = (drug.keywords || '').toLowerCase();
-    const fullText = `${name} ${dosage} ${cat} ${kw}`;
+    const brand = (drug.brandName || '').toLowerCase();
+    const fullText = `${name} ${dosage} ${cat} ${kw} ${brand}`;
 
+    const tokens = q.split(/\s+/).filter(Boolean);
     if (tokens.every((t) => fullText.includes(t))) {
-      return true;
-    }
-
-    if (name.includes(q) || dosage.includes(q) || cat.includes(q) || kw.includes(q)) {
       return true;
     }
 
@@ -241,7 +391,7 @@ export function searchClinicalDrugs(query: string, catalog: DrugItem[]): DrugIte
     return aliasKeywords.some((alias) => {
       const escaped = alias.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
       const pattern = new RegExp(`\\b${escaped}\\b`, 'i');
-      return pattern.test(name) || pattern.test(kw);
+      return pattern.test(name) || pattern.test(kw) || pattern.test(brand);
     });
   });
 }
