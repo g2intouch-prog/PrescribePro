@@ -523,9 +523,9 @@ export default function UserWorkspacePage() {
   const [presets, setPresets] = useState<AdminPresets>(getAdminPresets());
 
   // Specialties & Templates State
-  const [specialties, setSpecialties] = useState<Specialty[]>([]);
-  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<string>('');
-  const [drugCatalog, setDrugCatalog] = useState<DrugItem[]>([]);
+  const [specialties, setSpecialties] = useState<Specialty[]>(getSpecialties());
+  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<string>(getSpecialties()[0]?.id || 'gen-med');
+  const [drugCatalog, setDrugCatalog] = useState<DrugItem[]>(getDrugCatalog());
 
   // Modals State
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
@@ -534,7 +534,7 @@ export default function UserWorkspacePage() {
   const [pediatricSearchQuery, setPediatricSearchQuery] = useState('');
 
   // Clinical Protocols & Order Sets State
-  const [protocols, setProtocols] = useState<ClinicalProtocol[]>([]);
+  const [protocols, setProtocols] = useState<ClinicalProtocol[]>(getClinicalProtocols());
   const [isProtocolsModalOpen, setIsProtocolsModalOpen] = useState(false);
   const [protocolSearchTerm, setProtocolSearchTerm] = useState('');
   const [protocolCategoryFilter, setProtocolCategoryFilter] = useState<string>('all');
@@ -872,6 +872,10 @@ export default function UserWorkspacePage() {
   const [updateStatusMsg, setUpdateStatusMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    setSpecialties(getSpecialties());
+    setDrugCatalog(getDrugCatalog());
+    setProtocols(getClinicalProtocols());
+
     const savedPref = localStorage.getItem('prescribepro_erig_pref');
     if (savedPref) setPreferredErigKey(savedPref);
 
@@ -4803,6 +4807,27 @@ export default function UserWorkspacePage() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setDrugSearchQuery('endocrinology')}
+                  className="px-2.5 py-1 rounded-lg bg-red-100 text-red-950 font-bold hover:bg-red-200 shrink-0"
+                >
+                  🩸 Endocrinology
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('diabetes')}
+                  className="px-2.5 py-1 rounded-lg bg-orange-100 text-orange-950 font-bold hover:bg-orange-200 shrink-0"
+                >
+                  💉 Diabetes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('thyroid')}
+                  className="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-950 font-bold hover:bg-purple-200 shrink-0"
+                >
+                  🦋 Thyroid
+                </button>
+                <button
+                  type="button"
                   onClick={() => setDrugSearchQuery('dental')}
                   className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-950 font-bold hover:bg-amber-200 shrink-0"
                 >
@@ -5127,6 +5152,10 @@ export default function UserWorkspacePage() {
                 {[
                   { key: 'all', label: 'All Protocols' },
                   { key: 'personal', label: '⭐ My Personal Templates' },
+                  { key: 'endocrine', label: '🩸 Endocrinology & Diabetes' },
+                  { key: 'cardio', label: '❤️ Cardio & Hypertension' },
+                  { key: 'psychiatry', label: '🧠 Psychiatry' },
+                  { key: 'neurology', label: '⚡ Neurology' },
                   { key: 'bites', label: '🐾 Rabies & Animal Bites' },
                   { key: 'toxicology', label: '🧪 Toxicology & Poisoning' },
                   { key: 'trauma', label: '⚡ Trauma & Burns' },
@@ -5138,7 +5167,6 @@ export default function UserWorkspacePage() {
                   { key: 'infectious', label: '🦠 Infectious' },
                   { key: 'pediatric', label: '👶 Pediatric' },
                   { key: 'respiratory', label: '🫁 Respiratory' },
-                  { key: 'cardio', label: '❤️ Cardio' },
                   { key: 'gastro', label: '🤢 Gastro' },
                   { key: 'emergency', label: '🚨 ER / Emergency' },
                 ].map((cat) => (
