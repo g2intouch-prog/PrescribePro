@@ -975,7 +975,6 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'gen_semaglutide_oral', genericName: 'Semaglutide 7mg Oral Tablet (Rybelsus 7mg)', category: 'adult', dosage: '1 tablet once daily strictly empty stomach morning with 120ml water 30 mins before tea/food', duration: '30 days', keywords: 'semaglutide rybelsus glp1 agonist weight loss obesity diabetes sugar t2dm', minAge: 18 },
   { id: 'gen_tirzepatide_pen', genericName: 'Tirzepatide 5mg Subcutaneous Pen Injection (Mounjaro 5mg)', category: 'adult', formulation: 'inj', dosage: '0.5ml subcutaneous injection once weekly in abdomen/thigh', duration: '4 weeks (4 pens)', keywords: 'tirzepatide mounjaro zepbound glp1 gip dual agonist weight loss obesity diabetes', minAge: 18 },
   { id: 'gen_saroglitazar4', genericName: 'Saroglitazar 4mg Tablet (Lipaglyn 4mg)', category: 'adult', dosage: '1 tablet once daily at bedtime (0-0-1)', duration: '30 days', keywords: 'saroglitazar lipaglyn ppar agonist diabetic dyslipidemia hypertriglyceridemia fatty liver nafld', minAge: 18 },
-  { id: 'gen_lantus_pen', genericName: 'Insulin Glargine 100 IU/ml Subcutaneous Pen 3ml (Lantus / Basalog Pen)', category: 'all', formulation: 'inj', dosage: 'Subcutaneous injection once daily at fixed bedtime hour (0-0-1)', duration: '30 days', keywords: 'insulin glargine lantus basalog basal insulin pen long acting diabetes t1dm t2dm' },
 
   // ==========================================
   // HYPERTENSION & CARDIAC DRUGS
@@ -985,19 +984,14 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'gen_telmi_am', genericName: 'Telmisartan 40mg + Amlodipine 5mg Tablet (Telma-AM)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'telmisartan amlodipine telma am arb ccb dual therapy hypertension high bp', minAge: 18 },
   { id: 'gen_telmi_h', genericName: 'Telmisartan 40mg + Hydrochlorothiazide 12.5mg Tablet (Telma-H)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'telmisartan hydrochlorothiazide telma h arb diuretic hypertension high bp', minAge: 18 },
   { id: 'gen_telmi_ct', genericName: 'Telmisartan 40mg + Chlorthalidone 12.5mg Tablet (Telma-CT)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'telmisartan chlorthalidone telma ct arb diuretic hypertension high bp', minAge: 18 },
-  { id: 'gen_telmi_cl', genericName: 'Telmisartan 40mg + Cilnidipine 10mg Tablet (Telma-CL)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'telmisartan cilnidipine telma cl arb ccb hypertension high bp edema free', minAge: 18 },
   { id: 'gen_amlong5', genericName: 'Amlodipine 5mg Tablet (Amlong 5 / Stamlo 5)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'amlodipine amlong 5 stamlo 5 ccb calcium channel blocker hypertension high bp angina', minAge: 18 },
-  { id: 'gen_cilacar10', genericName: 'Cilnidipine 10mg Tablet (Cilacar 10)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'cilnidipine cilacar 10 ccb n-type calcium blocker hypertension high bp pedal edema free', minAge: 18 },
   { id: 'gen_benidipine4', genericName: 'Benidipine 4mg Tablet (Benitowa 4)', category: 'adult', dosage: '1 tablet twice daily after meals (1-0-1)', duration: '30 days', keywords: 'benidipine benitowa ccb renal protective hypertension high bp ckd', minAge: 18 },
   { id: 'gen_metoprolol_xl25', genericName: 'Metoprolol Succinate XL 25mg Tablet (Betaloc XL 25)', category: 'adult', dosage: '1 tablet once daily morning after food (1-0-0)', duration: '30 days', keywords: 'metoprolol betaloc xl 25 beta blocker hypertension high bp angina CAD heart failure', minAge: 18 },
   { id: 'gen_metoprolol_xl50', genericName: 'Metoprolol Succinate XL 50mg Tablet (Betaloc XL 50)', category: 'adult', dosage: '1 tablet once daily morning after food (1-0-0)', duration: '30 days', keywords: 'metoprolol betaloc xl 50 beta blocker hypertension high bp angina CAD heart failure', minAge: 18 },
-  { id: 'gen_nebicard5', genericName: 'Nebivolol 5mg Tablet (Nebicard 5)', category: 'adult', dosage: '1 tablet once daily morning after food (1-0-0)', duration: '30 days', keywords: 'nebivolol nebicard 5 beta 1 blocker nitric oxide hypertension high bp', minAge: 18 },
-  { id: 'gen_vymada50', genericName: 'Sacubitril 24mg + Valsartan 26mg Tablet (Vymada 50mg)', category: 'adult', dosage: '1 tablet twice daily after meals (1-0-1)', duration: '30 days', keywords: 'sacubitril valsartan vymada 50 arni heart failure hfref ejection fraction hypertension', minAge: 18 },
   { id: 'gen_methyldopa250', genericName: 'Methyldopa 250mg Tablet (Alphadopa 250)', category: 'adult', dosage: '1 tablet 3 times daily after meals', duration: '30 days', keywords: 'methyldopa alphadopa pregnancy hypertension preeclampsia gestational high bp safe in pregnancy', minAge: 18 },
   { id: 'fdc39', genericName: 'Telmisartan + Hydrochlorothiazide', category: 'adult', dosage: '40mg/12.5mg (1-0-0 morning)', duration: '30 days', keywords: 'telmisartan hydrochlorothiazide telma-h hypertension high bp blood pressure antihypertensive', minAge: 18, minWeight: 40 },
   { id: 'fdc40', genericName: 'Amlodipine + Atenolol', category: 'adult', dosage: '5mg/50mg (1-0-0 morning)', duration: '30 days', keywords: 'amlodipine atenolol amcard-at hypertension high bp blood pressure antihypertensive', minAge: 18, minWeight: 40 },
   { id: 'fdc41', genericName: 'Losartan + Hydrochlorothiazide', category: 'adult', dosage: '50mg/12.5mg (1-0-0 morning)', duration: '30 days', keywords: 'losartan hydrochlorothiazide covance-d hypertension high bp blood pressure antihypertensive', minAge: 18, minWeight: 40 },
-  { id: 'fdc42', genericName: 'Sacubitril + Valsartan (ARNI)', category: 'adult', dosage: '50mg (1-0-1 after food)', duration: '30 days', keywords: 'sacubitril valsartan vymada arni heart failure hypertension high bp cardiology', minAge: 18, minWeight: 40 },
   { id: 'fdc43', genericName: 'Aspirin + Clopidogrel', category: 'adult', dosage: '75mg/75mg (0-1-0 after lunch)', duration: '30 days', keywords: 'aspirin clopidogrel ecosprin-av antiplatelet CAD stroke heart cardiology', minAge: 18, minWeight: 40 },
   { id: 'fdc44', genericName: 'Rosuvastatin + Fenofibrate', category: 'adult', dosage: '10mg/160mg (0-0-1 at night)', duration: '30 days', keywords: 'rosuvastatin fenofibrate lipid cholesterol triglycerides cardiology', minAge: 18 },
   { id: 'fdc45', genericName: 'Metformin + Glimepiride', category: 'adult', dosage: '500mg/1mg (1-0-1 before food)', duration: '30 days', keywords: 'metformin glimepiride amaryl-m glycomet-gp diabetes blood sugar t2dm antidiabetic endocrinology', minAge: 18, minWeight: 40 },
@@ -4653,6 +4647,23 @@ export function saveClinicalProtocols(data: ClinicalProtocol[]): void {
   }
 }
 
+const isPurgedDrug = (item: DrugItem) => {
+  const text = `${item.genericName} ${item.keywords || ''}`.toLowerCase();
+  return (
+    text.includes('cilnidipine') ||
+    text.includes('glargine') ||
+    text.includes('nebivolol') ||
+    text.includes('sacubitril') ||
+    text.includes('valsartan') ||
+    text.includes('cilacar') ||
+    text.includes('nebicard') ||
+    text.includes('lantus') ||
+    text.includes('basalog') ||
+    text.includes('vymada') ||
+    text.includes('cidmus')
+  );
+};
+
 export function getDrugCatalog(): DrugItem[] {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem(DRUGS_STORAGE_KEY);
@@ -4660,9 +4671,13 @@ export function getDrugCatalog(): DrugItem[] {
       try {
         const parsed: DrugItem[] = JSON.parse(saved);
         const map = new Map<string, DrugItem>();
-        COMPREHENSIVE_GENERIC_DRUGS.forEach((item) => map.set(item.id, normalizeDrugItem(item)));
+        COMPREHENSIVE_GENERIC_DRUGS.forEach((item) => {
+          if (!isPurgedDrug(item)) {
+            map.set(item.id, normalizeDrugItem(item));
+          }
+        });
         parsed.forEach((item) => {
-          if (item && item.id) {
+          if (item && item.id && !isPurgedDrug(item)) {
             const defaultItem = COMPREHENSIVE_GENERIC_DRUGS.find((d) => d.id === item.id);
             if (defaultItem) {
               map.set(
@@ -4682,6 +4697,7 @@ export function getDrugCatalog(): DrugItem[] {
         // Deduplicate map values by normalized genericName & dosage
         const deduplicatedMap = new Map<string, DrugItem>();
         for (const item of map.values()) {
+          if (isPurgedDrug(item)) continue;
           const key = `${item.genericName.trim().toLowerCase()}_${item.dosage.trim().toLowerCase()}`;
           if (!deduplicatedMap.has(key)) {
             deduplicatedMap.set(key, item);
@@ -4696,6 +4712,7 @@ export function getDrugCatalog(): DrugItem[] {
   // Fallback default catalog deduplicated
   const deduplicatedMap = new Map<string, DrugItem>();
   for (const item of COMPREHENSIVE_GENERIC_DRUGS) {
+    if (isPurgedDrug(item)) continue;
     const norm = normalizeDrugItem(item);
     const key = `${norm.genericName.trim().toLowerCase()}_${norm.dosage.trim().toLowerCase()}`;
     if (!deduplicatedMap.has(key)) {

@@ -601,6 +601,93 @@ export default function UserWorkspacePage() {
     advice: '',
   });
 
+  // Drug Catalog Editor Popup State
+  const [isDrugEditorOpen, setIsDrugEditorOpen] = useState(false);
+  const [editingDrug, setEditingDrug] = useState<{
+    id?: string;
+    genericName: string;
+    category: 'adult' | 'pediatric' | 'infant' | 'all';
+    dosage: string;
+    duration: string;
+    keywords: string;
+  }>({
+    genericName: '',
+    category: 'adult',
+    dosage: '',
+    duration: '5 days',
+    keywords: '',
+  });
+
+  const handleOpenAddDrug = () => {
+    setEditingDrug({
+      genericName: '',
+      category: 'adult',
+      dosage: '',
+      duration: '5 days',
+      keywords: '',
+    });
+    setIsDrugEditorOpen(true);
+  };
+
+  const handleOpenEditDrug = (drug: DrugItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setEditingDrug({
+      id: drug.id,
+      genericName: drug.genericName || '',
+      category: drug.category || 'adult',
+      dosage: drug.dosage || '',
+      duration: drug.duration || '5 days',
+      keywords: drug.keywords || '',
+    });
+    setIsDrugEditorOpen(true);
+  };
+
+  const handleSaveDrugEditor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDrug.genericName || !editingDrug.genericName.trim()) {
+      alert('Please enter a generic drug name.');
+      return;
+    }
+
+    const newDrugItem: DrugItem = {
+      id: editingDrug.id || `custom_drug_${Date.now()}`,
+      genericName: editingDrug.genericName.trim(),
+      category: editingDrug.category || 'adult',
+      dosage: editingDrug.dosage?.trim() || '1 tablet once daily',
+      duration: editingDrug.duration?.trim() || '5 days',
+      keywords: editingDrug.keywords?.trim() || '',
+    };
+
+    let updatedCatalog: DrugItem[];
+    if (editingDrug.id) {
+      updatedCatalog = drugCatalog.map((d) => (d.id === editingDrug.id ? newDrugItem : d));
+    } else {
+      updatedCatalog = [newDrugItem, ...drugCatalog];
+    }
+
+    saveDrugCatalog(updatedCatalog);
+    setDrugCatalog(getDrugCatalog());
+    setIsDrugEditorOpen(false);
+  };
+
+  const handleDeleteDrug = (drugId: string, drugName: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (confirm(`Are you sure you want to delete "${drugName}" from your drug catalog?`)) {
+      const updatedCatalog = drugCatalog.filter((d) => d.id !== drugId);
+      saveDrugCatalog(updatedCatalog);
+      setDrugCatalog(getDrugCatalog());
+    }
+  };
+
+  const handleResetDrugCatalogToDefault = () => {
+    if (confirm('Are you sure you want to reset your generic drug catalog back to original default database? Any custom added/edited drugs will be cleared.')) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('prescribepro_drugs_v1');
+      }
+      setDrugCatalog(getDrugCatalog());
+    }
+  };
+
   const handleOpenNewTemplateEditor = (specialtyId: string) => {
     setTemplateEditorSpecialtyId(specialtyId);
     setEditingTemplate({
@@ -3864,14 +3951,24 @@ export default function UserWorkspacePage() {
 
             {/* INTERACTIVE ADDITIONAL DRUGS CHECKLIST (TICK TO APPEND TO RX) */}
             <div className="flex-1 overflow-hidden flex flex-col space-y-1.5 pt-1 border-t border-slate-200">
-              <button
-                type="button"
-                onClick={() => setIsPharmacopeiaModalOpen(true)}
-                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition transform active:scale-98 shrink-0"
-              >
-                <Pill className="h-4 w-4" />
-                <span>💊 Open Full Generic Drug Pharmacopeia (Popup Modal)</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setIsPharmacopeiaModalOpen(true)}
+                  className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition transform active:scale-98 shrink-0"
+                >
+                  <Pill className="h-4 w-4" />
+                  <span>💊 Open Pharmacopeia</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenAddDrug}
+                  className="py-2 px-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs shadow transition shrink-0 flex items-center gap-1"
+                  title="Manually Add New Generic Drug to Catalog"
+                >
+                  <span>➕ Add Drug</span>
+                </button>
+              </div>
 
               {/* PRESCRIBING MODE TOGGLE STRIP (GENERIC VS BRAND) */}
               <div className={`p-1.5 rounded-xl border text-[10px] shrink-0 space-y-1 ${
@@ -4871,12 +4968,29 @@ export default function UserWorkspacePage() {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => setIsPharmacopeiaModalOpen(false)}
-                className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 hover:text-slate-900 font-bold text-xs transition"
-              >
-                ✕ Close
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleOpenAddDrug}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition shrink-0 flex items-center gap-1"
+                >
+                  <span>➕ Add New Drug</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetDrugCatalogToDefault}
+                  className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 font-bold text-xs transition shrink-0"
+                  title="Restore default database catalog"
+                >
+                  <span>🔄 Reset Catalog</span>
+                </button>
+                <button
+                  onClick={() => setIsPharmacopeiaModalOpen(false)}
+                  className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 hover:text-slate-900 font-bold text-xs transition"
+                >
+                  ✕ Close
+                </button>
+              </div>
             </div>
 
             {/* MODAL SEARCH & SPECIALTY FILTER STRIP */}
@@ -5100,11 +5214,29 @@ export default function UserWorkspacePage() {
                           <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-snug">
                             {drug.genericName}
                           </h4>
-                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold shrink-0 ${
-                            isChecked ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                          }`}>
-                            {isChecked ? '✓ Added' : '+ Add'}
-                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenEditDrug(drug, e)}
+                              className="p-1 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-800 dark:bg-blue-950 dark:text-blue-200 text-[10px] font-bold transition"
+                              title="Edit this generic drug"
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteDrug(drug.id, drug.genericName, e)}
+                              className="p-1 rounded-lg bg-red-100 hover:bg-red-200 text-red-800 dark:bg-red-950 dark:text-red-200 text-[10px] font-bold transition"
+                              title="Delete this generic drug"
+                            >
+                              🗑️
+                            </button>
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold shrink-0 ${
+                              isChecked ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}>
+                              {isChecked ? '✓ Added' : '+ Add'}
+                            </span>
+                          </div>
                         </div>
                         <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
                           Dose: <strong className="text-slate-800 dark:text-slate-200">{drug.dosage}</strong>
@@ -5256,6 +5388,109 @@ export default function UserWorkspacePage() {
                   className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md"
                 >
                   Save Template
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* GENERIC DRUG EDITOR MODAL */}
+      {isDrugEditorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white text-slate-900 rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+            <div className="p-4 border-b border-slate-200 bg-emerald-700 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💊</span>
+                <h3 className="font-extrabold text-sm">
+                  {editingDrug.id ? 'Edit Generic Drug Details' : 'Add New Generic Drug'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDrugEditorOpen(false)}
+                className="p-1 rounded-lg bg-emerald-800 hover:bg-emerald-600 text-white font-bold text-xs"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveDrugEditor} className="p-4 space-y-3 overflow-y-auto text-xs">
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Generic Drug Name & Brand Alias *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingDrug.genericName || ''}
+                  onChange={(e) => setEditingDrug({ ...editingDrug, genericName: e.target.value })}
+                  placeholder="e.g. Cefixime 200mg Tablet (Taxim-O)"
+                  className="w-full rounded-xl border border-slate-300 p-2 font-bold bg-white text-slate-900"
+                  autoFocus
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Target Patient Category</label>
+                  <select
+                    value={editingDrug.category || 'adult'}
+                    onChange={(e) => setEditingDrug({ ...editingDrug, category: e.target.value as any })}
+                    className="w-full rounded-xl border border-slate-300 p-2 font-semibold bg-white text-slate-900"
+                  >
+                    <option value="adult">Adult</option>
+                    <option value="pediatric">Pediatric</option>
+                    <option value="infant">Infant</option>
+                    <option value="all">Universal / All</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-900 mb-1">Standard Duration</label>
+                  <input
+                    type="text"
+                    value={editingDrug.duration || ''}
+                    onChange={(e) => setEditingDrug({ ...editingDrug, duration: e.target.value })}
+                    placeholder="e.g. 5 days or 30 days"
+                    className="w-full rounded-xl border border-slate-300 p-2 font-semibold bg-white text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Standard Regimen & Directions</label>
+                <input
+                  type="text"
+                  value={editingDrug.dosage || ''}
+                  onChange={(e) => setEditingDrug({ ...editingDrug, dosage: e.target.value })}
+                  placeholder="e.g. 1 tablet twice daily after food (1-0-1)"
+                  className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-900 mb-1">Search Keywords / Symptom Aliases</label>
+                <input
+                  type="text"
+                  value={editingDrug.keywords || ''}
+                  onChange={(e) => setEditingDrug({ ...editingDrug, keywords: e.target.value })}
+                  placeholder="e.g. cefixime taxim-o antibiotic fever infection dysuria"
+                  className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsDrugEditorOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md"
+                >
+                  Save Generic Drug
                 </button>
               </div>
             </form>
