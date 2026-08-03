@@ -203,7 +203,22 @@ export const INDIAN_BRAND_TO_GENERIC_MAP: Record<string, string[]> = {
   'fosamax': ['alendronate', 'bisphosphonate'],
   'reclast': ['zoledronic acid', 'bisphosphonate'],
   'forteo': ['teriparatide', 'parathyroid'],
-  'prolia': ['denosumab', 'monoclonal-antibody']
+  'prolia': ['denosumab', 'monoclonal-antibody'],
+  'risperidone': ['risperidone', 'atypical-antipsychotic'],
+  'respidon': ['risperidone', 'atypical-antipsychotic'],
+  'oleanz': ['olanzapine', 'atypical-antipsychotic'],
+  'serenace': ['haloperidol', 'antipsychotic'],
+  'lithosun': ['lithium', 'mood-stabilizer'],
+  'sibelium': ['flunarizine', 'calcium-channel-blocker'],
+  'suminat': ['sumatriptan', 'triptan'],
+  'rifagut': ['rifaximin', 'antibiotic'],
+  'duphalac': ['lactulose', 'laxative'],
+  'k-bind': ['calcium-polystyrene-sulfonate', 'potassium-binder'],
+  'orofer': ['ferrous-ascorbate', 'iron'],
+  'venofer': ['iron-sucrose', 'iron'],
+  'pletal': ['cilostazol', 'antiplatelet'],
+  'trental': ['pentoxifylline', 'vasodilator'],
+  'refresh-tears': ['carboxymethylcellulose', 'ophthalmic']
 };
 
 // EXHAUSTIVE OFFLINE DRUG-DRUG INTERACTION RULES DATABASE

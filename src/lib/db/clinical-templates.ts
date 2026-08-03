@@ -738,6 +738,54 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'fdc36', genericName: 'Ambroxol + Terbutaline + Guaifenesin (Expectorant)', category: 'adult', dosage: '10ml (t.d.s after food)', duration: '5 days', minAge: 12 },
   { id: 'fdc37', genericName: 'Dextromethorphan + Chlorpheniramine + Phenylephrine', category: 'adult', dosage: '5ml to 10ml (t.d.s)', duration: '5 days', minAge: 6 },
   { id: 'fdc38', genericName: 'Telmisartan + Amlodipine', category: 'adult', dosage: '40mg/5mg (1-0-0 morning)', duration: '30 days', minAge: 18, minWeight: 40 },
+
+  // ==========================================
+  // ENDOCRINOLOGY, DIABETES & METABOLIC DRUGS
+  // ==========================================
+  { id: 'gen_glimepiride1', genericName: 'Glimepiride 1mg Tablet (Amaryl 1 / Glimestar 1)', category: 'adult', dosage: '1 tablet once daily strictly before breakfast (1-0-0)', duration: '30 days', keywords: 'glimepiride 1mg amaryl 1 glimestar 1 sulfonylurea diabetes blood sugar t2dm hypoglycemia', minAge: 18 },
+  { id: 'gen_glimepiride2', genericName: 'Glimepiride 2mg Tablet (Amaryl 2 / Glimestar 2)', category: 'adult', dosage: '1 tablet once daily strictly before breakfast (1-0-0)', duration: '30 days', keywords: 'glimepiride 2mg amaryl 2 glimestar 2 sulfonylurea diabetes blood sugar t2dm', minAge: 18 },
+  { id: 'gen_glimepiride3', genericName: 'Glimepiride 3mg Tablet (Amaryl 3 / Glimestar 3)', category: 'adult', dosage: '1 tablet once daily strictly before breakfast (1-0-0)', duration: '30 days', keywords: 'glimepiride 3mg amaryl 3 glimestar 3 sulfonylurea diabetes blood sugar t2dm', minAge: 18 },
+  { id: 'gen_glimepiride4', genericName: 'Glimepiride 4mg Tablet (Amaryl 4 / Glimestar 4)', category: 'adult', dosage: '1 tablet once daily strictly before breakfast (1-0-0)', duration: '30 days', keywords: 'glimepiride 4mg amaryl 4 glimestar 4 sulfonylurea diabetes blood sugar t2dm', minAge: 18 },
+  { id: 'gen_glimepiride1_met500', genericName: 'Glimepiride 1mg + Metformin 500mg SR Tablet (Amaryl M1 / Glimestar M1)', category: 'adult', dosage: '1 tablet once daily after breakfast (1-0-0)', duration: '30 days', keywords: 'glimepiride metformin 1mg 500mg amaryl m1 glimestar m1 glycomet gp 1 diabetes t2dm', minAge: 18 },
+  { id: 'gen_glimepiride2_met500', genericName: 'Glimepiride 2mg + Metformin 500mg SR Tablet (Amaryl M2 / Glimestar M2)', category: 'adult', dosage: '1 tablet twice daily after meals (1-0-1)', duration: '30 days', keywords: 'glimepiride metformin 2mg 500mg amaryl m2 glimestar m2 glycomet gp 2 diabetes t2dm', minAge: 18 },
+  { id: 'gen_glimepiride1_met1000', genericName: 'Glimepiride 1mg + Metformin 1000mg SR Tablet (Amaryl M1 Forte)', category: 'adult', dosage: '1 tablet once daily after breakfast (1-0-0)', duration: '30 days', keywords: 'glimepiride metformin 1mg 1000mg amaryl m1 forte glimestar m1 forte diabetes t2dm', minAge: 18 },
+  { id: 'gen_glimepiride2_met1000', genericName: 'Glimepiride 2mg + Metformin 1000mg SR Tablet (Amaryl M2 Forte)', category: 'adult', dosage: '1 tablet twice daily after meals (1-0-1)', duration: '30 days', keywords: 'glimepiride metformin 2mg 1000mg amaryl m2 forte glimestar m2 forte diabetes t2dm', minAge: 18 },
+  { id: 'gen_glimepiride_met_pio', genericName: 'Glimepiride 2mg + Metformin 500mg + Pioglitazone 15mg Tablet (Tripride 2)', category: 'adult', dosage: '1 tablet once daily after breakfast', duration: '30 days', keywords: 'glimepiride metformin pioglitazone tripride senform trio triple drug diabetes t2dm', minAge: 18 },
+  { id: 'gen_glimepiride_met_vog', genericName: 'Glimepiride 2mg + Metformin 500mg + Voglibose 0.2mg Tablet (Amaryl MV 2)', category: 'adult', dosage: '1 tablet twice daily before meals (1-0-1)', duration: '30 days', keywords: 'glimepiride metformin voglibose amaryl mv2 glimestar pm2 triple combination diabetes t2dm', minAge: 18 },
+  { id: 'gen_gliclazide30_mr', genericName: 'Gliclazide 30mg MR Tablet (Diamicron MR 30)', category: 'adult', dosage: '1 tablet once daily with breakfast (1-0-0)', duration: '30 days', keywords: 'gliclazide 30mg diamicron mr sulfonylurea diabetes sugar t2dm', minAge: 18 },
+  { id: 'gen_gliclazide60_mr', genericName: 'Gliclazide 60mg MR Tablet (Diamicron MR 60 / Glycinorm 60)', category: 'adult', dosage: '1 tablet once daily with breakfast (1-0-0)', duration: '30 days', keywords: 'gliclazide 60mg diamicron mr glycinorm 60 sulfonylurea diabetes sugar t2dm', minAge: 18 },
+  { id: 'gen_gliclazide_met500', genericName: 'Gliclazide 60mg + Metformin 500mg SR Tablet (Diamicron Mex 500)', category: 'adult', dosage: '1 tablet once daily with breakfast (1-0-0)', duration: '30 days', keywords: 'gliclazide metformin 60mg 500mg diamicron mex glycinorm m60 diabetes t2dm', minAge: 18 },
+  { id: 'gen_vildagliptin50', genericName: 'Vildagliptin 50mg Tablet (Galvus 50 / Jalra 50 / Zomelis 50)', category: 'adult', dosage: '1 tablet twice daily before food (1-0-1)', duration: '30 days', keywords: 'vildagliptin galvus jalra zomelis dpp4 inhibitor diabetes blood sugar t2dm', minAge: 18 },
+  { id: 'gen_vilda_met500', genericName: 'Vildagliptin 50mg + Metformin 500mg Tablet (Galvus Met 50/500)', category: 'adult', dosage: '1 tablet twice daily after meals (1-0-1)', duration: '30 days', keywords: 'vildagliptin metformin galvus met jalra m zomelis met dpp4 biguanide diabetes t2dm', minAge: 18 },
+  { id: 'gen_sitagliptin100', genericName: 'Sitagliptin 100mg Tablet (Januvia 100)', category: 'adult', dosage: '1 tablet once daily after food (1-0-0)', duration: '30 days', keywords: 'sitagliptin januvia dpp4 inhibitor diabetes blood sugar t2dm', minAge: 18 },
+  { id: 'gen_sita_met500', genericName: 'Sitagliptin 50mg + Metformin 500mg Tablet (Janumet 50/500)', category: 'adult', dosage: '1 tablet twice daily after meals (1-0-1)', duration: '30 days', keywords: 'sitagliptin metformin janumet dpp4 biguanide diabetes t2dm', minAge: 18 },
+  { id: 'gen_teneligliptin20', genericName: 'Teneligliptin 20mg Tablet (Tenepure 20 / Zita Plus 20)', category: 'adult', dosage: '1 tablet once daily before breakfast (1-0-0)', duration: '30 days', keywords: 'teneligliptin tenepure zita plus dpp4 inhibitor diabetes blood sugar t2dm', minAge: 18 },
+  { id: 'gen_teneli_met500', genericName: 'Teneligliptin 20mg + Metformin 500mg SR Tablet (Tenepure-M 20)', category: 'adult', dosage: '1 tablet twice daily after meals (1-0-1)', duration: '30 days', keywords: 'teneligliptin metformin tenepure m zita plus m dpp4 biguanide diabetes t2dm', minAge: 18 },
+  { id: 'gen_dapagliflozin10', genericName: 'Dapagliflozin 10mg Tablet (Forxiga 10)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'dapagliflozin forxiga sglt2 inhibitor kidney heart failure diabetes blood sugar t2dm', minAge: 18 },
+  { id: 'gen_dapa_met500', genericName: 'Dapagliflozin 10mg + Metformin 500mg SR Tablet (Forxiga-M 10/500)', category: 'adult', dosage: '1 tablet once daily after breakfast (1-0-0)', duration: '30 days', keywords: 'dapagliflozin metformin forxiga m dapa m sglt2 biguanide diabetes t2dm', minAge: 18 },
+  { id: 'gen_empagliflozin25', genericName: 'Empagliflozin 25mg Tablet (Jardiance 25)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'empagliflozin jardiance sglt2 inhibitor heart failure ckd diabetes t2dm', minAge: 18 },
+  { id: 'gen_semaglutide_oral', genericName: 'Semaglutide 7mg Oral Tablet (Rybelsus 7mg)', category: 'adult', dosage: '1 tablet once daily strictly empty stomach morning with 120ml water 30 mins before tea/food', duration: '30 days', keywords: 'semaglutide rybelsus glp1 agonist weight loss obesity diabetes sugar t2dm', minAge: 18 },
+  { id: 'gen_tirzepatide_pen', genericName: 'Tirzepatide 5mg Subcutaneous Pen Injection (Mounjaro 5mg)', category: 'adult', dosage: '0.5ml subcutaneous injection once weekly in abdomen/thigh', duration: '4 weeks (4 pens)', keywords: 'tirzepatide mounjaro zepbound glp1 gip dual agonist weight loss obesity diabetes', minAge: 18 },
+  { id: 'gen_saroglitazar4', genericName: 'Saroglitazar 4mg Tablet (Lipaglyn 4mg)', category: 'adult', dosage: '1 tablet once daily at bedtime (0-0-1)', duration: '30 days', keywords: 'saroglitazar lipaglyn ppar agonist diabetic dyslipidemia hypertriglyceridemia fatty liver nafld', minAge: 18 },
+  { id: 'gen_lantus_pen', genericName: 'Insulin Glargine 100 IU/ml Subcutaneous Pen 3ml (Lantus / Basalog Pen)', category: 'all', dosage: 'Subcutaneous injection once daily at fixed bedtime hour (0-0-1)', duration: '30 days', keywords: 'insulin glargine lantus basalog basal insulin pen long acting diabetes t1dm t2dm' },
+
+  // ==========================================
+  // HYPERTENSION & CARDIAC DRUGS
+  // ==========================================
+  { id: 'gen_telmi40', genericName: 'Telmisartan 40mg Tablet (Telma 40 / Micardis)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'telmisartan telma 40 micardis arb hypertension high bp blood pressure ckd', minAge: 18 },
+  { id: 'gen_telmi80', genericName: 'Telmisartan 80mg Tablet (Telma 80)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'telmisartan telma 80 arb hypertension high bp blood pressure ckd', minAge: 18 },
+  { id: 'gen_telmi_am', genericName: 'Telmisartan 40mg + Amlodipine 5mg Tablet (Telma-AM)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'telmisartan amlodipine telma am arb ccb dual therapy hypertension high bp', minAge: 18 },
+  { id: 'gen_telmi_h', genericName: 'Telmisartan 40mg + Hydrochlorothiazide 12.5mg Tablet (Telma-H)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'telmisartan hydrochlorothiazide telma h arb diuretic hypertension high bp', minAge: 18 },
+  { id: 'gen_telmi_ct', genericName: 'Telmisartan 40mg + Chlorthalidone 12.5mg Tablet (Telma-CT)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'telmisartan chlorthalidone telma ct arb diuretic hypertension high bp', minAge: 18 },
+  { id: 'gen_telmi_cl', genericName: 'Telmisartan 40mg + Cilnidipine 10mg Tablet (Telma-CL)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'telmisartan cilnidipine telma cl arb ccb hypertension high bp edema free', minAge: 18 },
+  { id: 'gen_amlong5', genericName: 'Amlodipine 5mg Tablet (Amlong 5 / Stamlo 5)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'amlodipine amlong 5 stamlo 5 ccb calcium channel blocker hypertension high bp angina', minAge: 18 },
+  { id: 'gen_cilacar10', genericName: 'Cilnidipine 10mg Tablet (Cilacar 10)', category: 'adult', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'cilnidipine cilacar 10 ccb n-type calcium blocker hypertension high bp pedal edema free', minAge: 18 },
+  { id: 'gen_benidipine4', genericName: 'Benidipine 4mg Tablet (Benitowa 4)', category: 'adult', dosage: '1 tablet twice daily after meals (1-0-1)', duration: '30 days', keywords: 'benidipine benitowa ccb renal protective hypertension high bp ckd', minAge: 18 },
+  { id: 'gen_metoprolol_xl25', genericName: 'Metoprolol Succinate XL 25mg Tablet (Betaloc XL 25)', category: 'adult', dosage: '1 tablet once daily morning after food (1-0-0)', duration: '30 days', keywords: 'metoprolol betaloc xl 25 beta blocker hypertension high bp angina CAD heart failure', minAge: 18 },
+  { id: 'gen_metoprolol_xl50', genericName: 'Metoprolol Succinate XL 50mg Tablet (Betaloc XL 50)', category: 'adult', dosage: '1 tablet once daily morning after food (1-0-0)', duration: '30 days', keywords: 'metoprolol betaloc xl 50 beta blocker hypertension high bp angina CAD heart failure', minAge: 18 },
+  { id: 'gen_nebicard5', genericName: 'Nebivolol 5mg Tablet (Nebicard 5)', category: 'adult', dosage: '1 tablet once daily morning after food (1-0-0)', duration: '30 days', keywords: 'nebivolol nebicard 5 beta 1 blocker nitric oxide hypertension high bp', minAge: 18 },
+  { id: 'gen_vymada50', genericName: 'Sacubitril 24mg + Valsartan 26mg Tablet (Vymada 50mg)', category: 'adult', dosage: '1 tablet twice daily after meals (1-0-1)', duration: '30 days', keywords: 'sacubitril valsartan vymada 50 arni heart failure hfref ejection fraction hypertension', minAge: 18 },
+  { id: 'gen_methyldopa250', genericName: 'Methyldopa 250mg Tablet (Alphadopa 250)', category: 'adult', dosage: '1 tablet 3 times daily after meals', duration: '30 days', keywords: 'methyldopa alphadopa pregnancy hypertension preeclampsia gestational high bp safe in pregnancy', minAge: 18 },
   { id: 'fdc39', genericName: 'Telmisartan + Hydrochlorothiazide', category: 'adult', dosage: '40mg/12.5mg (1-0-0 morning)', duration: '30 days', minAge: 18, minWeight: 40 },
   { id: 'fdc40', genericName: 'Amlodipine + Atenolol', category: 'adult', dosage: '5mg/50mg (1-0-0 morning)', duration: '30 days', minAge: 18, minWeight: 40 },
   { id: 'fdc41', genericName: 'Losartan + Hydrochlorothiazide', category: 'adult', dosage: '50mg/12.5mg (1-0-0 morning)', duration: '30 days', minAge: 18, minWeight: 40 },
@@ -1396,6 +1444,155 @@ const DEFAULT_SPECIALTIES: Specialty[] = [
           'Spironolactone 50mg Tablet (Aldactone) (1-0-0 morning) x 60 days',
         ],
         notes: 'Advised lifestyle modification & monthly menstrual cycle tracking.',
+      },
+    ],
+  },
+  {
+    id: 'psychiatry-mental-health',
+    name: 'Psychiatry & Mental Health',
+    templates: [
+      {
+        id: 'major-depression-anxiety',
+        name: 'Major Depressive Disorder & Generalized Anxiety Protocol',
+        tests: [
+          'Thyroid Profile (TSH - rule out organic hypothyroidism)',
+          'Serum Vitamin B12 & Vitamin D3 Levels',
+          'Baseline CBC & Electrolytes',
+        ],
+        advice: [
+          'Cognitive Behavioral Therapy (CBT) & Counseling Referral',
+          'Daily 30-minute outdoor physical activity & sleep hygiene',
+          'Avoid abrupt drug discontinuation (risk of withdrawal/relapse)',
+        ],
+        drugs: [
+          'Escitalopram 10mg Tablet (Nexito) (1-0-0 morning after food) x 30 days',
+          'Sertraline 50mg Tablet (Zosert) (1-0-0 morning) x 30 days',
+          'Clonazepam 0.25mg Tablet (Zapiz) (0-0-1 SOS for severe panic/insomnia) x 10 days',
+        ],
+        notes: 'Antidepressant therapeutic onset takes 2-4 weeks. Follow-up after 14 days.',
+      },
+      {
+        id: 'schizophrenia-psychosis-care',
+        name: 'Schizophrenia & Acute Psychosis Protocol',
+        tests: [
+          'Fasting Blood Sugar & Lipid Profile (Metabolic Monitoring)',
+          'Baseline ECG (QTc Interval Assessment)',
+          'Serum Prolactin Level',
+        ],
+        advice: [
+          'Caregiver education on strict medication compliance',
+          'Regular monitoring for extrapyramidal symptoms or weight gain',
+        ],
+        drugs: [
+          'Risperidone 2mg Tablet (Respidon) (1-0-1 after food) x 30 days',
+          'Olanzapine 5mg Tablet (Oleanz) (0-0-1 bedtime) x 30 days',
+          'Trihexyphenidyl 2mg Tablet (Pacitane) (1-0-1 SOS for stiffness/tremors) x 30 days',
+        ],
+        notes: 'Monitor metabolic parameters (weight, blood sugar, lipids) every 3 months.',
+      },
+      {
+        id: 'bipolar-mood-stabilization',
+        name: 'Bipolar Affective Disorder Mood Stabilization Protocol',
+        tests: [
+          'Serum Lithium Level (Target 0.6 - 1.2 mEq/L)',
+          'Serum Creatinine, BUN & Thyroid Function Tests',
+          'Liver Function Test (LFT) & CBC (for Sodium Valproate)',
+        ],
+        advice: [
+          'Maintain steady fluid and salt intake (dehydration increases lithium toxicity)',
+          'Promptly report nausea, coarse tremors, diarrhea, or confusion',
+        ],
+        drugs: [
+          'Lithium Carbonate 300mg SR Tablet (Lithosun SR) (1-0-1 after food) x 30 days',
+          'Sodium Valproate 500mg SR Tablet (Encorate Chrono) (1-0-1 after food) x 30 days',
+        ],
+        notes: 'Check 12-hour trough serum lithium level 5-7 days after initiating or changing dose.',
+      },
+    ],
+  },
+  {
+    id: 'neurology-headache-care',
+    name: 'Neurology & Neuro-Vascular Care',
+    templates: [
+      {
+        id: 'migraine-prophylaxis-protocol',
+        name: 'Acute Migraine Attack & Prophylaxis Protocol',
+        tests: [
+          'Non-Contrast CT / MRI Brain (if red flags: thunderclap onset, focal neurological deficit, >50 yrs onset)',
+        ],
+        advice: [
+          'Maintain a Migraine Diary to identify triggers (bright light, skipped meals, stress, caffeine)',
+          'Adequate hydration (3L water daily) and regular sleep schedule',
+        ],
+        drugs: [
+          'Flunarizine 10mg Tablet (Sibelium) (0-0-1 bedtime) x 30 days',
+          'Propranolol 40mg SR Tablet (Ciplar LA) (1-0-0 morning) x 30 days',
+          'Sumatriptan 50mg Tablet (Suminat) (1 tab SOS at migraine onset, repeat after 2h if needed, max 100mg/day)',
+          'Naproxen 500mg Tablet (Naprosyn) (1 tab SOS after food for severe headache)',
+          'Domperidone 10mg Tablet (1 tab SOS for migraine nausea)',
+        ],
+        notes: 'Prophylactic drugs take 4-8 weeks for full benefit. Re-evaluate monthly.',
+      },
+      {
+        id: 'hepatic-encephalopathy-cirrhosis',
+        name: 'Advanced Cirrhosis & Hepatic Encephalopathy Protocol',
+        tests: [
+          'Serum Ammonia Level',
+          'LFT, Serum Albumin & PT/INR',
+          'Serum Electrolytes (Sodium & Potassium)',
+          'USG Doppler Abdomen with Portal Vein Flow',
+        ],
+        advice: [
+          'Ensure 2-3 soft bowel movements daily (lactulose titrates stool frequency)',
+          'Low Sodium Diet (<2g/day) & Moderate High Quality Protein',
+        ],
+        drugs: [
+          'Lactulose 10g/15ml Syrup (Duphalac) (15ml 1-1-1 after food, titrate to 2-3 soft stools/day) x 30 days',
+          'Rifaximin 550mg Tablet (Rifagut) (1-0-1 after food) x 30 days',
+          'Spironolactone 100mg + Furosemide 40mg Tablet (Lasilactone 100) (1-0-0 morning) x 30 days',
+          'L-Ornithine L-Aspartate 500mg Tablet (1-0-1 after food) x 30 days',
+        ],
+        notes: 'Avoid sedatives & NSAIDs. Monitor for spontaneous bacterial peritonitis (SBP).',
+      },
+      {
+        id: 'ckd-hyperkalemia-anemia',
+        name: 'Advanced CKD Hyperkalemia & Renal Anemia Protocol',
+        tests: [
+          'Serum Potassium (K+) & Electrolytes',
+          'Serum Creatinine, eGFR & Blood Urea Nitrogen',
+          'Hemoglobin, Serum Ferritin & Transferrin Saturation (TSAT)',
+        ],
+        advice: [
+          'Strict Low Potassium Diet (avoid bananas, citrus fruits, coconut water, green leafy vegetables)',
+          'Avoid Potassium-sparing diuretics & OTC pain killers (NSAIDs)',
+        ],
+        drugs: [
+          'Calcium Polystyrene Sulfonate 15g Sachet (K-Bind) (1 sachet in water 1-1-1 after meals) x 14 days',
+          'Erythropoietin (rHuEPO) 4000 IU Injection (Eprex) (Subcutaneous twice weekly) x 30 days',
+          'Iron Sucrose 100mg IV Infusion (Venofer) (100mg in 100ml NS over 30 mins weekly x 5 doses)',
+          'Sevelamer Carbonate 800mg Tablet (Renvela) (1-1-1 with meals) x 30 days',
+        ],
+        notes: 'Target Hb 10-11 g/dL. Re-check serum potassium every 3-7 days.',
+      },
+      {
+        id: 'pad-claudication-vascular',
+        name: 'Peripheral Artery Disease (PAD) & Intermittent Claudication Protocol',
+        tests: [
+          'Ankle-Brachial Index (ABI Measurement)',
+          'Arterial Color Doppler Ultrasound of Lower Limbs',
+          'Lipid Profile & HbA1c',
+        ],
+        advice: [
+          'Structured Treadmill Exercise Program (walk to moderate pain threshold, rest, repeat)',
+          'Meticulous Foot Care & Complete Tobacco / Smoking Cessation',
+        ],
+        drugs: [
+          'Cilostazol 100mg Tablet (Pletal / Pletoz) (1-0-1 30 mins before breakfast & dinner) x 60 days',
+          'Pentoxifylline 400mg SR Tablet (Trental) (1-1-1 after meals) x 60 days',
+          'Aspirin 75mg Tablet (Ecosprin) (0-1-0 after lunch) x 60 days',
+          'Rosuvastatin 20mg Tablet (Rosuvas) (0-0-1 bedtime) x 60 days',
+        ],
+        notes: 'Cilostazol is contraindicated in patients with Heart Failure. Assess ABI after 3 months.',
       },
     ],
   },
@@ -3732,7 +3929,27 @@ export function getSpecialties(): Specialty[] {
     const saved = localStorage.getItem(SPECIALTIES_STORAGE_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: Specialty[] = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const map = new Map<string, Specialty>();
+          DEFAULT_SPECIALTIES.forEach((spec) => map.set(spec.id, spec));
+          parsed.forEach((spec) => {
+            if (spec && spec.id) {
+              const existing = map.get(spec.id);
+              if (existing) {
+                const templateMap = new Map<string, PrescriptionTemplate>();
+                existing.templates.forEach((t) => templateMap.set(t.id, t));
+                (spec.templates || []).forEach((t) => {
+                  if (t && t.id) templateMap.set(t.id, t);
+                });
+                map.set(spec.id, { ...existing, ...spec, templates: Array.from(templateMap.values()) });
+              } else {
+                map.set(spec.id, spec);
+              }
+            }
+          });
+          return Array.from(map.values());
+        }
       } catch (e) {}
     }
   }
