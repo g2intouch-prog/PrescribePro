@@ -825,6 +825,22 @@ export default function UserWorkspacePage() {
     'dextrose normal saline': ['DNS 500ml IV Infusion'],
     'isolyte': ['Isolyte-P 500ml', 'Isolyte-M 500ml'],
     'mannitol': ['Osmitrol 20% 100ml', 'Mannitol 20% Infusion'],
+    'xylometazoline': ['Otrivin 0.1% Adult Nasal Spray', 'Otrivin 0.05% Pediatric Drops', 'Nasoclear Saline Spray'],
+    'oxymetazoline': ['Nasivion 0.05% Adult Nasal Spray', 'Nasivion 0.025% Pediatric Drops', 'Nasivion Mini Drops'],
+    'oxy': ['Nasivion 0.05% Adult Nasal Spray', 'Trileptal 300mg', 'Terramycin 250mg', 'Drytop 5mg'],
+    'sucralfate': ['Sucrafil 1g/5ml Suspension', 'Sucrafil-O Suspension', 'Sucral Suspension'],
+    'erythromycin': ['Erythrocin 250mg Tablet', 'Erythrocin 500mg Tablet', 'Erytop Lotion'],
+    'roxithromycin': ['Roxid 150mg Tablet', 'Roxid 300mg Tablet', 'Roxibact 150'],
+    'clarithromycin': ['Claribid 250mg Tablet', 'Claribid 500mg Tablet', 'Clariwin 500'],
+    'lincomycin': ['Lincocin 500mg Capsule', 'Lincocin 600mg/2ml Inj'],
+    'clindamycin': ['Dalacin C 300mg Capsule', 'Dalacin C 600mg/4ml Inj', 'Clindac A Gel'],
+    'vancomycin': ['Vancocin 500mg IV Inj', 'Vancocin 1g IV Inj'],
+    'linezolid': ['Lizoforce 600mg Tablet', 'Lizoforce 600mg/300ml IV Infusion', 'Linospan 600'],
+    'faropenem': ['Farobact 200mg Tablet', 'Farozet 200'],
+    'meropenem': ['Meroplan 1g IV Inj', 'Meropen 1g IV Inj'],
+    'colistin': ['Colistimethate 3 Million IU IV', 'Colistin 1 Million IU'],
+    'pralidoxime': ['Pam 500mg Inj', 'Pralidoxime 500mg IV'],
+    'atropine': ['Atropine 0.6mg/1ml Inj', 'Atropine 1% Eye Drops'],
   });
 
   // Hard Drive Folder & GitHub Updates State

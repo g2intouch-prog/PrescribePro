@@ -56,6 +56,8 @@ export const KNOWN_GENERIC_SALTS = new Set([
   'hydroxyzine', 'cetirizine', 'levocetirizine', 'fexofenadine', 'loratadine', 'desloratadine', 'bilastine', 'chlorpheniramine', 'pheniramine',
   'thyroxine', 'levothyroxine', 'carbimazole', 'methimazole',
   'pralidoxime', 'atropine', 'neostigmine', 'physostigmine', 'pyridostigmine',
+  'lincomycin', 'clindamycin', 'vancomycin', 'linezolid', 'faropenem', 'meropenem', 'colistin',
+  'sucralfate', 'xylometazoline', 'oxymetazoline', 'oxytetracycline', 'oxybutynin', 'oxytocin',
   'magnesium sulfate', 'sodium bicarbonate', 'potassium chloride', 'calcium gluconate'
 ]);
 
