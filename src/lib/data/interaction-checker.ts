@@ -12,6 +12,54 @@ export interface DetectedInteraction {
 }
 
 /**
+ * Verified dictionary of actual generic active ingredient salt names.
+ * Dynamic duplicate checking ONLY triggers if a shared keyword is in this whitelist.
+ */
+export const KNOWN_GENERIC_SALTS = new Set([
+  'paracetamol', 'acetaminophen', 'pantoprazole', 'rabeprazole', 'esomeprazole', 'omeprazole', 'lansoprazole', 'dexlansoprazole', 'ilaprazole',
+  'domperidone', 'metoclopramide', 'levosulpiride', 'itopride', 'cinitapride', 'ondansetron', 'granisetron', 'palonosetron',
+  'amoxicillin', 'clavulanate', 'clavulanic acid', 'ampicillin', 'cloxacillin', 'penicillin',
+  'cefixime', 'cefpodoxime', 'cefuroxime', 'ceftriaxone', 'cephalexin', 'cefotaxime', 'cefepime', 'cefoperazone',
+  'ciprofloxacin', 'ofloxacin', 'levofloxacin', 'moxifloxacin', 'norfloxacin',
+  'azithromycin', 'clarithromycin', 'erythromycin', 'roxithromycin',
+  'doxycycline', 'tetracycline', 'minocycline', 'tigecycline',
+  'metronidazole', 'tinidazole', 'ornidazole', 'secnidazole',
+  'nitrofurantoin', 'cotrimoxazole', 'trimethoprim', 'sulfamethoxazole',
+  'fluconazole', 'itraconazole', 'voriconazole', 'posaconazole', 'ketoconazole', 'clotrimazole', 'terbinafine',
+  'acyclovir', 'valacyclovir', 'oseltamivir', 'favipiravir', 'remdesivir',
+  'diclofenac', 'aceclofenac', 'ibuprofen', 'naproxen', 'piroxicam', 'mefenamic acid', 'indomethacin', 'etoricoxib', 'celecoxib', 'nimesulide', 'aspirin',
+  'tramadol', 'codeine', 'morphine', 'fentanyl', 'tapentadol', 'buprenorphine',
+  'drotaverine', 'dicyclomine', 'hyoscine', 'flavoxate',
+  'telmisartan', 'losartan', 'valsartan', 'olmesartan', 'irbesartan', 'candesartan',
+  'enalapril', 'ramipril', 'lisinopril', 'perindopril', 'benazepril',
+  'amlodipine', 'cilnidipine', 'nifedipine', 'felodipine', 'verapamil', 'diltiazem',
+  'metoprolol', 'atenolol', 'bisoprolol', 'carvedilol', 'labetalol', 'propranolol', 'nebivolol',
+  'furosemide', 'torsemide', 'spironolactone', 'eplerenone', 'hydrochlorothiazide', 'chlorthalidone', 'indapamide',
+  'atorvastatin', 'rosuvastatin', 'simvastatin', 'pravastatin', 'lovastatin', 'fenofibrate', 'gemfibrozil',
+  'metformin', 'glimepiride', 'gliclazide', 'glipizide', 'glibenclamide', 'pioglitazone',
+  'sitagliptin', 'vildagliptin', 'teneligliptin', 'linagliptin', 'saxagliptin',
+  'dapagliflozin', 'empagliflozin', 'canagliflozin', 'remogliflozin',
+  'alprazolam', 'clonazepam', 'diazepam', 'lorazepam', 'clobazam', 'chlordiazepoxide', 'nitrazepam', 'zolpidem',
+  'escitalopram', 'sertraline', 'fluoxetine', 'paroxetine', 'citalopram', 'fluvoxamine',
+  'duloxetine', 'venlafaxine', 'desvenlafaxine', 'mirtazapine', 'amitriptyline', 'nortriptyline',
+  'phenytoin', 'levetiracetam', 'valproic acid', 'valproate', 'carbamazepine', 'oxcarbazepine', 'gabapentin', 'pregabalin', 'lamotrigine', 'topiramate',
+  'hydrocortisone', 'dexamethasone', 'prednisolone', 'defcort', 'deflazacort', 'triamcinolone', 'methylprednisolone', 'betamethasone',
+  'deriphyllin', 'theophylline', 'etofylline', 'doxofylline', 'salbutamol', 'albuterol', 'levosalbutamol', 'terbutaline',
+  'budesonide', 'fluticasone', 'beclomethasone', 'ciclesonide', 'formoterol', 'salmeterol', 'tiotropium', 'ipratropium',
+  'montelukast', 'zafirlukast',
+  'allopurinol', 'febuxostat', 'colchicine',
+  'methotrexate', 'azathioprine', 'hydroxychloroquine', 'sulfasalazine', 'leflunomide', 'cyclosporine', 'tacrolimus',
+  'artesunate', 'artemether', 'lumefantrine', 'chloroquine', 'primaquine', 'quinine',
+  'iron sucrose', 'ferrous ascorbate', 'ferrous sulfate', 'folic acid', 'cyanocobalamin', 'methylcobalamin',
+  'ranitidine', 'famotidine', 'cimetidine',
+  'thiocolchicoside', 'tizanidine', 'baclofen', 'chlorzoxazone',
+  'hydroxyzine', 'cetirizine', 'levocetirizine', 'fexofenadine', 'loratadine', 'desloratadine', 'bilastine', 'chlorpheniramine', 'pheniramine',
+  'thyroxine', 'levothyroxine', 'carbimazole', 'methimazole',
+  'pralidoxime', 'atropine', 'neostigmine', 'physostigmine', 'pyridostigmine',
+  'magnesium sulfate', 'sodium bicarbonate', 'potassium chloride', 'calcium gluconate'
+]);
+
+/**
  * Resolves a drug input string into all generic active ingredients, brand keywords, and drug class names.
  */
 export function resolveDrugKeywords(drugStr: string): string[] {
@@ -40,43 +88,6 @@ export function resolveDrugKeywords(drugStr: string): string[] {
 
   return Array.from(keywords);
 }
-
-const NON_GENERIC_STOP_WORDS = new Set([
-  // Formulations & Forms
-  'tablet', 'tablets', 'tab', 'tabs', 'capsule', 'capsules', 'cap', 'caps', 'syrup', 'syp', 'syrups',
-  'suspension', 'injection', 'inj', 'injections', 'ointment', 'gel', 'drop', 'drops', 'eye', 'ear',
-  'cream', 'lotion', 'solution', 'soln', 'inhaler', 'puffs', 'respules', 'patch', 'suppository',
-  'vial', 'vials', 'ampoule', 'amp', 'bottle', 'strip', 'pack', 'powder', 'infusion', 'spray',
-  'elixir', 'emulsion', 'mouthwash', 'gargle', 'liniment', 'paste', 'soap', 'shampoo',
-
-  // Units, Dosage & Numbers
-  'mg', 'gm', 'g', 'mcg', 'ml', 'iu', 'meq', 'mmol', 'mol', 'kg', 'lbs', 'pct', 'percent',
-
-  // Frequencies & Directions
-  '1-0-1', '1-0-0', '0-0-1', '1-1-1', 's.o.s', 'sos', 'bd', 'tds', 'od', 'hs', 'stat', 'q6h', 'q8h', 'q12h', 'qid', 'tid', 'bid',
-  'once', 'twice', 'thrice', 'daily', 'day', 'days', 'week', 'weeks', 'month', 'months', 'year', 'years', 'yrs',
-  'before', 'after', 'food', 'meals', 'meal', 'night', 'morning', 'afternoon', 'evening', 'bedtime',
-  'water', 'milk', 'oral', 'intravenous', 'intramuscular', 'subcutaneous', 'topical', 'sublingual',
-  'take', 'with', 'dose', 'doses', 'dosing', 'prescribed', 'standard', 'clinical', 'regimen', 'target',
-  'unit', 'units', 'site', 'deltoid', 'gluteal', 'anterolateral', 'thigh', 'im', 'iv', 'sc', 'po',
-  'day0', 'day3', 'day7', 'day14', 'day28', 'd0', 'd3', 'd7', 'd14', 'd28',
-
-  // Common Non-Salt English Words & Biological Stop Words
-  'plus', 'forte', 'extra', 'sr', 'xl', 'xr', 'er', 'cr', 'dt', 'md', 'la', 'ds', 'sf', 'cz',
-  'saline', 'dextrose', 'normal', 'water', 'sterile', 'distilled', 'fluid', 'solution',
-  'vaccine', 'vaccines', 'toxoid', 'antiserum', 'antiserums', 'immunoglobulin', 'serum',
-  'acid', 'sodium', 'potassium', 'calcium', 'chloride', 'sulfate', 'phosphate', 'acetate',
-  'carbonate', 'citrate', 'hydrochloride', 'hcl', 'maleate', 'succinate', 'tartrate', 'fumarate',
-
-  // Drug Class Keywords (Excluded from dynamic generic duplicate check because they are classes, not salts)
-  'ppi', 'nsaid', 'ccb', 'macrolide', 'prokinetic', 'statin', 'beta-blocker', 'arb', 'ace-inhibitor',
-  'benzodiazepine', 'opioid', 'antidepressant', 'anticonvulsant', 'antihistamine', 'azole-antifungal',
-  'fluoroquinolone', 'cephalosporin', 'beta-lactam', 'nitroimidazole', 'corticosteroid',
-  'anxiolytic', 'hypnotic', 'sedative', 'anticoagulant', 'antiplatelet', 'diuretic', 'biguanide',
-  'sulfonylurea', 'dpp4-inhibitor', 'sglt2-inhibitor', 'neuropathic', 'muscle-relaxant', 'xanthine',
-  'beta2-agonist', 'flu-vaccine', 'arv', 'hrig', 'erig', 'tcv', 'rabies-vaccine', 'rabies-immunoglobulin',
-  'tetanus-toxoid'
-]);
 
 /**
  * Checks prescribed drugs, patient allergies, and conditions against the offline DDI rules.
@@ -154,7 +165,7 @@ export function checkPrescriptionSafety(
   }
 
   // 1.5 DYNAMIC DUPLICATE GENERIC ACTIVE INGREDIENT CHECK
-  // (Detects when the exact same generic salt e.g. "cefixime", "paracetamol", "amoxicillin" is prescribed twice)
+  // (ONLY triggers if a shared keyword is a verified generic salt in KNOWN_GENERIC_SALTS)
   for (let i = 0; i < parsedDrugs.length; i++) {
     for (let j = i + 1; j < parsedDrugs.length; j++) {
       const drugA = parsedDrugs[i];
@@ -169,13 +180,11 @@ export function checkPrescriptionSafety(
 
       if (alreadyHasStaticRule) continue;
 
-      // Find common active ingredient keywords (excluding non-generic stop words, class keywords, & digits)
+      // Find common active generic salt keywords in KNOWN_GENERIC_SALTS
       const commonGenerics = drugA.keywords.filter(
         (k) =>
           drugB.keywords.includes(k) &&
-          !NON_GENERIC_STOP_WORDS.has(k) &&
-          k.length > 3 &&
-          !/\d/.test(k)
+          KNOWN_GENERIC_SALTS.has(k)
       );
 
       if (commonGenerics.length > 0) {
@@ -209,7 +218,7 @@ export function checkPrescriptionSafety(
     const allergyKeywords = patientAllergies
       .toLowerCase()
       .split(/[\s,;]+/)
-      .filter((k) => k.length > 2 && !NON_GENERIC_STOP_WORDS.has(k));
+      .filter((k) => k.length > 2 && KNOWN_GENERIC_SALTS.has(k));
 
     if (allergyKeywords.length > 0) {
       for (const item of parsedDrugs) {
