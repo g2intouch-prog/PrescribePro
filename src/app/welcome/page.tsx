@@ -4222,61 +4222,63 @@ export default function UserWorkspacePage() {
               </button>
             </div>
 
-            {/* FORM CONTAINER: RESPONSIVE 2-COLUMN GRID WITH SCROLLABLE BODY */}
-            <form onSubmit={handleSaveDoctorProfile} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            {/* FORM CONTAINER: RESPONSIVE 2-COLUMN GRID FIT WITHOUT OVERFLOW */}
+            <form onSubmit={handleSaveDoctorProfile} className="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 items-start">
                 
-                {/* LEFT COLUMN: DOCTOR CREDENTIALS & REG NO PREFERENCE */}
-                <div className="space-y-3.5">
-                  <div>
-                    <label className="block mb-1 font-bold text-slate-800">1. Full Name & Title</label>
-                    <input
-                      type="text"
-                      required
-                      value={doctorProfile.name}
-                      onChange={(e) => setDoctorProfile({ ...doctorProfile, name: e.target.value })}
-                      placeholder="e.g. Dr. Alexander Fleming, MD"
-                      className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
-                    />
+                {/* LEFT COLUMN: BOXES 1 TO 5 (DOCTOR CREDENTIALS & REG NO FORMAT) */}
+                <div className="space-y-2.5">
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                    <div>
+                      <label className="block mb-1 font-bold text-slate-800">1. Full Name & Title</label>
+                      <input
+                        type="text"
+                        required
+                        value={doctorProfile.name}
+                        onChange={(e) => setDoctorProfile({ ...doctorProfile, name: e.target.value })}
+                        placeholder="e.g. Dr. Alexander Fleming, MD"
+                        className="w-full rounded-xl px-3 py-1.5 border border-slate-300 bg-white text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 font-bold text-slate-800">2. Medical Registration No. (Regd. No)</label>
+                      <input
+                        type="text"
+                        required
+                        value={doctorProfile.regNo}
+                        onChange={(e) => setDoctorProfile({ ...doctorProfile, regNo: e.target.value })}
+                        placeholder="e.g. MCI/2026/89472"
+                        className="w-full rounded-xl px-3 py-1.5 border border-slate-300 bg-white text-slate-900 font-mono font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 font-bold text-slate-800">3. Medical Qualification</label>
+                      <input
+                        type="text"
+                        required
+                        value={doctorProfile.qualification}
+                        onChange={(e) => setDoctorProfile({ ...doctorProfile, qualification: e.target.value })}
+                        placeholder="e.g. MBBS, MD (Internal Medicine), DNB"
+                        className="w-full rounded-xl px-3 py-1.5 border border-slate-300 bg-white text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 font-bold text-slate-800">4. Designation & Specialty</label>
+                      <input
+                        type="text"
+                        required
+                        value={doctorProfile.designation}
+                        onChange={(e) => setDoctorProfile({ ...doctorProfile, designation: e.target.value })}
+                        placeholder="e.g. Senior Consultant Physician & Diabetologist"
+                        className="w-full rounded-xl px-3 py-1.5 border border-slate-300 bg-white text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block mb-1 font-bold text-slate-800">2. Medical Registration No. (Regd. No)</label>
-                    <input
-                      type="text"
-                      required
-                      value={doctorProfile.regNo}
-                      onChange={(e) => setDoctorProfile({ ...doctorProfile, regNo: e.target.value })}
-                      placeholder="e.g. MCI/2026/89472"
-                      className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-mono font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 font-bold text-slate-800">3. Medical Qualification</label>
-                    <input
-                      type="text"
-                      required
-                      value={doctorProfile.qualification}
-                      onChange={(e) => setDoctorProfile({ ...doctorProfile, qualification: e.target.value })}
-                      placeholder="e.g. MBBS, MD (Internal Medicine), DNB"
-                      className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 font-bold text-slate-800">4. Designation & Specialty</label>
-                    <input
-                      type="text"
-                      required
-                      value={doctorProfile.designation}
-                      onChange={(e) => setDoctorProfile({ ...doctorProfile, designation: e.target.value })}
-                      placeholder="e.g. Senior Consultant Physician & Diabetologist"
-                      className="w-full rounded-xl px-3 py-2 border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
-                    />
-                  </div>
-
-                  <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 space-y-2">
+                  <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 space-y-2">
                     <label className="block font-bold text-blue-950">5. Patient Reg. No. Sequential Format Preference</label>
                     <select
                       value={doctorProfile.regNoMode || 'custom_prefix'}
@@ -4288,7 +4290,7 @@ export default function UserWorkspacePage() {
                       <option value="blank">Blank / Custom Free Typing (No Auto Prefix)</option>
                     </select>
                     {doctorProfile.regNoMode !== 'blank' && (
-                      <div className="space-y-1.5 pt-1">
+                      <div className="space-y-1 pt-0.5">
                         <label className="block text-[11px] font-bold text-blue-900">Custom Prefix Identifier:</label>
                         <input
                           type="text"
@@ -4299,19 +4301,19 @@ export default function UserWorkspacePage() {
                         />
                       </div>
                     )}
-                    <p className="text-[10.5px] text-emerald-800 font-bold bg-emerald-100/60 p-2 rounded-lg border border-emerald-200">
+                    <p className="text-[10.5px] text-emerald-800 font-bold bg-emerald-100/60 p-1.5 rounded-lg border border-emerald-200">
                       ✨ Progression Preview: <code>{generateNextPatientRegNo(doctorProfile)}</code> → <code>{doctorProfile.customRegNoPrefix || 'Tangi-'}2</code> → <code>{doctorProfile.customRegNoPrefix || 'Tangi-'}3</code>...
                     </p>
                   </div>
                 </div>
 
-                {/* RIGHT COLUMN: BANNERS, LOCAL STORAGE SAFEGUARDS & UPDATE CHECKER */}
-                <div className="space-y-3.5">
-                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-2">
+                {/* RIGHT COLUMN: BOXES 6 TO 9 (BANNERS, HARD DRIVE SYNC & UPDATE CHECKER) */}
+                <div className="space-y-2.5">
+                  <div className="p-2.5 bg-emerald-50/80 rounded-xl border border-emerald-200 space-y-1.5">
                     <label className="block font-bold text-emerald-950">6. Digital Pad Header Banner / Logo (Optional)</label>
-                    <div className="flex items-center gap-3">
-                      <label className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shadow transition flex items-center gap-1">
-                        <span>🖼️ Upload Logo File</span>
+                    <div className="flex items-center gap-2">
+                      <label className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shadow transition flex items-center gap-1">
+                        <span>🖼️ Upload Logo</span>
                         <input type="file" accept="image/*" onChange={handleHeaderImageUpload} className="hidden" />
                       </label>
                       {headerImg && (
@@ -4325,27 +4327,27 @@ export default function UserWorkspacePage() {
                       )}
                     </div>
                     {headerImg ? (
-                      <div className="mt-1 border rounded-lg p-2 bg-white flex items-center justify-center">
-                        <img src={headerImg} alt="Header Preview" className="h-10 object-contain" />
+                      <div className="mt-1 border rounded-lg p-1 bg-white flex items-center justify-center">
+                        <img src={headerImg} alt="Header Preview" className="h-8 object-contain" />
                       </div>
                     ) : (
                       <p className="text-[10px] text-slate-500 italic">No image uploaded. Digital pad displays default clinic text header.</p>
                     )}
                   </div>
 
-                  <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 space-y-2">
+                  <div className="p-2.5 bg-purple-50/80 rounded-xl border border-purple-200 space-y-1.5">
                     <label className="block font-bold text-purple-950">7. Digital Pad Footer Banner (Optional)</label>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <label className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs cursor-pointer shadow transition flex items-center gap-1">
-                        <span>🖼️ Upload Custom Footer</span>
+                      <label className="px-3 py-1 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs cursor-pointer shadow transition flex items-center gap-1">
+                        <span>🖼️ Custom Footer</span>
                         <input type="file" accept="image/*" onChange={handleFooterImageUpload} className="hidden" />
                       </label>
                       <button
                         type="button"
                         onClick={handleApplyOdiaShantiMantraFooter}
-                        className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow transition flex items-center gap-1"
+                        className="px-3 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow transition flex items-center gap-1"
                       >
-                        <span>🕉️ Apply Odia Mantra Banner</span>
+                        <span>🕉️ Odia Mantra Banner</span>
                       </button>
                       {footerImg && (
                         <button
@@ -4358,46 +4360,38 @@ export default function UserWorkspacePage() {
                       )}
                     </div>
                     {footerImg ? (
-                      <div className="mt-1 border rounded-lg p-2 bg-white flex items-center justify-center">
-                        <img src={footerImg} alt="Footer Preview" className="h-8 object-contain" />
+                      <div className="mt-1 border rounded-lg p-1 bg-white flex items-center justify-center">
+                        <img src={footerImg} alt="Footer Preview" className="h-7 object-contain" />
                       </div>
                     ) : (
                       <p className="text-[10px] text-slate-500 italic">No footer banner set. Displays default 1cm signature spacing.</p>
                     )}
                   </div>
 
-                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
+                  <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 space-y-2">
                     <label className="block font-bold text-amber-950">8. Offline Database Safeguards & Hard Drive Sync</label>
                     <p className="text-[11px] text-slate-600">
-                      Option 1: Connect a folder on your hard drive (e.g. <code>D:\Clinic_Data\</code>) to silently auto-sync your <code>.sqlite</code> database file every time you prescribe, or download manual backups.
+                      Connect a folder on your local hard drive (e.g. <code>D:\Clinic_Data\</code>) for live auto-syncing every time you prescribe, or download manual backups.
                     </p>
-                    <div className="flex items-center gap-2 flex-wrap pt-1">
-                      <button
-                        type="button"
-                        onClick={handleSaveDbToChosenFolder}
-                        className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
-                        title="Pick any folder on your hard drive to save prescribepro_database.sqlite"
-                      >
-                        <span>💾</span>
-                        <span>Save Database (.sqlite) To Hard Drive</span>
-                      </button>
+                    <div className="flex items-center gap-2 flex-wrap pt-0.5">
                       <button
                         type="button"
                         onClick={handleConnectFolder}
-                        className="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                        title="Auto sync: PrescribePro DB after connecting to Local HDD"
                       >
-                        <span>📁</span>
-                        <span>{connectedFolderName ? `Auto-Sync: ${connectedFolderName}` : 'Connect Auto-Sync Folder'}</span>
+                        <span>💾</span>
+                        <span>{connectedFolderName ? `Connected: ${connectedFolderName}` : 'Connect Database'}</span>
                       </button>
                       <button
                         type="button"
                         onClick={downloadSqliteBackupFile}
-                        className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
                       >
                         <span>⬇️</span>
-                        <span>Download Backup (.sqlite)</span>
+                        <span>Download Backup</span>
                       </button>
-                      <label className="px-3.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs shadow transition cursor-pointer flex items-center gap-1.5">
+                      <label className="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs shadow transition cursor-pointer flex items-center gap-1.5">
                         <span>📥</span>
                         <span>Restore Database</span>
                         <input
@@ -4412,28 +4406,37 @@ export default function UserWorkspacePage() {
                       </label>
                     </div>
                     {connectedFolderName && (
-                      <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 pt-1">
-                        <span>✓</span> Live Auto-Sync Active: Saving prescriptions automatically updates your SQLite database <code>{connectedFolderName}/prescribepro_database.sqlite</code> on your hard drive.
-                      </p>
+                      <div className="p-2.5 rounded-xl bg-emerald-100/90 border border-emerald-300 text-emerald-950 text-[11px] leading-relaxed text-justify space-y-1">
+                        <div className="flex items-center gap-1.5 font-black text-emerald-900 text-xs">
+                          <span className="text-emerald-700 font-bold">✓</span> Live Auto-Sync Active
+                        </div>
+                        <p className="text-justify leading-snug font-medium text-emerald-900">
+                          Saving prescriptions automatically updates your SQLite database<br />
+                          <code className="bg-emerald-200/90 text-emerald-950 px-1.5 py-0.5 rounded font-mono font-bold text-[10.5px]">
+                            {connectedFolderName}/prescribepro_database.sqlite
+                          </code><br />
+                          directly on your local hard drive in real-time.
+                        </p>
+                      </div>
                     )}
                   </div>
 
-                  <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-200 space-y-2">
+                  <div className="p-3 bg-indigo-50/80 rounded-xl border border-indigo-200 space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="font-bold text-indigo-950">9. Software Updates & GitHub Release Checker</label>
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-200 text-indigo-900 font-bold">
-                        Current Version: v1.0.0
+                        v1.0.0
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-600">
-                      Option 2: Manually check your GitHub repository (<code>g2intouch-prog/PrescribePro</code>) for new software updates, drug database updates, or desktop installer releases.
+                      Check your GitHub repository (<code>g2intouch-prog/PrescribePro</code>) for software updates or desktop releases.
                     </p>
-                    <div className="flex items-center gap-2 flex-wrap pt-1">
+                    <div className="flex items-center gap-2 flex-wrap pt-0.5">
                       <button
                         type="button"
                         onClick={handleCheckGitHubRelease}
                         disabled={isCheckingUpdate}
-                        className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
                       >
                         <span>🔄</span>
                         <span>{isCheckingUpdate ? 'Checking GitHub...' : 'Check for GitHub Updates'}</span>
@@ -4444,7 +4447,7 @@ export default function UserWorkspacePage() {
                           href={githubReleaseInfo.downloadUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
                         >
                           <span>⚡ Download Release ({githubReleaseInfo.tagName})</span>
                         </a>
@@ -4870,10 +4873,31 @@ export default function UserWorkspacePage() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setDrugSearchQuery('neurology')}
+                  className="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-950 font-bold hover:bg-blue-200 shrink-0"
+                >
+                  ⚡ Neurology
+                </button>
+                <button
+                  type="button"
                   onClick={() => setDrugSearchQuery('cardio')}
                   className="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-950 font-bold hover:bg-rose-200 shrink-0"
                 >
                   ❤️ Cardiology
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('hypertension')}
+                  className="px-2.5 py-1 rounded-lg bg-red-100 text-red-950 font-bold hover:bg-red-200 shrink-0"
+                >
+                  💓 Hypertension
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('emergency')}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-950 font-bold hover:bg-emerald-200 shrink-0"
+                >
+                  🚨 ER Emergency
                 </button>
                 <button
                   type="button"
