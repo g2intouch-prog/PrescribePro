@@ -841,6 +841,14 @@ export default function UserWorkspacePage() {
     'colistin': ['Colistimethate 3 Million IU IV', 'Colistin 1 Million IU'],
     'pralidoxime': ['Pam 500mg Inj', 'Pralidoxime 500mg IV'],
     'atropine': ['Atropine 0.6mg/1ml Inj', 'Atropine 1% Eye Drops'],
+    'gliclazide': ['Diamicron 60mg MR', 'Glycinorm 60mg', 'Diamicron Mex 500'],
+    'vildagliptin': ['Galvus 50mg', 'Jalra 50mg', 'Galvus Met 50/500', 'Zomelis 50mg'],
+    'semaglutide': ['Rybelsus 3mg', 'Rybelsus 7mg', 'Rybelsus 14mg', 'Ozempic 1mg Pen'],
+    'tirzepatide': ['Mounjaro 2.5mg Pen', 'Mounjaro 5mg Pen', 'Mounjaro 10mg Pen'],
+    'levothyroxine': ['Thyronorm 25mcg', 'Thyronorm 50mcg', 'Thyronorm 75mcg', 'Thyronorm 100mcg', 'Eltroxin 100mcg'],
+    'carbimazole': ['Neomercazole 5mg', 'Neomercazole 10mg', 'Neomercazole 20mg'],
+    'alendronate': ['Fosamax 70mg Weekly', 'Osteofos 70mg'],
+    'sacubitril': ['Vymada 50mg', 'Vymada 100mg', 'Cidmus 50mg'],
   });
 
   // Hard Drive Folder & GitHub Updates State

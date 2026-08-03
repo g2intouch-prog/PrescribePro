@@ -58,6 +58,7 @@ export const KNOWN_GENERIC_SALTS = new Set([
   'pralidoxime', 'atropine', 'neostigmine', 'physostigmine', 'pyridostigmine',
   'lincomycin', 'clindamycin', 'vancomycin', 'linezolid', 'faropenem', 'meropenem', 'colistin',
   'sucralfate', 'xylometazoline', 'oxymetazoline', 'oxytetracycline', 'oxybutynin', 'oxytocin',
+  'gliclazide', 'semaglutide', 'tirzepatide', 'dulaglutide', 'liraglutide', 'alendronate', 'risedronate', 'zoledronic acid', 'teriparatide', 'denosumab', 'bromocriptine', 'octreotide', 'pasireotide', 'lanreotide', 'cinacalcet', 'myo-inositol',
   'magnesium sulfate', 'sodium bicarbonate', 'potassium chloride', 'calcium gluconate'
 ]);
 
