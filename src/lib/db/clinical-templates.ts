@@ -168,8 +168,8 @@ export const CLINICAL_SYMPTOM_MAP: Record<string, string[]> = {
   endo: ['metformin', 'glimepiride', 'gliclazide', 'vildagliptin', 'teneligliptin', 'sitagliptin', 'dapagliflozin', 'empagliflozin', 'voglibose', 'pioglitazone', 'semaglutide', 'tirzepatide', 'levothyroxine', 'carbimazole', 'insulin', 'lantus', 'saroglitazar'],
 
   urology: ['disodium hydrogen citrate', 'potassium citrate', 'tamsulosin', 'flavoxate', 'finasteride', 'darifenacin', 'solifenacin', 'furosemide'],
-  nephrology: ['ketoanalogues', 'erythropoietin', 'epo', 'sevelamer', 'calcium acetate', 'furosemide', 'lasix', 'torsemide', 'sodium bicarbonate', 'tacrolimus', 'mycophenolate', 'potassium citrate'],
-  renal: ['ketoanalogues', 'erythropoietin', 'epo', 'sevelamer', 'calcium acetate', 'furosemide', 'lasix', 'torsemide', 'sodium bicarbonate', 'tacrolimus', 'mycophenolate', 'potassium citrate'],
+  nephrology: ['ketoanalogues', 'erythropoietin', 'epo', 'sevelamer', 'calcium acetate', 'furosemide', 'lasix', 'torsemide', 'sodium bicarbonate', 'prograf', 'mycophenolate', 'potassium citrate'],
+  renal: ['ketoanalogues', 'erythropoietin', 'epo', 'sevelamer', 'calcium acetate', 'furosemide', 'lasix', 'torsemide', 'sodium bicarbonate', 'prograf', 'mycophenolate', 'potassium citrate'],
 
   hepatology: ['silymarin', 'l-ornithine', 'ornithine', 'ursodeoxycholic', 'udca', 'same', 'sam-e', 'metadoxine', 'lactulose', 'rifaximin', 'tenofovir', 'entecavir', 'vitamin k', 'silybon', 'hepamerz', 'ursocol'],
   hepato: ['silymarin', 'l-ornithine', 'ornithine', 'ursodeoxycholic', 'udca', 'same', 'sam-e', 'metadoxine', 'lactulose', 'rifaximin', 'silybon', 'hepamerz', 'ursocol'],
@@ -366,7 +366,40 @@ export function searchClinicalDrugs(
     // 3. Search text query check (if user typed something)
     if (!q) return true;
 
-    // Check if query matches specialty key directly (e.g. user selected "dental" or "ortho" or "hypertension")
+    // Direct Specialty Key Match (e.g. 'ent', 'eye', 'optha', 'dental', 'cardio', 'nephrology')
+    const directSpecialtyKeys: Record<string, string> = {
+      ent: 'ent',
+      eye: 'ophthalmology',
+      optha: 'ophthalmology',
+      ophthalmology: 'ophthalmology',
+      cardio: 'cardiology',
+      hypertension: 'hypertension',
+      nephrology: 'nephrology',
+      endocrinology: 'endocrinology',
+      diabetes: 'diabetes',
+      gastro: 'gastroenterology',
+      hepatology: 'hepatology',
+      derma: 'dermatology',
+      dermatology: 'dermatology',
+      ortho: 'orthopedics',
+      psych: 'psychiatry',
+      psychiatry: 'psychiatry',
+      neurology: 'neurology',
+      dental: 'dental',
+      emergency: 'emergency',
+      pulmonology: 'pulmonology',
+      respiratory: 'pulmonology',
+      gynecology: 'gynecology',
+      gynae: 'gynecology',
+    };
+
+    if (directSpecialtyKeys[q]) {
+      const targetSpec = directSpecialtyKeys[q];
+      const matchesSpec = drug.specialties.some((s) => s.toLowerCase() === targetSpec);
+      if (matchesSpec) return true;
+    }
+
+    // Check if query matches specialty key directly in CLINICAL_SYMPTOM_MAP
     if (Object.prototype.hasOwnProperty.call(CLINICAL_SYMPTOM_MAP, q)) {
       const targetAliases = CLINICAL_SYMPTOM_MAP[q] || [];
       const name = drug.genericName.toLowerCase();
@@ -387,7 +420,17 @@ export function searchClinicalDrugs(
     const fullText = `${name} ${dosage} ${cat} ${kw} ${brand}`;
 
     const tokens = q.split(/\s+/).filter(Boolean);
-    if (tokens.every((t) => fullText.includes(t))) {
+    // Token matching: use word boundaries for short tokens (<= 3 chars) to avoid matching "fENTanyl", "thiopENTal", "treatmENT", "OrganOPing"
+    const allTokensMatch = tokens.every((t) => {
+      if (t.length <= 3) {
+        const escaped = t.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const pattern = new RegExp(`\\b${escaped}\\b`, 'i');
+        return pattern.test(fullText);
+      }
+      return fullText.includes(t);
+    });
+
+    if (allTokensMatch) {
       return true;
     }
 
@@ -947,6 +990,13 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'fdc37', genericName: 'Dextromethorphan + Chlorpheniramine + Phenylephrine', category: 'adult', dosage: '5ml to 10ml (t.d.s)', duration: '5 days', minAge: 6 },
   { id: 'fdc38', genericName: 'Telmisartan + Amlodipine', category: 'adult', dosage: '40mg/5mg (1-0-0 morning)', duration: '30 days', minAge: 18, minWeight: 40 },
 
+  { id: 'gen_lantus_pen', genericName: 'Insulin Glargine 100 IU/ml Subcutaneous Pen 3ml (Lantus / Basalog Pen)', category: 'all', formulation: 'inj', dosage: 'Subcutaneous injection once daily at fixed bedtime hour (0-0-1)', duration: '30 days', keywords: 'insulin glargine lantus basalog basal insulin pen long acting diabetes t1dm t2dm' },
+  { id: 'gen_cilacar10', genericName: 'Cilnidipine 10mg Tablet (Cilacar 10)', category: 'adult', formulation: 'tab', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'cilnidipine cilacar 10 ccb n-type calcium blocker hypertension high bp pedal edema free', minAge: 18 },
+  { id: 'gen_telmi_cl', genericName: 'Telmisartan 40mg + Cilnidipine 10mg Tablet (Telma-CL)', category: 'adult', formulation: 'tab', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'telmisartan cilnidipine telma cl arb ccb hypertension high bp edema free', minAge: 18 },
+  { id: 'gen_nebicard5', genericName: 'Nebivolol 5mg Tablet (Nebicard 5)', category: 'adult', formulation: 'tab', dosage: '1 tablet once daily morning after food (1-0-0)', duration: '30 days', keywords: 'nebivolol nebicard 5 beta 1 blocker nitric oxide hypertension high bp', minAge: 18 },
+  { id: 'gen_vymada50', genericName: 'Sacubitril 24mg + Valsartan 26mg Tablet (Vymada 50mg)', category: 'adult', formulation: 'tab', dosage: '1 tablet twice daily after meals (1-0-1)', duration: '30 days', keywords: 'sacubitril valsartan vymada 50 arni heart failure hfref ejection fraction hypertension', minAge: 18 },
+  { id: 'fdc42', genericName: 'Sacubitril + Valsartan (ARNI)', category: 'adult', formulation: 'tab', dosage: '50mg (1-0-1 after food)', duration: '30 days', keywords: 'sacubitril valsartan vymada arni heart failure hypertension high bp cardiology', minAge: 18, minWeight: 40 },
+
   // ==========================================
   // ENDOCRINOLOGY, DIABETES & METABOLIC DRUGS
   // ==========================================
@@ -1288,6 +1338,26 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'gen_vobose02', genericName: 'Voglibose 0.2mg Tablet (Vobose 0.2 / Volibo)', category: 'adult', dosage: '1 tablet 3 times daily immediately before meals', duration: '30 days', keywords: 'voglibose vobose volibo alpha glucosidase inhibitor postprandial hyperglycemia', minAge: 18 },
   { id: 'gen_vobose03', genericName: 'Voglibose 0.3mg Tablet (Vobose 0.3)', category: 'adult', dosage: '1 tablet 3 times daily immediately before meals', duration: '30 days', keywords: 'voglibose vobose alpha glucosidase inhibitor postprandial sugar', minAge: 18 },
   { id: 'gen_glucobay50', genericName: 'Acarbose 50mg Tablet (Glucobay 50)', category: 'adult', dosage: '1 tablet 3 times daily with first bite of meal', duration: '30 days', keywords: 'acarbose glucobay alpha glucosidase inhibitor postprandial sugar', minAge: 18 },
+
+  // ==========================================
+  // 11. PEDIATRIC VACCINES & IMMUNIZATION
+  // ==========================================
+  { id: 'vax_bcg', genericName: 'BCG Vaccine 0.05ml Injection (Intradermal Birth Dose)', category: 'pediatric', formulation: 'inj', dosage: '0.05ml intradermal left upper arm stat at birth', duration: 'Stat dose', keywords: 'bcg vaccine tuberculosis birth dose pediatric immunization' },
+  { id: 'vax_hepb_birth', genericName: 'Hepatitis B Birth Dose Vaccine 0.5ml Injection (IM)', category: 'pediatric', formulation: 'inj', dosage: '0.5ml IM anterolateral thigh stat within 24h of birth', duration: 'Stat dose', keywords: 'hepatitis b birth dose vaccine pediatric immunization' },
+  { id: 'vax_bopv', genericName: 'bOPV (Bivalent Oral Polio Vaccine) Drops', category: 'pediatric', formulation: 'drops', dosage: '2 drops oral stat', duration: 'Stat dose', keywords: 'bopv opv oral polio vaccine drops immunization polio' },
+  { id: 'vax_penta', genericName: 'Pentavalent Vaccine (DTP + Hep-B + Hib) 0.5ml Injection', category: 'pediatric', formulation: 'inj', dosage: '0.5ml IM anterolateral thigh stat (at 6w, 10w, 14w)', duration: 'Stat dose', keywords: 'pentavalent dtp hepb hib 5-in-1 vaccine pediatric immunization' },
+  { id: 'vax_hexa', genericName: 'Hexavalent Vaccine (DTaP + IPV + Hep-B + Hib) 0.5ml Injection', category: 'pediatric', formulation: 'inj', dosage: '0.5ml IM anterolateral thigh stat (6-in-1 vaccine)', duration: 'Stat dose', keywords: 'hexavalent dtap ipv hepb hib 6-in-1 vaccine pediatric immunization' },
+  { id: 'vax_ipv', genericName: 'IPV (Inactivated Polio Vaccine) 0.5ml Injection', category: 'pediatric', formulation: 'inj', dosage: '0.5ml IM or 0.1ml intradermal stat', duration: 'Stat dose', keywords: 'ipv inactivated polio vaccine injection pediatric' },
+  { id: 'vax_pcv', genericName: 'PCV (Pneumococcal Conjugate Vaccine) 0.5ml Injection', category: 'pediatric', formulation: 'inj', dosage: '0.5ml IM anterolateral thigh stat', duration: 'Stat dose', keywords: 'pcv pneumococcal vaccine pneumonia pediatric' },
+  { id: 'vax_rotavirus', genericName: 'Rotavirus Oral Vaccine (Rotasiil / Rotavac)', category: 'pediatric', formulation: 'drops', dosage: '5 drops / 1.5ml oral stat (at 6w, 10w, 14w)', duration: 'Stat dose', keywords: 'rotavirus rotavac rotasiil diarrhea vaccine oral pediatric' },
+  { id: 'vax_mr', genericName: 'MR (Measles-Rubella) Vaccine 0.5ml Injection', category: 'pediatric', formulation: 'inj', dosage: '0.5ml Subcutaneous right upper arm stat at 9 months', duration: 'Stat dose', keywords: 'mr vaccine measles rubella 9 months pediatric' },
+  { id: 'vax_mmr', genericName: 'MMR (Measles-Mumps-Rubella) Vaccine 0.5ml Injection', category: 'pediatric', formulation: 'inj', dosage: '0.5ml Subcutaneous right upper arm stat at 15 months & 1.5 yrs', duration: 'Stat dose', keywords: 'mmr vaccine measles mumps rubella pediatric' },
+  { id: 'vax_je', genericName: 'JE (Japanese Encephalitis) Vaccine 0.5ml Injection', category: 'pediatric', formulation: 'inj', dosage: '0.5ml Subcutaneous stat at 9 months', duration: 'Stat dose', keywords: 'je vaccine japanese encephalitis pediatric' },
+  { id: 'vax_tcv', genericName: 'Typhoid Conjugate Vaccine (TCV / Typbar-TCV) 0.5ml Injection', category: 'pediatric', formulation: 'inj', dosage: '0.5ml IM stat at 6-9 months', duration: 'Stat dose', keywords: 'tcv typbar typhoid conjugate vaccine pediatric' },
+  { id: 'vax_hepa', genericName: 'Hepatitis A Inactivated Vaccine (Havrix / Avaxim) 0.5ml Injection', category: 'pediatric', formulation: 'inj', dosage: '0.5ml IM stat at 12 months & booster at 18 months', duration: 'Stat dose', keywords: 'hepatitis a havrix avaxim vaccine pediatric' },
+  { id: 'vax_varicella', genericName: 'Varicella (Chickenpox) Vaccine 0.5ml Injection', category: 'pediatric', formulation: 'inj', dosage: '0.5ml Subcutaneous stat at 15 months & 1.5 yrs', duration: 'Stat dose', keywords: 'varicella chickenpox vaccine pediatric' },
+  { id: 'vax_dpt_booster', genericName: 'DPT 1st / 2nd Booster Vaccine 0.5ml Injection', category: 'pediatric', formulation: 'inj', dosage: '0.5ml IM deltoid / anterolateral thigh stat', duration: 'Stat dose', keywords: 'dpt booster diphtheria pertussis tetanus vaccine pediatric' },
+  { id: 'vax_vita_sol', genericName: 'Vitamin A Oral Solution (1 Lakh IU / 2 Lakh IU)', category: 'pediatric', formulation: 'syp', dosage: '1ml (1 Lakh IU at 9m) or 2ml (2 Lakh IU every 6m up to 5 yrs)', duration: 'Stat dose', keywords: 'vitamin a syrup oral solution night blindness pediatric' },
   { id: 'gen_pioz15', genericName: 'Pioglitazone 15mg Tablet (Pioz 15 / Glizone)', category: 'adult', dosage: '1 tablet once daily', duration: '30 days', keywords: 'pioglitazone pioz glizone thiazolidinedione tzd insulin sensitizer diabetes', minAge: 18 },
   { id: 'gen_novonorm1', genericName: 'Repaglinide 1mg Tablet (Novonorm 1 / Eurepa)', category: 'adult', dosage: '1 tablet 3 times daily 15 mins before main meals', duration: '30 days', keywords: 'repaglinide novonorm eurepa meglitinide postprandial diabetes', minAge: 18 },
   { id: 'gen_rybelsus7', genericName: 'Semaglutide 7mg Tablet (Rybelsus 7)', category: 'adult', dosage: '1 tablet once daily on empty stomach 30 mins before food', duration: '30 days', keywords: 'semaglutide rybelsus glp-1 agonist oral semaglutide weight loss diabetes Ozempic', minAge: 18 },
@@ -2385,6 +2455,161 @@ export const DEFAULT_CLINICAL_PROTOCOLS: ClinicalProtocol[] = [
     ],
     tests: ['Stat ABG', 'Urine Toxicology Screen', 'Capillary Blood Glucose'],
     advice: 'Continuous pulse oximetry monitoring. Keep bag-valve-mask ready.',
+  },
+
+  // ==========================================
+  // PEDIATRIC IMMUNIZATION & VACCINATION SCHEDULE PROTOCOLS (👶/💉)
+  // ==========================================
+  {
+    id: 'proto_peds_vax_birth',
+    title: 'Pediatric Immunization (Birth Dose Schedule) Protocol',
+    category: 'pediatric',
+    targetGroup: 'Newborns (Birth to 15 Days)',
+    guidelinesSummary: 'National Immunization Schedule & IAP Birth Doses: Administer BCG 0.05ml ID, Hepatitis B Birth Dose 0.5ml IM within 24h, and bOPV Birth Dose 2 drops oral.',
+    redFlags: 'Neonatal jaundice, birth asphyxia, birth weight < 1.8kg (defer BCG/Hep-B as per pediatrician advice).',
+    diagnosis: 'Pediatric Routine Immunization (Birth Dose Schedule)',
+    chiefComplaints: ['Routine Infant Well-Baby Checkup', 'Birth Immunization Visit'],
+    drugs: [
+      'Inj. BCG Vaccine 0.05ml (Intradermal left upper arm stat)',
+      'Inj. Hepatitis B Birth Dose Vaccine 0.5ml (IM anterolateral thigh stat within 24 hours)',
+      'Drops. bOPV (Oral Polio Vaccine Birth Dose) 2 drops (Oral stat)',
+    ],
+    tests: ['Newborn Clinical Examination', 'Birth Weight & Length Measurement'],
+    advice: '1. A small red papule/scar will form at the BCG site after 2-4 weeks; do not squeeze or apply ointment. 2. Keep baby warm and comfortable. 3. Return at 6 weeks for 1.5 month primary vaccines.',
+  },
+  {
+    id: 'proto_peds_vax_6wks',
+    title: 'Pediatric Immunization (6 Weeks / 1.5 Months Schedule) Protocol',
+    category: 'pediatric',
+    targetGroup: 'Infants (6 Weeks / 1.5 Months)',
+    guidelinesSummary: '1.5 Month Primary Doses: Pentavalent-1 (DTP+HepB+Hib) 0.5ml IM, IPV-1 0.5ml IM, PCV-1 0.5ml IM, and Rotavirus-1 5 drops Oral.',
+    redFlags: 'High persistent crying > 3 hours, temperature > 102°F, hypotonic hyporesponsive episode (HHE).',
+    diagnosis: 'Pediatric Primary Immunization (6 Weeks / 1.5 Months Schedule)',
+    chiefComplaints: ['1.5 Month Well-Child Immunization Visit', '6-Week Routine Vaccination'],
+    drugs: [
+      'Inj. Pentavalent Vaccine (DTP + Hep-B + Hib) 0.5ml (IM anterolateral thigh stat)',
+      'Inj. IPV (Inactivated Polio Vaccine) 0.5ml (IM left thigh / 0.1ml ID stat)',
+      'Inj. PCV (Pneumococcal Conjugate Vaccine) 0.5ml (IM right thigh stat)',
+      'Drops. Rotavirus Oral Vaccine 1st Dose (5 drops / 1.5ml Oral stat)',
+      'Drops. Paracetamol 100mg/ml Pediatric Drops (10-15 mg/kg S.O.S for post-vaccine fever)',
+    ],
+    tests: ['Growth & Developmental Milestone Check', 'Weight & Head Circumference Charting'],
+    advice: '1. Give Paracetamol drops (0.5ml to 1ml S.O.S) if fever > 99.5°F or irritability occurs. 2. Apply cold compress on injection site if swollen. 3. Return at 10 weeks (2.5 months) for 2nd primary dose.',
+  },
+  {
+    id: 'proto_peds_vax_10wks',
+    title: 'Pediatric Immunization (10 Weeks / 2.5 Months Schedule) Protocol',
+    category: 'pediatric',
+    targetGroup: 'Infants (10 Weeks / 2.5 Months)',
+    guidelinesSummary: '2.5 Month Primary Doses: Pentavalent-2 0.5ml IM, IPV-2 0.5ml IM, PCV-2 0.5ml IM, and Rotavirus-2 5 drops Oral.',
+    redFlags: 'Post-vaccinal seizure, high fever unresponding to antipyretics.',
+    diagnosis: 'Pediatric Primary Immunization (10 Weeks / 2.5 Months Schedule)',
+    chiefComplaints: ['2.5 Month Well-Child Immunization Visit', '10-Week Routine Vaccination'],
+    drugs: [
+      'Inj. Pentavalent Vaccine (DTP + Hep-B + Hib) 2nd Dose 0.5ml (IM stat)',
+      'Inj. IPV 2nd Dose 0.5ml (IM stat)',
+      'Inj. PCV 2nd Dose 0.5ml (IM stat)',
+      'Drops. Rotavirus Oral Vaccine 2nd Dose (5 drops / 1.5ml Oral stat)',
+      'Drops. Paracetamol 100mg/ml Pediatric Drops (10-15 mg/kg S.O.S for fever)',
+    ],
+    tests: ['Weight & Length Charting', 'Social Smile & Neck Holding Assessment'],
+    advice: '1. Paracetamol drops S.O.S for fever. 2. Cold compress on thigh injection site. 3. Return at 14 weeks (3.5 months) for 3rd primary dose.',
+  },
+  {
+    id: 'proto_peds_vax_14wks',
+    title: 'Pediatric Immunization (14 Weeks / 3.5 Months Schedule) Protocol',
+    category: 'pediatric',
+    targetGroup: 'Infants (14 Weeks / 3.5 Months)',
+    guidelinesSummary: '3.5 Month Primary Doses Completion: Pentavalent-3 0.5ml IM, IPV-3 0.5ml IM, PCV-3 0.5ml IM, and Rotavirus-3 5 drops Oral.',
+    redFlags: 'Anaphylaxis suspect, severe leg swelling.',
+    diagnosis: 'Pediatric Primary Immunization (14 Weeks / 3.5 Months Schedule)',
+    chiefComplaints: ['3.5 Month Well-Child Immunization Visit', '14-Week Primary Series Completion'],
+    drugs: [
+      'Inj. Pentavalent Vaccine (DTP + Hep-B + Hib) 3rd Dose 0.5ml (IM stat)',
+      'Inj. IPV 3rd Dose 0.5ml (IM stat)',
+      'Inj. PCV 3rd Dose 0.5ml (IM stat)',
+      'Drops. Rotavirus Oral Vaccine 3rd Dose (5 drops / 1.5ml Oral stat)',
+      'Drops. Paracetamol 100mg/ml Pediatric Drops S.O.S for fever',
+    ],
+    tests: ['Primary Series Completion Check', 'Growth Velocity Charting'],
+    advice: '1. Primary infant 3-dose series completed successfully. 2. Schedule Influenza vaccine at 6 months. 3. Return at 9 months for MR-1, JE-1, & Vitamin A.',
+  },
+  {
+    id: 'proto_peds_vax_6m_9m',
+    title: 'Pediatric Immunization (6 to 9 Months Schedule) Protocol',
+    category: 'pediatric',
+    targetGroup: 'Infants (6 to 9 Months)',
+    guidelinesSummary: '9 Months Milestone: MR (Measles-Rubella) 1st Dose 0.5ml SC, JE 1st Dose 0.5ml SC, Typhoid Conjugate Vaccine (TCV) 0.5ml IM, and Vitamin A Solution 1 Lakh IU (1ml Oral).',
+    redFlags: 'Vitamin A toxicity symptoms (bulging fontanelle, vomiting), high post-measles fever.',
+    diagnosis: 'Pediatric Immunization (6 to 9 Months Schedule)',
+    chiefComplaints: ['6-9 Month Well-Child Immunization Visit', 'Measles & Vitamin A Vaccination'],
+    drugs: [
+      'Inj. MR (Measles-Rubella) Vaccine 1st Dose 0.5ml (Subcutaneous right upper arm stat)',
+      'Inj. JE (Japanese Encephalitis) Vaccine 1st Dose 0.5ml (Subcutaneous stat)',
+      'Inj. Typhoid Conjugate Vaccine (TCV) 0.5ml (IM stat at 6-9 months)',
+      'Syp. Vitamin A Oral Solution (1 Lakh IU = 1ml Oral stat)',
+      'Inj. Influenza Quadrivalent Vaccine 0.5ml (IM at 6m & 7m 4w apart)',
+    ],
+    tests: ['Sitting Milestone Check', 'Hemoglobin Screening for Infant Anemia'],
+    advice: '1. Ensure Vitamin A liquid dose is administered orally. 2. Complementary weaning diet (soft khichdi, ragi, banana mash 3 times daily). 3. Return at 12-15 months for MMR-1 & PCV Booster.',
+  },
+  {
+    id: 'proto_peds_vax_12m_15m',
+    title: 'Pediatric Immunization (12 to 15 Months Schedule) Protocol',
+    category: 'pediatric',
+    targetGroup: 'Toddlers (12 to 15 Months)',
+    guidelinesSummary: '1-Year Toddler Milestone: MMR-1 0.5ml SC, PCV Booster 0.5ml IM, Hepatitis A 1st Dose 0.5ml IM, and Varicella-1 0.5ml SC.',
+    redFlags: 'Post-MMR rash with high fever after 5-10 days (benign post-measles rash vs severe allergic reaction).',
+    diagnosis: 'Pediatric Toddler Immunization (12 to 15 Months Schedule)',
+    chiefComplaints: ['1-Year Toddler Well-Child Immunization Visit', 'MMR & PCV Booster Vaccination'],
+    drugs: [
+      'Inj. MMR (Measles-Mumps-Rubella) 1st Dose 0.5ml (Subcutaneous right upper arm stat)',
+      'Inj. PCV Booster Dose 0.5ml (IM right anterolateral thigh stat)',
+      'Inj. Hepatitis A Inactivated Vaccine 1st Dose 0.5ml (IM stat)',
+      'Inj. Varicella (Chickenpox) Vaccine 1st Dose 0.5ml (Subcutaneous stat)',
+      'Syp. Paracetamol 250mg/5ml Syrup (5ml S.O.S for fever)',
+    ],
+    tests: ['Standing & Walking Milestone Assessment', 'Toddler Growth Charting'],
+    advice: '1. Paracetamol syrup S.O.S for fever. 2. Continue active toddler feeding & growth monitoring. 3. Return at 16-18 months for DPT Booster-1.',
+  },
+  {
+    id: 'proto_peds_vax_16m_24m',
+    title: 'Pediatric Immunization (16 to 24 Months Booster Schedule) Protocol',
+    category: 'pediatric',
+    targetGroup: 'Toddlers (16 to 24 Months / 1.5 to 2 Years)',
+    guidelinesSummary: '1.5 Year Toddler Booster: DPT 1st Booster 0.5ml IM, IPV Booster 0.5ml IM, bOPV Booster 2 drops Oral, MMR-2 0.5ml SC, Varicella-2 0.5ml SC, and Vitamin A 2 Lakh IU (2ml Oral).',
+    redFlags: 'Severe deltoid/thigh swelling, sterile abscess at injection site.',
+    diagnosis: 'Pediatric Booster Immunization (16 to 24 Months Schedule)',
+    chiefComplaints: ['1.5 Year Toddler Booster Immunization Visit', 'DPT-1 & OPV Booster Vaccination'],
+    drugs: [
+      'Inj. DPT 1st Booster Vaccine 0.5ml (IM anterolateral thigh/deltoid stat)',
+      'Inj. IPV Booster Dose 0.5ml (IM stat)',
+      'Drops. bOPV Booster 2 drops (Oral stat)',
+      'Inj. MMR 2nd Dose 0.5ml (Subcutaneous stat)',
+      'Inj. Varicella 2nd Dose 0.5ml (Subcutaneous stat)',
+      'Syp. Vitamin A Oral Solution (2 Lakh IU = 2ml Oral stat)',
+      'Syp. Paracetamol 250mg/5ml Syrup (5ml S.O.S for fever)',
+    ],
+    tests: ['Speech & Language Development Check', 'De-Worming Screen (Albendazole 400mg)'],
+    advice: '1. DPT booster can cause mild localized swelling and low fever; apply cool compress. 2. Give Vitamin A 2ml orally. 3. Return at 4-6 years for DPT Booster-2.',
+  },
+  {
+    id: 'proto_peds_vax_4y_6y',
+    title: 'Pediatric Immunization (4 to 6 Years School Entry Booster) Protocol',
+    category: 'pediatric',
+    targetGroup: 'Preschoolers (4 to 6 Years)',
+    guidelinesSummary: 'School Entry Boosters: DPT 2nd Booster 0.5ml IM deltoid, bOPV Booster 2 drops Oral, MMR 3rd Dose 0.5ml SC.',
+    redFlags: 'Large local reaction > 10cm, severe muscle pain.',
+    diagnosis: 'Pediatric School Entry Booster Immunization (4 to 6 Years Schedule)',
+    chiefComplaints: ['4-6 Year Preschooler / School Entry Immunization Visit', 'DPT-2 Booster Vaccination'],
+    drugs: [
+      'Inj. DPT 2nd Booster Vaccine 0.5ml (IM deltoid arm stat)',
+      'Drops. bOPV Booster 2 drops (Oral stat)',
+      'Inj. MMR 3rd Dose / TCV Booster 0.5ml (IM/SC stat)',
+      'Syp. Paracetamol 250mg/5ml Syrup (7.5ml S.O.S for fever)',
+    ],
+    tests: ['Pre-School Vision & Hearing Screening', 'Height & BMI Centile Charting'],
+    advice: '1. Local arm soreness is normal for 24-48 hours. 2. Paracetamol syrup/tablet S.O.S for fever. 3. Next Tdap / Tetanus booster scheduled at 10-12 years.',
   },
 
   // ==========================================
@@ -4647,23 +4872,6 @@ export function saveClinicalProtocols(data: ClinicalProtocol[]): void {
   }
 }
 
-const isPurgedDrug = (item: DrugItem) => {
-  const text = `${item.genericName} ${item.keywords || ''}`.toLowerCase();
-  return (
-    text.includes('cilnidipine') ||
-    text.includes('glargine') ||
-    text.includes('nebivolol') ||
-    text.includes('sacubitril') ||
-    text.includes('valsartan') ||
-    text.includes('cilacar') ||
-    text.includes('nebicard') ||
-    text.includes('lantus') ||
-    text.includes('basalog') ||
-    text.includes('vymada') ||
-    text.includes('cidmus')
-  );
-};
-
 export function getDrugCatalog(): DrugItem[] {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem(DRUGS_STORAGE_KEY);
@@ -4672,12 +4880,10 @@ export function getDrugCatalog(): DrugItem[] {
         const parsed: DrugItem[] = JSON.parse(saved);
         const map = new Map<string, DrugItem>();
         COMPREHENSIVE_GENERIC_DRUGS.forEach((item) => {
-          if (!isPurgedDrug(item)) {
-            map.set(item.id, normalizeDrugItem(item));
-          }
+          map.set(item.id, normalizeDrugItem(item));
         });
         parsed.forEach((item) => {
-          if (item && item.id && !isPurgedDrug(item)) {
+          if (item && item.id) {
             const defaultItem = COMPREHENSIVE_GENERIC_DRUGS.find((d) => d.id === item.id);
             if (defaultItem) {
               map.set(
@@ -4697,7 +4903,6 @@ export function getDrugCatalog(): DrugItem[] {
         // Deduplicate map values by normalized genericName & dosage
         const deduplicatedMap = new Map<string, DrugItem>();
         for (const item of map.values()) {
-          if (isPurgedDrug(item)) continue;
           const key = `${item.genericName.trim().toLowerCase()}_${item.dosage.trim().toLowerCase()}`;
           if (!deduplicatedMap.has(key)) {
             deduplicatedMap.set(key, item);
@@ -4712,7 +4917,6 @@ export function getDrugCatalog(): DrugItem[] {
   // Fallback default catalog deduplicated
   const deduplicatedMap = new Map<string, DrugItem>();
   for (const item of COMPREHENSIVE_GENERIC_DRUGS) {
-    if (isPurgedDrug(item)) continue;
     const norm = normalizeDrugItem(item);
     const key = `${norm.genericName.trim().toLowerCase()}_${norm.dosage.trim().toLowerCase()}`;
     if (!deduplicatedMap.has(key)) {
