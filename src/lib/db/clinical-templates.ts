@@ -990,13 +990,6 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'fdc37', genericName: 'Dextromethorphan + Chlorpheniramine + Phenylephrine', category: 'adult', dosage: '5ml to 10ml (t.d.s)', duration: '5 days', minAge: 6 },
   { id: 'fdc38', genericName: 'Telmisartan + Amlodipine', category: 'adult', dosage: '40mg/5mg (1-0-0 morning)', duration: '30 days', minAge: 18, minWeight: 40 },
 
-  { id: 'gen_lantus_pen', genericName: 'Insulin Glargine 100 IU/ml Subcutaneous Pen 3ml (Lantus / Basalog Pen)', category: 'all', formulation: 'inj', dosage: 'Subcutaneous injection once daily at fixed bedtime hour (0-0-1)', duration: '30 days', keywords: 'insulin glargine lantus basalog basal insulin pen long acting diabetes t1dm t2dm' },
-  { id: 'gen_cilacar10', genericName: 'Cilnidipine 10mg Tablet (Cilacar 10)', category: 'adult', formulation: 'tab', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'cilnidipine cilacar 10 ccb n-type calcium blocker hypertension high bp pedal edema free', minAge: 18 },
-  { id: 'gen_telmi_cl', genericName: 'Telmisartan 40mg + Cilnidipine 10mg Tablet (Telma-CL)', category: 'adult', formulation: 'tab', dosage: '1 tablet once daily morning after breakfast (1-0-0)', duration: '30 days', keywords: 'telmisartan cilnidipine telma cl arb ccb hypertension high bp edema free', minAge: 18 },
-  { id: 'gen_nebicard5', genericName: 'Nebivolol 5mg Tablet (Nebicard 5)', category: 'adult', formulation: 'tab', dosage: '1 tablet once daily morning after food (1-0-0)', duration: '30 days', keywords: 'nebivolol nebicard 5 beta 1 blocker nitric oxide hypertension high bp', minAge: 18 },
-  { id: 'gen_vymada50', genericName: 'Sacubitril 24mg + Valsartan 26mg Tablet (Vymada 50mg)', category: 'adult', formulation: 'tab', dosage: '1 tablet twice daily after meals (1-0-1)', duration: '30 days', keywords: 'sacubitril valsartan vymada 50 arni heart failure hfref ejection fraction hypertension', minAge: 18 },
-  { id: 'fdc42', genericName: 'Sacubitril + Valsartan (ARNI)', category: 'adult', formulation: 'tab', dosage: '50mg (1-0-1 after food)', duration: '30 days', keywords: 'sacubitril valsartan vymada arni heart failure hypertension high bp cardiology', minAge: 18, minWeight: 40 },
-
   // ==========================================
   // ENDOCRINOLOGY, DIABETES & METABOLIC DRUGS
   // ==========================================
@@ -4872,6 +4865,19 @@ export function saveClinicalProtocols(data: ClinicalProtocol[]): void {
   }
 }
 
+const PURGED_DRUG_NAMES = [
+  'insulin glargine',
+  'cilnidipine',
+  'nebivolol',
+  'sacubitril',
+  'valsartan',
+];
+
+function isPurgedDrug(drugName: string): boolean {
+  const lower = drugName.toLowerCase();
+  return PURGED_DRUG_NAMES.some((p) => lower.includes(p));
+}
+
 export function getDrugCatalog(): DrugItem[] {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem(DRUGS_STORAGE_KEY);
@@ -4880,10 +4886,12 @@ export function getDrugCatalog(): DrugItem[] {
         const parsed: DrugItem[] = JSON.parse(saved);
         const map = new Map<string, DrugItem>();
         COMPREHENSIVE_GENERIC_DRUGS.forEach((item) => {
-          map.set(item.id, normalizeDrugItem(item));
+          if (!isPurgedDrug(item.genericName)) {
+            map.set(item.id, normalizeDrugItem(item));
+          }
         });
         parsed.forEach((item) => {
-          if (item && item.id) {
+          if (item && item.id && !isPurgedDrug(item.genericName || '')) {
             const defaultItem = COMPREHENSIVE_GENERIC_DRUGS.find((d) => d.id === item.id);
             if (defaultItem) {
               map.set(
@@ -4903,9 +4911,11 @@ export function getDrugCatalog(): DrugItem[] {
         // Deduplicate map values by normalized genericName & dosage
         const deduplicatedMap = new Map<string, DrugItem>();
         for (const item of map.values()) {
-          const key = `${item.genericName.trim().toLowerCase()}_${item.dosage.trim().toLowerCase()}`;
-          if (!deduplicatedMap.has(key)) {
-            deduplicatedMap.set(key, item);
+          if (!isPurgedDrug(item.genericName)) {
+            const key = `${item.genericName.trim().toLowerCase()}_${item.dosage.trim().toLowerCase()}`;
+            if (!deduplicatedMap.has(key)) {
+              deduplicatedMap.set(key, item);
+            }
           }
         }
 
@@ -4917,10 +4927,12 @@ export function getDrugCatalog(): DrugItem[] {
   // Fallback default catalog deduplicated
   const deduplicatedMap = new Map<string, DrugItem>();
   for (const item of COMPREHENSIVE_GENERIC_DRUGS) {
-    const norm = normalizeDrugItem(item);
-    const key = `${norm.genericName.trim().toLowerCase()}_${norm.dosage.trim().toLowerCase()}`;
-    if (!deduplicatedMap.has(key)) {
-      deduplicatedMap.set(key, norm);
+    if (!isPurgedDrug(item.genericName)) {
+      const norm = normalizeDrugItem(item);
+      const key = `${norm.genericName.trim().toLowerCase()}_${norm.dosage.trim().toLowerCase()}`;
+      if (!deduplicatedMap.has(key)) {
+        deduplicatedMap.set(key, norm);
+      }
     }
   }
   return Array.from(deduplicatedMap.values());

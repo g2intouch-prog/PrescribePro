@@ -555,6 +555,10 @@ export default function UserWorkspacePage() {
   // Modals State
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isDrugModalOpen, setIsDrugModalOpen] = useState(false);
+  const [isPharmacopeiaModalOpen, setIsPharmacopeiaModalOpen] = useState(false);
+  const [drugSearchQuery, setDrugSearchQuery] = useState('');
+  const [drugFormulationFilter, setDrugFormulationFilter] = useState<'all' | 'inj' | 'tab' | 'cap' | 'syp' | 'drops' | 'topical'>('all');
+  const [pharmaCategoryFilter, setPharmaCategoryFilter] = useState<string | null>(null);
   const [isPediatricModalOpen, setIsPediatricModalOpen] = useState(false);
   const [pediatricSearchQuery, setPediatricSearchQuery] = useState('');
 
@@ -1257,8 +1261,6 @@ export default function UserWorkspacePage() {
 
   // Selected Ticked Drugs on Prescription
   const [selectedDrugs, setSelectedDrugs] = useState<string[]>([]);
-  const [drugSearchQuery, setDrugSearchQuery] = useState('');
-  const [drugFormulationFilter, setDrugFormulationFilter] = useState<'all' | 'inj' | 'tab' | 'cap' | 'syp' | 'drops' | 'topical'>('all');
 
   // Patient Registration Form State
   const [patient, setPatient] = useState({
@@ -1352,9 +1354,6 @@ export default function UserWorkspacePage() {
 
   // Active Left Sub-Tab
   const [activeLeftTab, setActiveLeftTab] = useState<'patient' | 'vitals' | 'clinical' | 'procedures' | 'tests' | 'advice'>('patient');
-
-  // Pharmacopeia Selector Modal State
-  const [isPharmacopeiaModalOpen, setIsPharmacopeiaModalOpen] = useState<boolean>(false);
 
   // Doctor Profile State (Name, Regd No, Qualification, Designation, RegNo Format Preferences)
   const [doctorProfile, setDoctorProfile] = useState<{
@@ -4949,21 +4948,21 @@ export default function UserWorkspacePage() {
         </div>
       )}
 
-      {/* FULL PHARMACOPEIA GENERIC DRUG SELECTOR MODAL POPUP */}
+      {/* FULL PHARMACOPEIA GENERIC DRUG SELECTOR MODAL POPUP (REDESIGNED 2-COLUMN SIDEBAR LAYOUT MATCHING CLINICAL PROTOCOLS) */}
       {isPharmacopeiaModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-6xl w-full h-[88vh] flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
             {/* MODAL HEADER */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 font-bold">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-emerald-600 text-white font-extrabold text-base shadow">
                   💊
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100">
+                  <h3 className="font-extrabold text-base text-white">
                     Universal USFDA & IP Generic Drug Pharmacopeia
                   </h3>
-                  <p className="text-xs text-slate-500 font-semibold">
+                  <p className="text-xs text-slate-300 font-medium">
                     100% Pure Generic Preparations • Tick or click to append to Live Prescription Pad ({drugCatalog.length} loaded)
                   </p>
                 </div>
@@ -4972,290 +4971,271 @@ export default function UserWorkspacePage() {
                 <button
                   type="button"
                   onClick={handleOpenAddDrug}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition shrink-0 flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow flex items-center gap-1 transition shrink-0"
                 >
                   <span>➕ Add New Drug</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleResetDrugCatalogToDefault}
-                  className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 font-bold text-xs transition shrink-0"
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition shrink-0"
                   title="Restore default database catalog"
                 >
                   <span>🔄 Reset Catalog</span>
                 </button>
                 <button
-                  onClick={() => setIsPharmacopeiaModalOpen(false)}
-                  className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 hover:text-slate-900 font-bold text-xs transition"
+                  onClick={() => {
+                    setIsPharmacopeiaModalOpen(false);
+                    setPharmaCategoryFilter(null);
+                  }}
+                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition"
                 >
                   ✕ Close
                 </button>
               </div>
             </div>
 
-            {/* MODAL SEARCH & SPECIALTY FILTER STRIP */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3 bg-slate-100/50 dark:bg-slate-900/50">
-              <div className="relative">
-                <Search className="h-4 w-4 text-slate-400 absolute left-3 top-3" />
-                <input
-                  type="text"
-                  value={drugSearchQuery}
-                  onChange={(e) => setDrugSearchQuery(e.target.value)}
-                  placeholder="Type generic drug name, symptom or condition (e.g. Cefixime, Azithromycin, Toothache, Fits, Asthma)..."
-                  className="w-full rounded-xl pl-9 pr-24 py-2.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-semibold shadow-inner focus:ring-2 focus:ring-emerald-500 outline-none"
-                  autoFocus
-                />
-                {(drugSearchQuery || drugFormulationFilter !== 'all') && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDrugSearchQuery('');
-                      setDrugFormulationFilter('all');
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 hover:bg-red-200 font-extrabold text-[10px] transition shadow-sm"
-                  >
-                    ✕ Clear Filters
-                  </button>
-                )}
-              </div>
+            {/* MAIN 2-COLUMN SIDEBAR LAYOUT MATCHING CLINICAL PROTOCOLS */}
+            <div className="flex-1 flex overflow-hidden min-h-0 bg-white dark:bg-slate-950">
+              {/* LEFT SIDEBAR: ALPHABETICALLY SORTED SPECIALTIES WITH DRUG COUNTS */}
+              <div className="w-64 md:w-72 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/90 p-2.5 overflow-y-auto space-y-1">
+                <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  Specialties (A-Z)
+                </div>
 
-              {/* FORMULATION FILTER PILLS (INJ, TAB, CAP, SYP, DROPS, TOPICAL) */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                <span className="text-slate-500 font-bold shrink-0 text-[11px]">Formulation:</span>
-                {[
-                  { key: 'all', label: 'All Formulations' },
-                  { key: 'inj', label: '💉 Injectables / IV' },
-                  { key: 'tab', label: '💊 Tablets' },
-                  { key: 'cap', label: '💊 Capsules' },
-                  { key: 'syp', label: '🧪 Syrups / Liquid' },
-                  { key: 'drops', label: '💧 Drops' },
-                  { key: 'topical', label: '🧴 Ointments & Creams' },
-                ].map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => setDrugFormulationFilter(item.key as any)}
-                    className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition text-[11px] ${
-                      drugFormulationFilter === item.key
-                        ? 'bg-emerald-600 text-white shadow-md'
-                        : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
+                {PROTOCOL_CATEGORIES.filter((c) => c.key !== 'personal').map((cat) => {
+                  const isActive = pharmaCategoryFilter === cat.key || (!pharmaCategoryFilter && cat.key === 'all' && !drugSearchQuery);
+                  let catCount = 0;
+                  if (cat.key === 'all') {
+                    catCount = drugCatalog.length;
+                  } else {
+                    catCount = searchClinicalDrugs(cat.key, drugCatalog, '', 'all').length;
+                  }
 
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                <span className="text-slate-500 font-bold shrink-0 text-[11px]">Filter Specialty:</span>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('')}
-                  className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition ${!drugSearchQuery ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300'}`}
-                >
-                  All Generics
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('general')}
-                  className="px-2.5 py-1 rounded-lg bg-teal-100 text-teal-950 font-bold hover:bg-teal-200 shrink-0"
-                >
-                  🩺 General Medicine
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('nephrology')}
-                  className="px-2.5 py-1 rounded-lg bg-sky-100 text-sky-950 font-bold hover:bg-sky-200 shrink-0"
-                >
-                  🫘 Nephrology
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('endocrinology')}
-                  className="px-2.5 py-1 rounded-lg bg-red-100 text-red-950 font-bold hover:bg-red-200 shrink-0"
-                >
-                  🩸 Endocrinology
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('diabetes')}
-                  className="px-2.5 py-1 rounded-lg bg-orange-100 text-orange-950 font-bold hover:bg-orange-200 shrink-0"
-                >
-                  💉 Diabetes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('thyroid')}
-                  className="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-950 font-bold hover:bg-purple-200 shrink-0"
-                >
-                  🦋 Thyroid
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('dental')}
-                  className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-950 font-bold hover:bg-amber-200 shrink-0"
-                >
-                  🦷 Dental
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('hepatology')}
-                  className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-950 font-bold hover:bg-emerald-200 shrink-0"
-                >
-                  🫀 Hepatology
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('gynae')}
-                  className="px-2.5 py-1 rounded-lg bg-pink-100 text-pink-950 font-bold hover:bg-pink-200 shrink-0"
-                >
-                  🤰 Gynecology
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('ortho')}
-                  className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-950 font-bold hover:bg-indigo-200 shrink-0"
-                >
-                  🦴 Orthopedics
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('psych')}
-                  className="px-2.5 py-1 rounded-lg bg-violet-100 text-violet-950 font-bold hover:bg-violet-200 shrink-0"
-                >
-                  🧠 Psychiatry
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('neurology')}
-                  className="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-950 font-bold hover:bg-blue-200 shrink-0"
-                >
-                  ⚡ Neurology
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('cardio')}
-                  className="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-950 font-bold hover:bg-rose-200 shrink-0"
-                >
-                  ❤️ Cardiology
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('hypertension')}
-                  className="px-2.5 py-1 rounded-lg bg-red-100 text-red-950 font-bold hover:bg-red-200 shrink-0"
-                >
-                  💓 Hypertension
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('emergency')}
-                  className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-950 font-bold hover:bg-emerald-200 shrink-0"
-                >
-                  🚨 ER Emergency
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('gastro')}
-                  className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-950 font-bold hover:bg-amber-200 shrink-0"
-                >
-                  🫁 Gastroenterology
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('eye')}
-                  className="px-2.5 py-1 rounded-lg bg-cyan-100 text-cyan-950 font-bold hover:bg-cyan-200 shrink-0"
-                >
-                  👁️ Ophthalmology
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('ent')}
-                  className="px-2.5 py-1 rounded-lg bg-teal-100 text-teal-950 font-bold hover:bg-teal-200 shrink-0"
-                >
-                  👂 ENT Care
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrugSearchQuery('derma')}
-                  className="px-2.5 py-1 rounded-lg bg-fuchsia-100 text-fuchsia-950 font-bold hover:bg-fuchsia-200 shrink-0"
-                >
-                  🧴 Dermatology
-                </button>
-              </div>
-            </div>
-
-            {/* MODAL DRUGS CARDS GRID BODY */}
-            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-950">
-              {(() => {
-                const matched = searchClinicalDrugs(drugSearchQuery, drugCatalog, '', drugFormulationFilter);
-
-                return matched.map((drug) => {
-                  const doseLabel = `${drug.genericName} - ${drug.dosage} for ${drug.duration}`;
-                  const isChecked = selectedDrugs.includes(doseLabel);
                   return (
-                    <div
-                      key={drug.id}
-                      onClick={() => toggleDrugSelection(doseLabel)}
-                      className={`p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between space-y-2 ${
-                        isChecked
-                          ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 shadow-md ring-2 ring-emerald-400'
-                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:bg-emerald-50/50'
+                    <button
+                      key={cat.key}
+                      type="button"
+                      onClick={() => {
+                        setPharmaCategoryFilter(cat.key === 'all' ? null : cat.key);
+                        if (cat.key !== 'all') {
+                          setDrugSearchQuery('');
+                        }
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl font-bold text-xs flex items-center justify-between transition ${
+                        isActive
+                          ? 'bg-emerald-600 text-white shadow-md'
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-800 hover:text-slate-900 bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800'
                       }`}
                     >
-                      <div>
-                        <div className="flex items-start justify-between gap-1.5 mb-1">
-                          <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-snug">
-                            {drug.genericName}
-                          </h4>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <button
-                              type="button"
-                              onClick={(e) => handleOpenEditDrug(drug, e)}
-                              className="p-1 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-800 dark:bg-blue-950 dark:text-blue-200 text-[10px] font-bold transition"
-                              title="Edit this generic drug"
-                            >
-                              ✏️ Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => handleDeleteDrug(drug.id, drug.genericName, e)}
-                              className="p-1 rounded-lg bg-red-100 hover:bg-red-200 text-red-800 dark:bg-red-950 dark:text-red-200 text-[10px] font-bold transition"
-                              title="Delete this generic drug"
-                            >
-                              🗑️
-                            </button>
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold shrink-0 ${
-                              isChecked ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                            }`}>
-                              {isChecked ? '✓ Added' : '+ Add'}
-                            </span>
-                          </div>
-                        </div>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-                          Dose: <strong className="text-slate-800 dark:text-slate-200">{drug.dosage}</strong>
-                        </p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-500">
-                          Standard Duration: {drug.duration}
-                        </p>
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-400">
-                        <span className="uppercase font-bold tracking-wider">{drug.category}</span>
-                        <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">100% Pure Generic</span>
-                      </div>
-                    </div>
+                      <span className="flex items-center gap-2 truncate">
+                        <span className="text-sm">{cat.icon}</span>
+                        <span className="truncate">{cat.label}</span>
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold transition ${
+                        isActive ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}>
+                        {catCount}
+                      </span>
+                    </button>
                   );
-                });
-              })()}
+                })}
+              </div>
+
+              {/* RIGHT MAIN PANEL */}
+              <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white dark:bg-slate-900">
+                {/* SEARCH & FORMULATION CONTROLS STRIP */}
+                <div className="p-3 border-b border-slate-200 dark:border-slate-800 space-y-2 bg-slate-100/60 dark:bg-slate-900/60 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        value={drugSearchQuery}
+                        onChange={(e) => setDrugSearchQuery(e.target.value)}
+                        placeholder="Search generic drug name, symptom or alias (e.g. Cefixime, Toothache, Fits, Asthma)..."
+                        className="w-full rounded-xl pl-9 pr-24 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-semibold shadow-inner focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                      {(drugSearchQuery || drugFormulationFilter !== 'all' || pharmaCategoryFilter) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDrugSearchQuery('');
+                            setDrugFormulationFilter('all');
+                            setPharmaCategoryFilter(null);
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded-lg bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 hover:bg-red-200 font-extrabold text-[10px] transition shadow-sm"
+                        >
+                          ✕ Clear Filters
+                        </button>
+                      )}
+                    </div>
+
+                    {/* PRESCRIBING MODE TOGGLE BUTTON */}
+                    <div className="flex items-center gap-1 bg-slate-200 dark:bg-slate-800 p-1 rounded-xl text-[10px] font-bold">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPrescribingMode('generic');
+                          localStorage.setItem('prescribepro_rx_mode', 'generic');
+                        }}
+                        className={`px-2 py-1 rounded-lg transition ${prescribingMode === 'generic' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
+                      >
+                        Generic Rx
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPrescribingMode('brand');
+                          localStorage.setItem('prescribepro_rx_mode', 'brand');
+                        }}
+                        className={`px-2 py-1 rounded-lg transition ${prescribingMode === 'brand' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
+                      >
+                        Brand Rx
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* FORMULATION PILLS (INJ, TAB, CAP, SYP, DROPS, TOPICAL) */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
+                    <span className="text-slate-500 font-bold shrink-0 text-[10px] uppercase tracking-wider">Formulation:</span>
+                    {[
+                      { key: 'all', label: 'All Formulations' },
+                      { key: 'inj', label: '💉 Injectables' },
+                      { key: 'tab', label: '💊 Tablets' },
+                      { key: 'cap', label: '💊 Capsules' },
+                      { key: 'syp', label: '🧪 Syrups' },
+                      { key: 'drops', label: '💧 Drops' },
+                      { key: 'topical', label: '🧴 Topical' },
+                    ].map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => setDrugFormulationFilter(item.key as any)}
+                        className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition text-[10px] ${
+                          drugFormulationFilter === item.key
+                            ? 'bg-emerald-600 text-white shadow-md'
+                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* INITIATION BLANK STATE */}
+                {!pharmaCategoryFilter && !drugSearchQuery && drugFormulationFilter === 'all' ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-400 dark:text-slate-500 space-y-3">
+                    <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-3xl shadow-sm animate-pulse">
+                      👈
+                    </div>
+                    <h4 className="font-extrabold text-base text-slate-800 dark:text-slate-200">Select a Specialty from the Left Panel</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md leading-relaxed">
+                      Click any specialty in the left panel or type in the search bar above to browse generic preparations. ({drugCatalog.length} generic drugs available)
+                    </p>
+                  </div>
+                ) : (
+                  /* DRUGS GRID BODY */
+                  <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-950">
+                    {(() => {
+                      const effectiveQuery = drugSearchQuery || (pharmaCategoryFilter || '');
+                      const matched = searchClinicalDrugs(effectiveQuery, drugCatalog, '', drugFormulationFilter);
+
+                      if (matched.length === 0) {
+                        return (
+                          <div className="col-span-full py-12 text-center text-slate-400 space-y-2">
+                            <p className="font-bold text-xs text-slate-600 dark:text-slate-400">
+                              No generic drugs found matching the selected filters.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDrugSearchQuery('');
+                                setDrugFormulationFilter('all');
+                                setPharmaCategoryFilter(null);
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs"
+                            >
+                              Reset Filters
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      return matched.map((drug) => {
+                        const doseLabel = `${drug.genericName} - ${drug.dosage} for ${drug.duration}`;
+                        const isChecked = selectedDrugs.includes(doseLabel);
+                        return (
+                          <div
+                            key={drug.id}
+                            onClick={() => toggleDrugSelection(doseLabel)}
+                            className={`p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between space-y-2 ${
+                              isChecked
+                                ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 shadow-md ring-2 ring-emerald-400'
+                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:bg-emerald-50/50'
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-start justify-between gap-1.5 mb-1">
+                                <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-snug">
+                                  {drug.genericName}
+                                </h4>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleOpenEditDrug(drug, e)}
+                                    className="p-1 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-800 dark:bg-blue-950 dark:text-blue-200 text-[10px] font-bold transition"
+                                    title="Edit this generic drug"
+                                  >
+                                    ✏️ Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleDeleteDrug(drug.id, drug.genericName, e)}
+                                    className="p-1 rounded-lg bg-red-100 hover:bg-red-200 text-red-800 dark:bg-red-950 dark:text-red-200 text-[10px] font-bold transition"
+                                    title="Delete this generic drug"
+                                  >
+                                    🗑️
+                                  </button>
+                                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold shrink-0 ${
+                                    isChecked ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                                  }`}>
+                                    {isChecked ? '✓ Added' : '+ Add'}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                                Dose: <strong className="text-slate-800 dark:text-slate-200">{drug.dosage}</strong>
+                              </p>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-500">
+                                Standard Duration: {drug.duration}
+                              </p>
+                            </div>
+
+                            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-400">
+                              <span className="uppercase font-bold tracking-wider">{drug.category}</span>
+                              <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">100% Pure Generic</span>
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* MODAL FOOTER */}
             <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between">
               <span className="text-xs text-slate-600 dark:text-slate-400 font-bold">
-                {selectedDrugs.length} medications selected on prescription pad
+                {selectedDrugs.length} medications selected on live prescription pad
               </span>
               <button
-                onClick={() => setIsPharmacopeiaModalOpen(false)}
+                onClick={() => {
+                  setIsPharmacopeiaModalOpen(false);
+                  setPharmaCategoryFilter(null);
+                }}
                 className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition"
               >
                 Done / Back to Prescription Pad
