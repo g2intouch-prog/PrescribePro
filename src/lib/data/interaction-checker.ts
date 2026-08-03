@@ -18,10 +18,13 @@ export function resolveDrugKeywords(drugStr: string): string[] {
   const normalized = drugStr.toLowerCase().trim();
   const keywords = new Set<string>();
 
-  // Add original words
-  const words = normalized.split(/[\s,()/-]+/);
+  // Split on spaces, punctuation, dashes, slashes, and dots (so 0.5ml becomes 0, 5ml or 5, ml)
+  const words = normalized.split(/[\s,()/\.\-]+/);
   words.forEach((w) => {
-    if (w.length > 2) keywords.add(w);
+    // Exclude words that are purely numbers or contain digits (e.g. 500mg, 0.5ml, d0, 650)
+    if (w.length > 2 && !/\d/.test(w)) {
+      keywords.add(w);
+    }
   });
 
   // Check Indian Brand Resolution Map (use whole word regex to avoid substring false matches)
@@ -37,6 +40,43 @@ export function resolveDrugKeywords(drugStr: string): string[] {
 
   return Array.from(keywords);
 }
+
+const NON_GENERIC_STOP_WORDS = new Set([
+  // Formulations & Forms
+  'tablet', 'tablets', 'tab', 'tabs', 'capsule', 'capsules', 'cap', 'caps', 'syrup', 'syp', 'syrups',
+  'suspension', 'injection', 'inj', 'injections', 'ointment', 'gel', 'drop', 'drops', 'eye', 'ear',
+  'cream', 'lotion', 'solution', 'soln', 'inhaler', 'puffs', 'respules', 'patch', 'suppository',
+  'vial', 'vials', 'ampoule', 'amp', 'bottle', 'strip', 'pack', 'powder', 'infusion', 'spray',
+  'elixir', 'emulsion', 'mouthwash', 'gargle', 'liniment', 'paste', 'soap', 'shampoo',
+
+  // Units, Dosage & Numbers
+  'mg', 'gm', 'g', 'mcg', 'ml', 'iu', 'meq', 'mmol', 'mol', 'kg', 'lbs', 'pct', 'percent',
+
+  // Frequencies & Directions
+  '1-0-1', '1-0-0', '0-0-1', '1-1-1', 's.o.s', 'sos', 'bd', 'tds', 'od', 'hs', 'stat', 'q6h', 'q8h', 'q12h', 'qid', 'tid', 'bid',
+  'once', 'twice', 'thrice', 'daily', 'day', 'days', 'week', 'weeks', 'month', 'months', 'year', 'years', 'yrs',
+  'before', 'after', 'food', 'meals', 'meal', 'night', 'morning', 'afternoon', 'evening', 'bedtime',
+  'water', 'milk', 'oral', 'intravenous', 'intramuscular', 'subcutaneous', 'topical', 'sublingual',
+  'take', 'with', 'dose', 'doses', 'dosing', 'prescribed', 'standard', 'clinical', 'regimen', 'target',
+  'unit', 'units', 'site', 'deltoid', 'gluteal', 'anterolateral', 'thigh', 'im', 'iv', 'sc', 'po',
+  'day0', 'day3', 'day7', 'day14', 'day28', 'd0', 'd3', 'd7', 'd14', 'd28',
+
+  // Common Non-Salt English Words & Biological Stop Words
+  'plus', 'forte', 'extra', 'sr', 'xl', 'xr', 'er', 'cr', 'dt', 'md', 'la', 'ds', 'sf', 'cz',
+  'saline', 'dextrose', 'normal', 'water', 'sterile', 'distilled', 'fluid', 'solution',
+  'vaccine', 'vaccines', 'toxoid', 'antiserum', 'antiserums', 'immunoglobulin', 'serum',
+  'acid', 'sodium', 'potassium', 'calcium', 'chloride', 'sulfate', 'phosphate', 'acetate',
+  'carbonate', 'citrate', 'hydrochloride', 'hcl', 'maleate', 'succinate', 'tartrate', 'fumarate',
+
+  // Drug Class Keywords (Excluded from dynamic generic duplicate check because they are classes, not salts)
+  'ppi', 'nsaid', 'ccb', 'macrolide', 'prokinetic', 'statin', 'beta-blocker', 'arb', 'ace-inhibitor',
+  'benzodiazepine', 'opioid', 'antidepressant', 'anticonvulsant', 'antihistamine', 'azole-antifungal',
+  'fluoroquinolone', 'cephalosporin', 'beta-lactam', 'nitroimidazole', 'corticosteroid',
+  'anxiolytic', 'hypnotic', 'sedative', 'anticoagulant', 'antiplatelet', 'diuretic', 'biguanide',
+  'sulfonylurea', 'dpp4-inhibitor', 'sglt2-inhibitor', 'neuropathic', 'muscle-relaxant', 'xanthine',
+  'beta2-agonist', 'flu-vaccine', 'arv', 'hrig', 'erig', 'tcv', 'rabies-vaccine', 'rabies-immunoglobulin',
+  'tetanus-toxoid'
+]);
 
 /**
  * Checks prescribed drugs, patient allergies, and conditions against the offline DDI rules.
@@ -59,7 +99,7 @@ export function checkPrescriptionSafety(
     keywords: resolveDrugKeywords(d)
   }));
 
-  // 1. DRUG-DRUG INTERACTION CHECK
+  // 1. DRUG-DRUG INTERACTION CHECK (Static Rules Database)
   for (const rule of rules) {
     if (ignoredSet.has(rule.id)) continue;
 
@@ -91,7 +131,7 @@ export function checkPrescriptionSafety(
           const matchesRuleB = rule.drugB.some((k) => drugItemB.keywords.includes(k));
 
           if (matchesRuleB) {
-            // Avoid duplicate reverse pair reports
+            // Avoid duplicate reverse pair reports for the same rule
             const alreadyReported = detected.some(
               (d) =>
                 d.rule.id === rule.id &&
@@ -113,41 +153,29 @@ export function checkPrescriptionSafety(
     }
   }
 
-  // 1.5 DYNAMIC DUPLICATE GENERIC ACTIVE INGREDIENT & SUB-CLASS CHECK
-  // (Detects when the exact same generic salt e.g. "cefixime", "paracetamol", "amoxicillin" is prescribed twice in different doses or forms)
-  const NON_GENERIC_STOP_WORDS = new Set([
-    'tablet', 'tablets', 'tab', 'tabs', 'capsule', 'capsules', 'cap', 'caps', 'syrup', 'syp', 'syrups',
-    'suspension', 'injection', 'inj', 'injections', 'ointment', 'gel', 'drop', 'drops', 'eye', 'ear',
-    'cream', 'lotion', 'solution', 'soln', 'inhaler', 'puffs', 'respules', 'patch', 'suppository',
-    'mg', 'gm', 'g', 'mcg', 'ml', 'iu', 'meq', '1-0-1', '1-0-0', '0-0-1', '1-1-1', 's.o.s', 'sos',
-    'bd', 'tds', 'od', 'hs', 'stat', 'q6h', 'q8h', 'q12h',
-    'once', 'twice', 'thrice', 'daily', 'day', 'days', 'week', 'weeks', 'month', 'months',
-    'before', 'after', 'food', 'meals', 'meal', 'night', 'morning', 'afternoon', 'evening',
-    'water', 'milk', 'bedtime', 'oral', 'intravenous', 'intramuscular', 'subcutaneous', 'topical',
-    'take', 'with', 'dose', 'doses', 'dosing', 'prescribed', 'standard', 'clinical', 'regimen', 'target',
-    'unit', 'units', 'vial', 'vials', 'ampoule', 'amp', 'bottle', 'strip'
-  ]);
-
+  // 1.5 DYNAMIC DUPLICATE GENERIC ACTIVE INGREDIENT CHECK
+  // (Detects when the exact same generic salt e.g. "cefixime", "paracetamol", "amoxicillin" is prescribed twice)
   for (let i = 0; i < parsedDrugs.length; i++) {
     for (let j = i + 1; j < parsedDrugs.length; j++) {
       const drugA = parsedDrugs[i];
       const drugB = parsedDrugs[j];
 
-      // Exempt Rabies Biologicals: Immunoglobulin (ERIG/HRIG/rMAb) + Vaccine (ARV) are synergistic co-prescriptions, not duplicates!
-      const isA_Immunoglobulin = drugA.keywords.some((k) => ['erig', 'hrig', 'immunoglobulin', 'rmab', 'rabishield', 'twinrab', 'equirab'].includes(k));
-      const isB_Immunoglobulin = drugB.keywords.some((k) => ['erig', 'hrig', 'immunoglobulin', 'rmab', 'rabishield', 'twinrab', 'equirab'].includes(k));
-      const isA_Vaccine = drugA.keywords.some((k) => ['arv', 'vaccine', 'rabipur', 'abhayrab', 'rabivax'].includes(k));
-      const isB_Vaccine = drugB.keywords.some((k) => ['arv', 'vaccine', 'rabipur', 'abhayrab', 'rabivax'].includes(k));
+      // Skip dynamic check if a static DDI rule already triggered for this exact pair of drug items
+      const alreadyHasStaticRule = detected.some(
+        (d) =>
+          (d.foundDrugA === drugA.original && d.foundDrugB === drugB.original) ||
+          (d.foundDrugA === drugB.original && d.foundDrugB === drugA.original)
+      );
 
-      if ((isA_Immunoglobulin && isB_Vaccine) || (isB_Immunoglobulin && isA_Vaccine)) {
-        continue; // Synergistic rabies post-exposure prophylaxis combination
-      }
+      if (alreadyHasStaticRule) continue;
 
-      const EXEMPT_WORDS = new Set(['rabies', 'vaccine', 'immunoglobulin', 'toxoid', 'antivenom', 'saline', 'dextrose', 'solution', 'infusion', 'syrup', 'suspension']);
-
-      // Find common active ingredient keywords (excluding dosage/form & biological stop words)
+      // Find common active ingredient keywords (excluding non-generic stop words, class keywords, & digits)
       const commonGenerics = drugA.keywords.filter(
-        (k) => drugB.keywords.includes(k) && !NON_GENERIC_STOP_WORDS.has(k) && !EXEMPT_WORDS.has(k) && k.length > 3
+        (k) =>
+          drugB.keywords.includes(k) &&
+          !NON_GENERIC_STOP_WORDS.has(k) &&
+          k.length > 3 &&
+          !/\d/.test(k)
       );
 
       if (commonGenerics.length > 0) {
@@ -155,30 +183,22 @@ export function checkPrescriptionSafety(
         const ruleId = `dynamic-duplicate-${commonGenerics[0]}-${i}-${j}`;
 
         if (!ignoredSet.has(ruleId)) {
-          const alreadyAdded = detected.some(
-            (d) =>
-              (d.foundDrugA === drugA.original && d.foundDrugB === drugB.original) ||
-              (d.foundDrugA === drugB.original && d.foundDrugB === drugA.original)
-          );
-
-          if (!alreadyAdded) {
-            detected.push({
-              rule: {
-                id: ruleId,
-                drugA: [commonGenerics[0]],
-                drugB: [commonGenerics[0]],
-                severity: 'high',
-                title: `🚨 Duplicate Generic Active Ingredient: ${primarySalt}`,
-                description: `Co-prescribing multiple formulations containing the exact same active generic salt "${primarySalt}" (${drugA.original} and ${drugB.original}) causes accidental toxicity, severe cumulative overdose, and redundant therapy.`,
-                recommendation: `Discontinue one of the redundant ${primarySalt} line items and select a single dosage formulation.`,
-                source: 'CDSCO / NLEM India & WHO EML Safety Advisory',
-                category: 'Antimicrobial'
-              },
-              foundDrugA: drugA.original,
-              foundDrugB: drugB.original,
-              type: 'interaction'
-            });
-          }
+          detected.push({
+            rule: {
+              id: ruleId,
+              drugA: [commonGenerics[0]],
+              drugB: [commonGenerics[0]],
+              severity: 'high',
+              title: `🚨 Duplicate Generic Active Ingredient: ${primarySalt}`,
+              description: `Co-prescribing multiple formulations containing the exact same active generic salt "${primarySalt}" (${drugA.original} and ${drugB.original}) causes accidental toxicity, severe cumulative overdose, and redundant therapy.`,
+              recommendation: `Discontinue one of the redundant ${primarySalt} line items and select a single dosage formulation.`,
+              source: 'CDSCO / NLEM India & WHO EML Safety Advisory',
+              category: 'Antimicrobial'
+            },
+            foundDrugA: drugA.original,
+            foundDrugB: drugB.original,
+            type: 'interaction'
+          });
         }
       }
     }
@@ -189,12 +209,11 @@ export function checkPrescriptionSafety(
     const allergyKeywords = patientAllergies
       .toLowerCase()
       .split(/[\s,;]+/)
-      .filter((k) => k.length > 2);
+      .filter((k) => k.length > 2 && !NON_GENERIC_STOP_WORDS.has(k));
 
     if (allergyKeywords.length > 0) {
       for (const item of parsedDrugs) {
         for (const kw of allergyKeywords) {
-          // Check if any drug keyword matches allergy keyword (e.g. penicillin, sulfa, aspirin, NSAID)
           const isAllergicMatch = item.keywords.some(
             (dk) => dk.includes(kw) || kw.includes(dk)
           );
@@ -222,5 +241,23 @@ export function checkPrescriptionSafety(
     }
   }
 
-  return detected;
+  // 3. PAIR DEDUPLICATION
+  // Ensure no two red alerts target the exact same pair of prescribed drug lines
+  const uniqueAlerts: DetectedInteraction[] = [];
+  const seenPairKeys = new Set<string>();
+
+  for (const item of detected) {
+    if (item.foundDrugB === 'Patient Safety Alert' || item.type === 'allergy') {
+      uniqueAlerts.push(item);
+      continue;
+    }
+
+    const pairKey = [item.foundDrugA.toLowerCase().trim(), item.foundDrugB.toLowerCase().trim()].sort().join('___');
+    if (!seenPairKeys.has(pairKey)) {
+      seenPairKeys.add(pairKey);
+      uniqueAlerts.push(item);
+    }
+  }
+
+  return uniqueAlerts;
 }

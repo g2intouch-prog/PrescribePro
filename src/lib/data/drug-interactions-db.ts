@@ -464,17 +464,6 @@ export const DEFAULT_OFFLINE_DRUG_INTERACTIONS: DrugInteractionRule[] = [
 
   // 5. CNS & PSYCHIATRY
   {
-    id: 'ddi-benzodiazepine-opioid',
-    drugA: ['alprazolam', 'alprax', 'clonazepam', 'epitril', 'diazepam', 'valium', 'lorazepam', 'ativan', 'benzodiazepine'],
-    drugB: ['tramadol', 'ultram', 'codeine', 'morphine', 'fentanyl', 'opioid'],
-    severity: 'high',
-    title: 'Severe Respiratory Depression & Coma Warning',
-    description: 'Concomitant use of benzodiazepines and opioids causes profound CNS depression, respiratory depression, coma, and risk of fatal overdose.',
-    recommendation: 'Reserve co-prescription for patients where alternative treatment options are inadequate; limit dosages and duration to minimum required.',
-    source: 'FDA Black Box Warning & IPC / PvPI India',
-    category: 'Psychiatry'
-  },
-  {
     id: 'ddi-ssri-nsaid-gi-bleed',
     drugA: ['escitalopram', 'nexito', 'sertraline', 'zoloft', 'fluoxetine', 'ssri'],
     drugB: ['aspirin', 'ecospirin', 'ibuprofen', 'brufen', 'diclofenac', 'voveran', 'meftal', 'nsaid'],
