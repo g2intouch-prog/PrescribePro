@@ -2168,14 +2168,22 @@ export default function UserWorkspacePage() {
   const isAdmin = email.toLowerCase() === 'g2intouch@gmail.com';
   const currentSpecialty = specialties.find((sp) => sp.id === selectedSpecialtyId);
 
-  // Seamless Glassmorphism Styling over Green, Pink & Blue Smudged Oval Background
-  const containerBg = "bg-transparent text-slate-900";
+  // High-Contrast Night Mode & Seamless Glassmorphism Styling
+  const containerBg = theme === 'day' 
+    ? 'bg-transparent text-slate-900' 
+    : 'bg-black text-slate-100';
 
-  const headerBg = 'bg-white/65 backdrop-blur-xl border-b border-white/60 shadow-sm relative z-10';
+  const headerBg = theme === 'day' 
+    ? 'bg-white/65 backdrop-blur-xl border-b border-white/60 shadow-sm relative z-10' 
+    : 'bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/90 text-white relative z-10 shadow-lg';
 
-  const cardBg = 'bg-white/65 backdrop-blur-xl border border-white/70 shadow-2xl shadow-slate-300/40 text-slate-900 relative z-10';
+  const cardBg = theme === 'day' 
+    ? 'bg-white/65 backdrop-blur-xl border border-white/70 shadow-2xl shadow-slate-300/40 text-slate-900 relative z-10' 
+    : 'bg-slate-950/95 backdrop-blur-xl border border-slate-800/90 text-slate-100 shadow-2xl shadow-black relative z-10';
 
-  const inputBg = 'bg-white/80 backdrop-blur-md border border-slate-300/80 text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-400/20';
+  const inputBg = theme === 'day' 
+    ? 'bg-white/80 backdrop-blur-md border border-slate-300/80 text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-400/20' 
+    : 'bg-slate-900/90 backdrop-blur-md border border-slate-700/80 text-slate-100 placeholder-slate-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20';
 
   return (
     <div className={`h-screen flex flex-col overflow-hidden transition-colors duration-300 ${containerBg}`}>
@@ -5223,9 +5231,9 @@ export default function UserWorkspacePage() {
       {/* CLINICAL PROTOCOLS & ER ORDER SETS LIST VIEW MODAL */}
       {isProtocolsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-6xl w-full h-[88vh] flex flex-col overflow-hidden text-slate-900">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-6xl w-full h-[88vh] flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
             {/* HEADER */}
-            <div className="p-4 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between shrink-0">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900 text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-indigo-600 text-white font-extrabold text-base shadow">
                   📜
@@ -5261,14 +5269,23 @@ export default function UserWorkspacePage() {
             </div>
 
             {/* MAIN 2-COLUMN SIDEBAR LAYOUT */}
-            <div className="flex-1 flex overflow-hidden min-h-0 bg-white">
-              {/* LEFT SIDEBAR: ALPHABETICALLY SORTED SPECIALTIES */}
-              <div className="w-64 md:w-72 shrink-0 border-r border-slate-200 bg-slate-50/90 p-2.5 overflow-y-auto space-y-1">
-                <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+            <div className="flex-1 flex overflow-hidden min-h-0 bg-white dark:bg-slate-950">
+              {/* LEFT SIDEBAR: ALPHABETICALLY SORTED SPECIALTIES WITH PROTOCOL COUNTS */}
+              <div className="w-64 md:w-72 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/90 p-2.5 overflow-y-auto space-y-1">
+                <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   Specialties (A-Z)
                 </div>
                 {PROTOCOL_CATEGORIES.map((cat) => {
                   const isActive = protocolCategoryFilter === cat.key;
+                  let catCount = 0;
+                  if (cat.key === 'all') {
+                    catCount = protocols.length + specialties.reduce((acc, sp) => acc + (sp.templates?.length || 0), 0);
+                  } else if (cat.key === 'personal') {
+                    catCount = specialties.reduce((acc, sp) => acc + (sp.templates?.length || 0), 0);
+                  } else {
+                    catCount = protocols.filter((p) => p.category === cat.key).length;
+                  }
+
                   return (
                     <button
                       key={cat.key}
@@ -5280,73 +5297,42 @@ export default function UserWorkspacePage() {
                       className={`w-full text-left px-3 py-2 rounded-xl font-bold text-xs flex items-center justify-between transition ${
                         isActive
                           ? 'bg-indigo-600 text-white shadow-md'
-                          : 'text-slate-700 hover:bg-slate-200/80 hover:text-slate-900 bg-white/60 border border-slate-200/60'
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-800 hover:text-slate-900 bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800'
                       }`}
                     >
                       <span className="flex items-center gap-2 truncate">
                         <span className="text-sm">{cat.icon}</span>
                         <span className="truncate">{cat.label}</span>
                       </span>
-                      {isActive && <span className="text-xs font-black">›</span>}
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold transition ${
+                        isActive ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}>
+                        {catCount}
+                      </span>
                     </button>
                   );
                 })}
               </div>
 
               {/* RIGHT MAIN PANEL */}
-              <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
+              <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white dark:bg-slate-900">
                 {/* INITIATION BLANK STATE */}
                 {!protocolCategoryFilter && !selectedProtocol && (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-400 space-y-3">
-                    <div className="p-4 rounded-2xl bg-indigo-50 text-indigo-600 text-3xl shadow-sm animate-pulse">
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-400 dark:text-slate-500 space-y-3">
+                    <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 text-3xl shadow-sm animate-pulse">
                       👈
                     </div>
-                    <h4 className="font-extrabold text-base text-slate-800">Select a Specialty from the Left Panel</h4>
-                    <p className="text-xs text-slate-500 max-w-md leading-relaxed">
-                      Click any specialty or <strong className="text-indigo-600">"All Protocols"</strong> in the left panel to browse protocols. Click any protocol to view its full order set details.
+                    <h4 className="font-extrabold text-base text-slate-800 dark:text-slate-200">Select a Specialty from the Left Panel</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md leading-relaxed">
+                      Click any specialty or <strong className="text-indigo-600 dark:text-indigo-400">"All Protocols"</strong> in the left panel to browse protocols. Click any protocol to view its full order set details.
                     </p>
                   </div>
                 )}
 
                 {/* DETAILED VIEW FOR SELECTED PROTOCOL / TEMPLATE */}
                 {selectedProtocol && (
-                  <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-white">
-                    {/* DETAIL HEADER */}
-                    <div className="p-3 border-b border-slate-200 bg-slate-100/70 flex items-center justify-between gap-3 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedProtocol(null)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold text-xs transition flex items-center gap-1"
-                      >
-                        <ChevronLeft className="h-4 w-4" /> Back to Protocol List
-                      </button>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (selectedProtocol.specialtyId) {
-                              // Personal Template
-                              if (selectedProtocol.complaints && selectedProtocol.complaints.length > 0) setChiefComplaints(selectedProtocol.complaints.join(', '));
-                              if (selectedProtocol.diagnosis) setProvisionalDiagnosis(selectedProtocol.diagnosis);
-                              if (selectedProtocol.drugs && selectedProtocol.drugs.length > 0) setSelectedDrugs(selectedProtocol.drugs);
-                              if (selectedProtocol.tests && selectedProtocol.tests.length > 0) setSelectedTests(selectedProtocol.tests);
-                              if (selectedProtocol.advice) setSpecificAdviceText(Array.isArray(selectedProtocol.advice) ? selectedProtocol.advice.join('\n') : selectedProtocol.advice);
-                              setIsProtocolsModalOpen(false);
-                              setSelectedProtocol(null);
-                              setSaveStatus(`Applied Template: "${selectedProtocol.name}"`);
-                              setTimeout(() => setSaveStatus(null), 3500);
-                            } else {
-                              // Clinical Protocol
-                              handleApplyProtocol(selectedProtocol);
-                              setSelectedProtocol(null);
-                            }
-                          }}
-                          className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1"
-                        >
-                          <span>⚡ Apply Order Set to Pad</span>
-                        </button>
-                      </div>
-                    </div>
+                  <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-white dark:bg-slate-900">
+                    {/* DETAIL CONTENT BODY (TOP RIBBON REMOVED FOR MAXIMUM SCREEN REAL ESTATE) */}
 
                     {/* DETAIL CONTENT BODY */}
                     <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
@@ -5696,12 +5682,28 @@ export default function UserWorkspacePage() {
                     </div>
 
                     {/* FOOTER */}
-                    <div className="p-3 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-xs shrink-0">
-                      <span className="text-slate-500 font-semibold">Total Protocols Loaded: {protocols.length}</span>
+                    <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex justify-between items-center text-xs shrink-0 text-slate-700 dark:text-slate-300 font-bold">
+                      <span>
+                        {protocolCategoryFilter ? (
+                          <>
+                            Protocols in <span className="text-indigo-600 dark:text-indigo-400 font-extrabold">{PROTOCOL_CATEGORIES.find(c => c.key === protocolCategoryFilter)?.label || 'Specialty'}</span>: {' '}
+                            <span className="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-900 dark:text-indigo-200 font-mono font-black border border-indigo-200 dark:border-indigo-800">
+                              {protocolCategoryFilter === 'all' 
+                                ? (protocols.length + specialties.reduce((acc, sp) => acc + (sp.templates?.length || 0), 0))
+                                : protocolCategoryFilter === 'personal'
+                                ? specialties.reduce((acc, sp) => acc + (sp.templates?.length || 0), 0)
+                                : protocols.filter(p => p.category === protocolCategoryFilter).length
+                              }
+                            </span>
+                          </>
+                        ) : (
+                          `Total Protocols System Library: ${protocols.length}`
+                        )}
+                      </span>
                       <button
                         type="button"
                         onClick={() => setIsProtocolsModalOpen(false)}
-                        className="px-4 py-1.5 rounded-xl bg-slate-200 text-slate-800 font-bold text-xs hover:bg-slate-300 transition"
+                        className="px-4 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs hover:bg-slate-300 dark:hover:bg-slate-700 transition"
                       >
                         Close Screen
                       </button>
