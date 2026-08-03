@@ -626,6 +626,7 @@ export interface GitHubReleaseInfo {
   htmlUrl: string;
   downloadUrl?: string;
   hasUpdate: boolean;
+  releaseNotes?: string;
 }
 
 export async function checkForGitHubUpdates(currentVersion = '1.0.0'): Promise<GitHubReleaseInfo | null> {
@@ -650,6 +651,7 @@ export async function checkForGitHubUpdates(currentVersion = '1.0.0'): Promise<G
       htmlUrl: data.html_url,
       downloadUrl,
       hasUpdate,
+      releaseNotes: data.body || '',
     };
   } catch (e) {
     console.error('Failed checking for GitHub updates:', e);

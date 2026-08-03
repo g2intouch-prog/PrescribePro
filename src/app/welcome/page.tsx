@@ -81,6 +81,31 @@ import {
   DrugItem 
 } from '@/lib/db/clinical-templates';
 
+const PROTOCOL_CATEGORIES = [
+  { key: 'all', label: 'All Protocols', icon: '📋' },
+  { key: 'personal', label: 'My Personal Templates', icon: '⭐' },
+  { key: 'bites', label: 'Animal Bites & Rabies', icon: '🐾' },
+  { key: 'cardio', label: 'Cardio & Hypertension', icon: '❤️' },
+  { key: 'dermatology', label: 'Dermatology & Skin Care', icon: '🧴' },
+  { key: 'endocrine', label: 'Endocrinology & Diabetes', icon: '🩸' },
+  { key: 'ent', label: 'ENT (Ear, Nose, Throat)', icon: '👂' },
+  { key: 'emergency', label: 'ER / Emergency & Critical Care', icon: '🚨' },
+  { key: 'gastro', label: 'Gastroenterology & Hepatology', icon: '🤢' },
+  { key: 'general', label: 'General Medicine', icon: '🩺' },
+  { key: 'gynae', label: 'Gynaecology & Obstetrics', icon: '🤰' },
+  { key: 'infectious', label: 'Infectious Diseases', icon: '🦠' },
+  { key: 'nephrology', label: 'Nephrology & Renal Care', icon: '🫘' },
+  { key: 'neurology', label: 'Neurology & Seizures', icon: '⚡' },
+  { key: 'ophthalmology', label: 'Ophthalmology & Eye Care', icon: '👁️' },
+  { key: 'ortho', label: 'Orthopedics & Joint Care', icon: '🦴' },
+  { key: 'pediatric', label: 'Pediatrics & Child Health', icon: '👶' },
+  { key: 'psychiatry', label: 'Psychiatry & Mental Health', icon: '🧠' },
+  { key: 'respiratory', label: 'Respiratory Care & Pulmonology', icon: '🫁' },
+  { key: 'toxicology', label: 'Toxicology & Poisoning', icon: '🧪' },
+  { key: 'trauma', label: 'Trauma & Burns', icon: '🔥' },
+];
+
+
 interface MedicalRecord {
   date: string;
   diagnosis: string;
@@ -537,7 +562,8 @@ export default function UserWorkspacePage() {
   const [protocols, setProtocols] = useState<ClinicalProtocol[]>(getClinicalProtocols());
   const [isProtocolsModalOpen, setIsProtocolsModalOpen] = useState(false);
   const [protocolSearchTerm, setProtocolSearchTerm] = useState('');
-  const [protocolCategoryFilter, setProtocolCategoryFilter] = useState<string>('all');
+  const [protocolCategoryFilter, setProtocolCategoryFilter] = useState<string | null>(null);
+  const [selectedProtocol, setSelectedProtocol] = useState<any | null>(null);
 
   // Template Editor Popup State
   const [isTemplateEditorOpen, setIsTemplateEditorOpen] = useState(false);
@@ -870,6 +896,7 @@ export default function UserWorkspacePage() {
   const [githubReleaseInfo, setGithubReleaseInfo] = useState<GitHubReleaseInfo | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [updateStatusMsg, setUpdateStatusMsg] = useState<string | null>(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   useEffect(() => {
     setSpecialties(getSpecialties());
@@ -897,6 +924,8 @@ export default function UserWorkspacePage() {
       restoreConnectedFolderHandle().then(({ folderName, active }) => {
         if (folderName) setConnectedFolderName(folderName);
       });
+      // Automatically search for updates on every login / page load
+      handleCheckGitHubRelease();
     }
   }, []);
 
@@ -2161,6 +2190,38 @@ export default function UserWorkspacePage() {
         </div>
 
         <div className="flex items-center gap-1.5">
+          {/* DAY / NIGHT MODE TOGGLE BUTTON */}
+          <button
+            type="button"
+            onClick={() => setTheme(theme === 'dark' ? 'day' : 'dark')}
+            className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-300 transition shadow-sm"
+            title={`Switch to ${theme === 'dark' ? 'Day Light' : 'Night Dark'} Mode`}
+          >
+            {theme === 'dark' ? <Sun className="h-3 w-3 text-amber-400" /> : <Moon className="h-3 w-3 text-indigo-600" />}
+            <span>{theme === 'dark' ? 'Day Mode' : 'Night Mode'}</span>
+          </button>
+
+          {/* SOFTWARE UPDATE CHECKER / UPDATE AVAILABLE BUTTON */}
+          <button
+            type="button"
+            onClick={() => {
+              if (githubReleaseInfo?.hasUpdate) {
+                setIsUpdateModalOpen(true);
+              } else {
+                handleCheckGitHubRelease();
+              }
+            }}
+            className={`flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold shadow transition transform active:scale-95 ${
+              githubReleaseInfo?.hasUpdate
+                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white animate-pulse shadow-orange-500/40 ring-2 ring-amber-300'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+            }`}
+            title={githubReleaseInfo?.hasUpdate ? 'Update Available! Click to inspect changes and update.' : 'Check for software updates'}
+          >
+            <Sparkles className="h-3 w-3" />
+            <span>{githubReleaseInfo?.hasUpdate ? `⚡ Update Available (${githubReleaseInfo.tagName || 'v1.1.0'})` : (isCheckingUpdate ? 'Checking...' : 'Check Updates')}</span>
+          </button>
+
           {isAdmin && (
             <button
               onClick={() => router.push('/admin')}
@@ -2175,7 +2236,7 @@ export default function UserWorkspacePage() {
             type="button"
             onClick={() => setIsDoctorProfileModalOpen(true)}
             className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md transition transform active:scale-95"
-            title="Edit Doctor Credentials (Name, Regd No, Qualification, Designation)"
+            title="Edit Doctor Credentials & Clinic Settings"
           >
             <UserCheck className="h-3 w-3" />
             <span>Doctor Profile</span>
@@ -4222,92 +4283,11 @@ export default function UserWorkspacePage() {
               </button>
             </div>
 
-            {/* FORM CONTAINER: RESPONSIVE 2-COLUMN GRID FIT WITHOUT OVERFLOW */}
+            {/* FORM CONTAINER: RESPONSIVE 2-COLUMN GRID */}
             <form onSubmit={handleSaveDoctorProfile} className="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 items-start">
                 
-                {/* LEFT COLUMN: BOXES 1 TO 5 (DOCTOR CREDENTIALS & REG NO FORMAT) */}
-                <div className="space-y-2.5">
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                    <div>
-                      <label className="block mb-1 font-bold text-slate-800">1. Full Name & Title</label>
-                      <input
-                        type="text"
-                        required
-                        value={doctorProfile.name}
-                        onChange={(e) => setDoctorProfile({ ...doctorProfile, name: e.target.value })}
-                        placeholder="e.g. Dr. Alexander Fleming, MD"
-                        className="w-full rounded-xl px-3 py-1.5 border border-slate-300 bg-white text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 font-bold text-slate-800">2. Medical Registration No. (Regd. No)</label>
-                      <input
-                        type="text"
-                        required
-                        value={doctorProfile.regNo}
-                        onChange={(e) => setDoctorProfile({ ...doctorProfile, regNo: e.target.value })}
-                        placeholder="e.g. MCI/2026/89472"
-                        className="w-full rounded-xl px-3 py-1.5 border border-slate-300 bg-white text-slate-900 font-mono font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 font-bold text-slate-800">3. Medical Qualification</label>
-                      <input
-                        type="text"
-                        required
-                        value={doctorProfile.qualification}
-                        onChange={(e) => setDoctorProfile({ ...doctorProfile, qualification: e.target.value })}
-                        placeholder="e.g. MBBS, MD (Internal Medicine), DNB"
-                        className="w-full rounded-xl px-3 py-1.5 border border-slate-300 bg-white text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block mb-1 font-bold text-slate-800">4. Designation & Specialty</label>
-                      <input
-                        type="text"
-                        required
-                        value={doctorProfile.designation}
-                        onChange={(e) => setDoctorProfile({ ...doctorProfile, designation: e.target.value })}
-                        placeholder="e.g. Senior Consultant Physician & Diabetologist"
-                        className="w-full rounded-xl px-3 py-1.5 border border-slate-300 bg-white text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 space-y-2">
-                    <label className="block font-bold text-blue-950">5. Patient Reg. No. Sequential Format Preference</label>
-                    <select
-                      value={doctorProfile.regNoMode || 'custom_prefix'}
-                      onChange={(e: any) => setDoctorProfile({ ...doctorProfile, regNoMode: e.target.value })}
-                      className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-slate-900 font-semibold outline-none text-xs"
-                    >
-                      <option value="custom_prefix">Custom Auto-Incrementing Prefix (e.g. Tangi-1, Tangi-2...)</option>
-                      <option value="auto_year">Auto Year Sequential Format (e.g. Tangi-2026-1, Tangi-2026-2...)</option>
-                      <option value="blank">Blank / Custom Free Typing (No Auto Prefix)</option>
-                    </select>
-                    {doctorProfile.regNoMode !== 'blank' && (
-                      <div className="space-y-1 pt-0.5">
-                        <label className="block text-[11px] font-bold text-blue-900">Custom Prefix Identifier:</label>
-                        <input
-                          type="text"
-                          value={doctorProfile.customRegNoPrefix ?? 'Tangi-'}
-                          onChange={(e) => setDoctorProfile({ ...doctorProfile, customRegNoPrefix: e.target.value })}
-                          placeholder="e.g. Tangi- or OPD-"
-                          className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-xs font-mono font-bold"
-                        />
-                      </div>
-                    )}
-                    <p className="text-[10.5px] text-emerald-800 font-bold bg-emerald-100/60 p-1.5 rounded-lg border border-emerald-200">
-                      ✨ Progression Preview: <code>{generateNextPatientRegNo(doctorProfile)}</code> → <code>{doctorProfile.customRegNoPrefix || 'Tangi-'}2</code> → <code>{doctorProfile.customRegNoPrefix || 'Tangi-'}3</code>...
-                    </p>
-                  </div>
-                </div>
-
-                {/* RIGHT COLUMN: BOXES 6 TO 9 (BANNERS, HARD DRIVE SYNC & UPDATE CHECKER) */}
+                {/* LEFT COLUMN: BOXES 6 TO 8 (LOGO BANNERS & HARD DRIVE SYNC) */}
                 <div className="space-y-2.5">
                   <div className="p-2.5 bg-emerald-50/80 rounded-xl border border-emerald-200 space-y-1.5">
                     <label className="block font-bold text-emerald-950">6. Digital Pad Header Banner / Logo (Optional)</label>
@@ -4420,52 +4400,92 @@ export default function UserWorkspacePage() {
                       </div>
                     )}
                   </div>
+                </div>
 
-                  <div className="p-3 bg-indigo-50/80 rounded-xl border border-indigo-200 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="font-bold text-indigo-950">9. Software Updates & GitHub Release Checker</label>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-200 text-indigo-900 font-bold">
-                        v1.0.0
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-600">
-                      Check your GitHub repository (<code>g2intouch-prog/PrescribePro</code>) for software updates or desktop releases.
-                    </p>
-                    <div className="flex items-center gap-2 flex-wrap pt-0.5">
-                      <button
-                        type="button"
-                        onClick={handleCheckGitHubRelease}
-                        disabled={isCheckingUpdate}
-                        className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
-                      >
-                        <span>🔄</span>
-                        <span>{isCheckingUpdate ? 'Checking GitHub...' : 'Check for GitHub Updates'}</span>
-                      </button>
-
-                      {githubReleaseInfo && githubReleaseInfo.downloadUrl && (
-                        <a
-                          href={githubReleaseInfo.downloadUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1.5"
-                        >
-                          <span>⚡ Download Release ({githubReleaseInfo.tagName})</span>
-                        </a>
-                      )}
+                {/* RIGHT COLUMN: BOXES 1 TO 5 (DOCTOR CREDENTIALS & REG NO FORMAT) */}
+                <div className="space-y-2.5">
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                    <div>
+                      <label className="block mb-1 font-bold text-slate-800">1. Full Name & Title</label>
+                      <input
+                        type="text"
+                        required
+                        value={doctorProfile.name}
+                        onChange={(e) => setDoctorProfile({ ...doctorProfile, name: e.target.value })}
+                        placeholder="e.g. Dr. Alexander Fleming, MD"
+                        className="w-full rounded-xl px-3 py-1.5 border border-slate-300 bg-white text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
                     </div>
 
-                    {updateStatusMsg && (
-                      <div className="p-2 rounded-lg bg-white border border-indigo-200 text-[11px] font-semibold text-indigo-900 flex items-center gap-1.5">
-                        <span>📢</span>
-                        <span>{updateStatusMsg}</span>
+                    <div>
+                      <label className="block mb-1 font-bold text-slate-800">2. Medical Registration No. (Regd. No)</label>
+                      <input
+                        type="text"
+                        required
+                        value={doctorProfile.regNo}
+                        onChange={(e) => setDoctorProfile({ ...doctorProfile, regNo: e.target.value })}
+                        placeholder="e.g. MCI/2026/89472"
+                        className="w-full rounded-xl px-3 py-1.5 border border-slate-300 bg-white text-slate-900 font-mono font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 font-bold text-slate-800">3. Medical Qualification</label>
+                      <input
+                        type="text"
+                        required
+                        value={doctorProfile.qualification}
+                        onChange={(e) => setDoctorProfile({ ...doctorProfile, qualification: e.target.value })}
+                        placeholder="e.g. MBBS, MD (Internal Medicine), DNB"
+                        className="w-full rounded-xl px-3 py-1.5 border border-slate-300 bg-white text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 font-bold text-slate-800">4. Designation & Specialty</label>
+                      <input
+                        type="text"
+                        required
+                        value={doctorProfile.designation}
+                        onChange={(e) => setDoctorProfile({ ...doctorProfile, designation: e.target.value })}
+                        placeholder="e.g. Senior Consultant Physician & Diabetologist"
+                        className="w-full rounded-xl px-3 py-1.5 border border-slate-300 bg-white text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 space-y-2">
+                    <label className="block font-bold text-blue-950">5. Patient Reg. No. Sequential Format Preference</label>
+                    <select
+                      value={doctorProfile.regNoMode || 'custom_prefix'}
+                      onChange={(e: any) => setDoctorProfile({ ...doctorProfile, regNoMode: e.target.value })}
+                      className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-slate-900 font-semibold outline-none text-xs"
+                    >
+                      <option value="custom_prefix">Custom Auto-Incrementing Prefix (e.g. Tangi-1, Tangi-2...)</option>
+                      <option value="auto_year">Auto Year Sequential Format (e.g. Tangi-2026-1, Tangi-2026-2...)</option>
+                      <option value="blank">Blank / Custom Free Typing (No Auto Prefix)</option>
+                    </select>
+                    {doctorProfile.regNoMode !== 'blank' && (
+                      <div className="space-y-1 pt-0.5">
+                        <label className="block text-[11px] font-bold text-blue-900">Custom Prefix Identifier:</label>
+                        <input
+                          type="text"
+                          value={doctorProfile.customRegNoPrefix ?? 'Tangi-'}
+                          onChange={(e) => setDoctorProfile({ ...doctorProfile, customRegNoPrefix: e.target.value })}
+                          placeholder="e.g. Tangi- or OPD-"
+                          className="w-full rounded-xl px-3 py-1.5 border border-blue-300 bg-white text-xs font-mono font-bold"
+                        />
                       </div>
                     )}
+                    <p className="text-[10.5px] text-emerald-800 font-bold bg-emerald-100/60 p-1.5 rounded-lg border border-emerald-200">
+                      ✨ Progression Preview: <code>{generateNextPatientRegNo(doctorProfile)}</code> → <code>{doctorProfile.customRegNoPrefix || 'Tangi-'}2</code> → <code>{doctorProfile.customRegNoPrefix || 'Tangi-'}3</code>...
+                    </p>
                   </div>
                 </div>
 
               </div>
 
-              {/* FOOTER ACTIONS */}
+              {/* FOOTER ACTIONS: ONE LINE ALIGNED RIGHT */}
               <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2 shrink-0">
                 <button
                   type="button"
@@ -4482,6 +4502,90 @@ export default function UserWorkspacePage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* SOFTWARE UPDATE CONFIRMATION POPUP MODAL */}
+      {isUpdateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100">
+            <div className="p-4 bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">🚀</span>
+                <div>
+                  <h3 className="font-extrabold text-sm text-white">
+                    Software Update Available ({githubReleaseInfo?.tagName || 'v1.1.0'})
+                  </h3>
+                  <p className="text-[11px] text-indigo-200 font-medium">
+                    A new update is available for PrescribePro
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsUpdateModalOpen(false)}
+                className="p-1 rounded-lg bg-indigo-800/80 hover:bg-indigo-700 text-white font-bold text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3 text-xs">
+              <div className="p-3 bg-indigo-50/80 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-900 space-y-2">
+                <strong className="text-indigo-950 dark:text-indigo-200 block font-extrabold text-xs">
+                  📋 Release Highlights & Improvements:
+                </strong>
+                <ul className="space-y-1 text-slate-700 dark:text-slate-300 font-medium">
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-500 font-bold">✓</span>
+                    <span>Alphabetical Specialty Navigation & Master-Detail Protocol View</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-500 font-bold">✓</span>
+                    <span>Deterministic Diuretic & Multi-Indication Specialty Tagging</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-500 font-bold">✓</span>
+                    <span>Real-Time Local HDD Offline Database Safeguards & Auto-Sync</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-500 font-bold">✓</span>
+                    <span>Pediatric & Body Surface Area (BSA m²) Dosing Assistant</span>
+                  </li>
+                </ul>
+              </div>
+
+              {githubReleaseInfo?.releaseNotes && (
+                <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-700 dark:text-slate-300 whitespace-pre-line max-h-28 overflow-y-auto">
+                  {githubReleaseInfo.releaseNotes}
+                </div>
+              )}
+            </div>
+
+            <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-end gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setIsUpdateModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-300 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsUpdateModalOpen(false);
+                  if (githubReleaseInfo?.downloadUrl) {
+                    window.open(githubReleaseInfo.downloadUrl, '_blank');
+                  } else {
+                    window.location.reload();
+                  }
+                }}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold shadow-md transition flex items-center gap-1.5"
+              >
+                <span>⚡ Update Now</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -5118,12 +5222,12 @@ export default function UserWorkspacePage() {
 
       {/* CLINICAL PROTOCOLS & ER ORDER SETS LIST VIEW MODAL */}
       {isProtocolsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-6xl w-full h-[88vh] flex flex-col overflow-hidden text-slate-900">
             {/* HEADER */}
-            <div className="p-4 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-indigo-600 text-white font-extrabold text-base">
+            <div className="p-4 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-indigo-600 text-white font-extrabold text-base shadow">
                   📜
                 </div>
                 <div>
@@ -5139,310 +5243,472 @@ export default function UserWorkspacePage() {
                 <button
                   type="button"
                   onClick={handleOpenNewProtocolEditor}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow flex items-center gap-1 transition"
                 >
                   <Plus className="h-4 w-4" /> + Create New Protocol
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsProtocolsModalOpen(false)}
-                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs"
+                  onClick={() => {
+                    setIsProtocolsModalOpen(false);
+                    setSelectedProtocol(null);
+                  }}
+                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition"
                 >
                   ✕ Close
                 </button>
               </div>
             </div>
 
-            {/* SEARCH & CATEGORY FILTER STRIP */}
-            <div className="p-4 border-b border-slate-200 bg-slate-100/70 space-y-3">
-              <div className="flex gap-2 items-center">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={protocolSearchTerm}
-                    onChange={(e) => setProtocolSearchTerm(e.target.value)}
-                    placeholder="Search clinical protocols by disease, symptom, or keyword..."
-                    className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
-                  />
+            {/* MAIN 2-COLUMN SIDEBAR LAYOUT */}
+            <div className="flex-1 flex overflow-hidden min-h-0 bg-white">
+              {/* LEFT SIDEBAR: ALPHABETICALLY SORTED SPECIALTIES */}
+              <div className="w-64 md:w-72 shrink-0 border-r border-slate-200 bg-slate-50/90 p-2.5 overflow-y-auto space-y-1">
+                <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                  Specialties (A-Z)
                 </div>
+                {PROTOCOL_CATEGORIES.map((cat) => {
+                  const isActive = protocolCategoryFilter === cat.key;
+                  return (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      onClick={() => {
+                        setProtocolCategoryFilter(cat.key);
+                        setSelectedProtocol(null);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl font-bold text-xs flex items-center justify-between transition ${
+                        isActive
+                          ? 'bg-indigo-600 text-white shadow-md'
+                          : 'text-slate-700 hover:bg-slate-200/80 hover:text-slate-900 bg-white/60 border border-slate-200/60'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        <span className="text-sm">{cat.icon}</span>
+                        <span className="truncate">{cat.label}</span>
+                      </span>
+                      {isActive && <span className="text-xs font-black">›</span>}
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* CATEGORY FILTER PILLS */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                {[
-                  { key: 'all', label: 'All Protocols' },
-                  { key: 'personal', label: '⭐ My Personal Templates' },
-                  { key: 'endocrine', label: '🩸 Endocrinology & Diabetes' },
-                  { key: 'cardio', label: '❤️ Cardio & Hypertension' },
-                  { key: 'psychiatry', label: '🧠 Psychiatry' },
-                  { key: 'neurology', label: '⚡ Neurology' },
-                  { key: 'bites', label: '🐾 Rabies & Animal Bites' },
-                  { key: 'toxicology', label: '🧪 Toxicology & Poisoning' },
-                  { key: 'trauma', label: '⚡ Trauma & Burns' },
-                  { key: 'gynae', label: '🤰 Gynaecology' },
-                  { key: 'ortho', label: '🦴 Orthopedics' },
-                  { key: 'ent', label: '👂 ENT' },
-                  { key: 'ophthalmology', label: '👁️ Ophthalmology' },
-                  { key: 'dermatology', label: '🧴 Dermatology' },
-                  { key: 'infectious', label: '🦠 Infectious' },
-                  { key: 'pediatric', label: '👶 Pediatric' },
-                  { key: 'respiratory', label: '🫁 Respiratory' },
-                  { key: 'gastro', label: '🤢 Gastro' },
-                  { key: 'emergency', label: '🚨 ER / Emergency' },
-                ].map((cat) => (
-                  <button
-                    key={cat.key}
-                    type="button"
-                    onClick={() => setProtocolCategoryFilter(cat.key)}
-                    className={`px-3 py-1 rounded-xl font-bold shrink-0 transition text-[11px] ${
-                      protocolCategoryFilter === cat.key
-                        ? 'bg-indigo-600 text-white shadow'
-                        : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-200'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+              {/* RIGHT MAIN PANEL */}
+              <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
+                {/* INITIATION BLANK STATE */}
+                {!protocolCategoryFilter && !selectedProtocol && (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-400 space-y-3">
+                    <div className="p-4 rounded-2xl bg-indigo-50 text-indigo-600 text-3xl shadow-sm animate-pulse">
+                      👈
+                    </div>
+                    <h4 className="font-extrabold text-base text-slate-800">Select a Specialty from the Left Panel</h4>
+                    <p className="text-xs text-slate-500 max-w-md leading-relaxed">
+                      Click any specialty or <strong className="text-indigo-600">"All Protocols"</strong> in the left panel to browse protocols. Click any protocol to view its full order set details.
+                    </p>
+                  </div>
+                )}
 
-            {/* PROTOCOLS & PERSONAL TEMPLATES LIST CARDS */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[60vh]">
-              {(() => {
-                if (protocolCategoryFilter === 'personal') {
-                  const personalList: Array<{
-                    id: string;
-                    name: string;
-                    specialtyId: string;
-                    specialtyName: string;
-                    complaints?: string[];
-                    diagnosis?: string;
-                    drugs: string[];
-                    tests: string[];
-                    advice: string[];
-                  }> = [];
-
-                  specialties.forEach((sp) => {
-                    sp.templates.forEach((tpl) => {
-                      personalList.push({
-                        ...tpl,
-                        specialtyId: sp.id,
-                        specialtyName: sp.name,
-                        advice: Array.isArray(tpl.advice) ? tpl.advice : [tpl.advice || ''],
-                      });
-                    });
-                  });
-
-                  const filteredPersonal = personalList.filter((p) => {
-                    if (!protocolSearchTerm.trim()) return true;
-                    const q = protocolSearchTerm.toLowerCase();
-                    return (
-                      p.name.toLowerCase().includes(q) ||
-                      (p.diagnosis || '').toLowerCase().includes(q) ||
-                      p.specialtyName.toLowerCase().includes(q)
-                    );
-                  });
-
-                  if (filteredPersonal.length === 0) {
-                    return (
-                      <div className="text-center py-12 text-slate-400 space-y-2">
-                        <FileText className="h-10 w-10 mx-auto text-slate-300 animate-bounce" />
-                        <p className="font-bold text-xs text-slate-600">No personal templates saved yet.</p>
+                {/* DETAILED VIEW FOR SELECTED PROTOCOL / TEMPLATE */}
+                {selectedProtocol && (
+                  <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-white">
+                    {/* DETAIL HEADER */}
+                    <div className="p-3 border-b border-slate-200 bg-slate-100/70 flex items-center justify-between gap-3 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedProtocol(null)}
+                        className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold text-xs transition flex items-center gap-1"
+                      >
+                        <ChevronLeft className="h-4 w-4" /> Back to Protocol List
+                      </button>
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => handleOpenNewTemplateEditor(specialties[0]?.id || 'spec-1')}
-                          className="px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow"
+                          onClick={() => {
+                            if (selectedProtocol.specialtyId) {
+                              // Personal Template
+                              if (selectedProtocol.complaints && selectedProtocol.complaints.length > 0) setChiefComplaints(selectedProtocol.complaints.join(', '));
+                              if (selectedProtocol.diagnosis) setProvisionalDiagnosis(selectedProtocol.diagnosis);
+                              if (selectedProtocol.drugs && selectedProtocol.drugs.length > 0) setSelectedDrugs(selectedProtocol.drugs);
+                              if (selectedProtocol.tests && selectedProtocol.tests.length > 0) setSelectedTests(selectedProtocol.tests);
+                              if (selectedProtocol.advice) setSpecificAdviceText(Array.isArray(selectedProtocol.advice) ? selectedProtocol.advice.join('\n') : selectedProtocol.advice);
+                              setIsProtocolsModalOpen(false);
+                              setSelectedProtocol(null);
+                              setSaveStatus(`Applied Template: "${selectedProtocol.name}"`);
+                              setTimeout(() => setSaveStatus(null), 3500);
+                            } else {
+                              // Clinical Protocol
+                              handleApplyProtocol(selectedProtocol);
+                              setSelectedProtocol(null);
+                            }
+                          }}
+                          className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1"
                         >
-                          + Create Custom Template
+                          <span>⚡ Apply Order Set to Pad</span>
                         </button>
                       </div>
-                    );
-                  }
+                    </div>
 
-                  return filteredPersonal.map((tpl) => (
-                    <div
-                      key={tpl.id}
-                      className="p-4 rounded-2xl border border-amber-300/80 bg-amber-50/40 hover:border-amber-500 hover:shadow-lg transition space-y-3 text-xs"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <h4 className="font-black text-sm text-slate-900">{tpl.name}</h4>
-                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-extrabold text-[10px] uppercase border border-amber-300">
-                              ⭐ Personal Template • {tpl.specialtyName}
+                    {/* DETAIL CONTENT BODY */}
+                    <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <h2 className="font-black text-lg text-slate-900">{selectedProtocol.title || selectedProtocol.name}</h2>
+                          <span className="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-900 font-black text-xs uppercase border border-indigo-200">
+                            {selectedProtocol.category || selectedProtocol.specialtyName || 'General'}
+                          </span>
+                          {selectedProtocol.targetGroup && (
+                            <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-bold text-xs">
+                              👥 {selectedProtocol.targetGroup}
                             </span>
-                          </div>
-                          {tpl.diagnosis && (
-                            <p className="text-slate-700 font-bold text-xs">
-                              Diagnosis: <span className="text-blue-900">{tpl.diagnosis}</span>
-                            </p>
                           )}
                         </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (tpl.complaints && tpl.complaints.length > 0) setChiefComplaints(tpl.complaints.join(', '));
-                              if (tpl.diagnosis) setProvisionalDiagnosis(tpl.diagnosis);
-                              if (tpl.drugs && tpl.drugs.length > 0) {
-                                setSelectedDrugs(tpl.drugs);
-                              }
-                              if (tpl.tests && tpl.tests.length > 0) setSelectedTests(tpl.tests);
-                              if (tpl.advice) setSpecificAdviceText(Array.isArray(tpl.advice) ? tpl.advice.join('\n') : tpl.advice);
-                              setIsProtocolsModalOpen(false);
-                              setSaveStatus(`Applied Template: "${tpl.name}"`);
-                              setTimeout(() => setSaveStatus(null), 3500);
-                            }}
-                            className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1"
-                          >
-                            <span>⚡ Apply to Pad</span>
-                          </button>
-                        </div>
+                        {selectedProtocol.guidelinesSummary && (
+                          <p className="text-slate-700 font-medium text-xs leading-relaxed mt-2 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
+                            {selectedProtocol.guidelinesSummary}
+                          </p>
+                        )}
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-white/80 p-2.5 rounded-xl border border-slate-200 text-[11px]">
-                        <div>
-                          <strong className="text-slate-900 block mb-0.5">💊 Prescribed Medications:</strong>
-                          <ul className="list-disc pl-4 text-slate-700 space-y-0.5 font-mono text-[10.5px]">
-                            {tpl.drugs.map((d, idx) => (
-                              <li key={idx}>{d}</li>
+                      {/* RED FLAGS ALERT BAR */}
+                      {selectedProtocol.redFlags && (
+                        <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-950 font-medium text-xs flex items-start gap-2.5 shadow-sm">
+                          <span className="font-extrabold text-red-600 text-base leading-none">⚠️ EMERGENCY RED FLAGS:</span>
+                          <span className="leading-relaxed">{selectedProtocol.redFlags}</span>
+                        </div>
+                      )}
+
+                      {/* PROVISIONAL DIAGNOSIS & COMPLAINTS */}
+                      {(selectedProtocol.diagnosis || (selectedProtocol.chiefComplaints && selectedProtocol.chiefComplaints.length > 0)) && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                          {selectedProtocol.diagnosis && (
+                            <div>
+                              <strong className="text-slate-900 block mb-0.5 font-extrabold">Provisional Diagnosis:</strong>
+                              <p className="text-slate-800 font-bold">{selectedProtocol.diagnosis}</p>
+                            </div>
+                          )}
+                          {selectedProtocol.chiefComplaints && selectedProtocol.chiefComplaints.length > 0 && (
+                            <div>
+                              <strong className="text-slate-900 block mb-0.5 font-extrabold">Chief Complaints:</strong>
+                              <p className="text-slate-700">{selectedProtocol.chiefComplaints.join(', ')}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* PRESCRIBED MEDICATIONS */}
+                      {selectedProtocol.drugs && selectedProtocol.drugs.length > 0 && (
+                        <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/30 space-y-2">
+                          <h4 className="font-extrabold text-xs text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                            💊 Prescribed Order Set Medications (Rx)
+                          </h4>
+                          <ul className="space-y-1.5">
+                            {selectedProtocol.drugs.map((drugStr: string, idx: number) => (
+                              <li key={idx} className="p-2 rounded-lg bg-white border border-emerald-200 text-slate-900 font-mono text-xs font-semibold shadow-sm flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                                <span>{drugStr}</span>
+                              </li>
                             ))}
                           </ul>
                         </div>
-                        <div>
-                          {tpl.tests && tpl.tests.length > 0 && (
-                            <p className="text-slate-700 font-medium mb-1">
-                              <span className="font-bold text-slate-900">Diagnostic Tests:</span> {tpl.tests.join(', ')}
-                            </p>
-                          )}
-                          {tpl.advice && tpl.advice.length > 0 && (
-                            <p className="text-slate-700 italic">
-                              <span className="font-bold text-slate-900">Advice:</span> {Array.isArray(tpl.advice) ? tpl.advice.join(' ') : tpl.advice}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ));
-                }
+                      )}
 
-                const filtered = protocols.filter((p) => {
-                  const matchesCat = protocolCategoryFilter === 'all' || p.category === protocolCategoryFilter;
-                  const matchesSearch = !protocolSearchTerm.trim() ||
-                    p.title.toLowerCase().includes(protocolSearchTerm.toLowerCase()) ||
-                    p.diagnosis.toLowerCase().includes(protocolSearchTerm.toLowerCase()) ||
-                    p.guidelinesSummary.toLowerCase().includes(protocolSearchTerm.toLowerCase());
-                  return matchesCat && matchesSearch;
-                });
-
-                if (filtered.length === 0) {
-                  return (
-                    <div className="text-center py-12 text-slate-400 space-y-2">
-                      <FileText className="h-10 w-10 mx-auto text-slate-300 animate-bounce" />
-                      <p className="font-bold text-xs text-slate-600">No clinical protocols found for this filter.</p>
-                    </div>
-                  );
-                }
-
-                return filtered.map((proto) => (
-                  <div
-                    key={proto.id}
-                    className="p-4 rounded-2xl border border-slate-200 bg-white hover:border-indigo-500 hover:shadow-lg transition space-y-3 text-xs"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <h4 className="font-black text-sm text-slate-900">{proto.title}</h4>
-                          <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[10px] uppercase">
-                            {proto.category}
-                          </span>
-                          {proto.targetGroup && (
-                            <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold text-[10px]">
-                              👥 {proto.targetGroup}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-slate-600 font-medium text-xs leading-relaxed">
-                          {proto.guidelinesSummary}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleApplyProtocol(proto)}
-                          className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1"
-                        >
-                          <span>⚡ Apply to Pad</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditProtocolEditor(proto)}
-                          className="px-2.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shadow transition"
-                          title="Edit Protocol"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteProtocol(proto.id)}
-                          className="px-2.5 py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs transition"
-                          title="Delete Protocol"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* RED FLAGS ALERT BAR */}
-                    {proto.redFlags && (
-                      <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-950 font-medium text-[11px] flex items-start gap-2">
-                        <span className="font-extrabold text-red-600 text-sm leading-none">⚠️ RED FLAGS:</span>
-                        <span>{proto.redFlags}</span>
-                      </div>
-                    )}
-
-                    {/* PRESCRIBED ORDER SET DETAILS */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px]">
-                      <div>
-                        <strong className="text-slate-900 block mb-0.5">💊 Order Set Medications:</strong>
-                        <ul className="list-disc pl-4 text-slate-700 space-y-0.5 font-mono text-[10.5px]">
-                          {proto.drugs.map((d, idx) => (
-                            <li key={idx}>{d}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <strong className="text-slate-900 block mb-0.5">🧪 Diagnostic Tests & Advice:</strong>
-                        {proto.tests.length > 0 && (
-                          <p className="text-slate-700 font-medium mb-1">
-                            <span className="font-bold text-slate-900">Tests:</span> {proto.tests.join(', ')}
-                          </p>
+                      {/* DIAGNOSTIC TESTS & ADVICE */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {selectedProtocol.tests && selectedProtocol.tests.length > 0 && (
+                          <div className="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1">
+                            <strong className="text-slate-900 block font-extrabold text-xs">🧪 Recommended Diagnostic Tests:</strong>
+                            <ul className="list-disc pl-4 text-slate-700 space-y-1 font-medium">
+                              {selectedProtocol.tests.map((t: string, i: number) => (
+                                <li key={i}>{t}</li>
+                              ))}
+                            </ul>
+                          </div>
                         )}
-                        {proto.advice && (
-                          <p className="text-slate-700 italic">
-                            <span className="font-bold text-slate-900">Advice:</span> {proto.advice}
-                          </p>
+
+                        {selectedProtocol.advice && (
+                          <div className="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1">
+                            <strong className="text-slate-900 block font-extrabold text-xs">📝 Specific Advice & Follow-Up:</strong>
+                            <p className="text-slate-700 italic leading-relaxed">
+                              {Array.isArray(selectedProtocol.advice) ? selectedProtocol.advice.join('\n') : selectedProtocol.advice}
+                            </p>
+                          </div>
                         )}
                       </div>
+                    </div>
+
+                    {/* DETAIL FOOTER */}
+                    <div className="p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedProtocol(null)}
+                        className="px-4 py-1.5 rounded-xl bg-slate-200 text-slate-800 font-bold text-xs hover:bg-slate-300 transition"
+                      >
+                        ← Back to Protocols List
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (selectedProtocol.specialtyId) {
+                            if (selectedProtocol.complaints && selectedProtocol.complaints.length > 0) setChiefComplaints(selectedProtocol.complaints.join(', '));
+                            if (selectedProtocol.diagnosis) setProvisionalDiagnosis(selectedProtocol.diagnosis);
+                            if (selectedProtocol.drugs && selectedProtocol.drugs.length > 0) setSelectedDrugs(selectedProtocol.drugs);
+                            if (selectedProtocol.tests && selectedProtocol.tests.length > 0) setSelectedTests(selectedProtocol.tests);
+                            if (selectedProtocol.advice) setSpecificAdviceText(Array.isArray(selectedProtocol.advice) ? selectedProtocol.advice.join('\n') : selectedProtocol.advice);
+                            setIsProtocolsModalOpen(false);
+                            setSelectedProtocol(null);
+                            setSaveStatus(`Applied Template: "${selectedProtocol.name}"`);
+                            setTimeout(() => setSaveStatus(null), 3500);
+                          } else {
+                            handleApplyProtocol(selectedProtocol);
+                            setSelectedProtocol(null);
+                          }
+                        }}
+                        className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition flex items-center gap-1.5"
+                      >
+                        <span>⚡ Apply Order Set to Prescription Pad</span>
+                      </button>
                     </div>
                   </div>
-                ));
-              })()}
-            </div>
+                )}
 
-            {/* FOOTER */}
-            <div className="p-3 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-xs">
-              <span className="text-slate-500 font-semibold">Total Protocols Loaded: {protocols.length}</span>
-              <button
-                type="button"
-                onClick={() => setIsProtocolsModalOpen(false)}
-                className="px-4 py-1.5 rounded-xl bg-slate-200 text-slate-800 font-bold text-xs hover:bg-slate-300"
-              >
-                Close Screen
-              </button>
+                {/* PROTOCOLS LIST VIEW FOR SELECTED CATEGORY */}
+                {protocolCategoryFilter && !selectedProtocol && (
+                  <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
+                    {/* TOP SEARCH BAR */}
+                    <div className="p-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2 shrink-0">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={protocolSearchTerm}
+                          onChange={(e) => setProtocolSearchTerm(e.target.value)}
+                          placeholder="Search clinical protocols by disease, symptom, or keyword..."
+                          className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* SCROLLABLE CARDS CONTAINER */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                      {(() => {
+                        if (protocolCategoryFilter === 'personal') {
+                          const personalList: Array<{
+                            id: string;
+                            name: string;
+                            specialtyId: string;
+                            specialtyName: string;
+                            complaints?: string[];
+                            diagnosis?: string;
+                            drugs: string[];
+                            tests: string[];
+                            advice: string[];
+                          }> = [];
+
+                          specialties.forEach((sp) => {
+                            sp.templates.forEach((tpl) => {
+                              personalList.push({
+                                ...tpl,
+                                specialtyId: sp.id,
+                                specialtyName: sp.name,
+                                advice: Array.isArray(tpl.advice) ? tpl.advice : [tpl.advice || ''],
+                              });
+                            });
+                          });
+
+                          const filteredPersonal = personalList.filter((p) => {
+                            if (!protocolSearchTerm.trim()) return true;
+                            const q = protocolSearchTerm.toLowerCase();
+                            return (
+                              p.name.toLowerCase().includes(q) ||
+                              (p.diagnosis || '').toLowerCase().includes(q) ||
+                              p.specialtyName.toLowerCase().includes(q)
+                            );
+                          });
+
+                          if (filteredPersonal.length === 0) {
+                            return (
+                              <div className="text-center py-12 text-slate-400 space-y-2">
+                                <FileText className="h-10 w-10 mx-auto text-slate-300 animate-bounce" />
+                                <p className="font-bold text-xs text-slate-600">No personal templates saved yet.</p>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenNewTemplateEditor(specialties[0]?.id || 'spec-1')}
+                                  className="px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow"
+                                >
+                                  + Create Custom Template
+                                </button>
+                              </div>
+                            );
+                          }
+
+                          return filteredPersonal.map((tpl) => (
+                            <div
+                              key={tpl.id}
+                              onClick={() => setSelectedProtocol(tpl)}
+                              className="p-3.5 rounded-2xl border border-amber-300/80 bg-amber-50/40 hover:border-amber-500 hover:shadow-md cursor-pointer transition space-y-2 text-xs"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                                    <h4 className="font-black text-sm text-slate-900 hover:text-indigo-600 transition">{tpl.name}</h4>
+                                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-extrabold text-[10px] uppercase border border-amber-300">
+                                      ⭐ Personal Template • {tpl.specialtyName}
+                                    </span>
+                                  </div>
+                                  {tpl.diagnosis && (
+                                    <p className="text-slate-700 font-bold text-xs">
+                                      Diagnosis: <span className="text-blue-900">{tpl.diagnosis}</span>
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedProtocol(tpl)}
+                                    className="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs transition"
+                                  >
+                                    📄 Details
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (tpl.complaints && tpl.complaints.length > 0) setChiefComplaints(tpl.complaints.join(', '));
+                                      if (tpl.diagnosis) setProvisionalDiagnosis(tpl.diagnosis);
+                                      if (tpl.drugs && tpl.drugs.length > 0) setSelectedDrugs(tpl.drugs);
+                                      if (tpl.tests && tpl.tests.length > 0) setSelectedTests(tpl.tests);
+                                      if (tpl.advice) setSpecificAdviceText(Array.isArray(tpl.advice) ? tpl.advice.join('\n') : tpl.advice);
+                                      setIsProtocolsModalOpen(false);
+                                      setSaveStatus(`Applied Template: "${tpl.name}"`);
+                                      setTimeout(() => setSaveStatus(null), 3500);
+                                    }}
+                                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1"
+                                  >
+                                    <span>⚡ Apply</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditTemplateEditor(tpl.specialtyId, tpl as any)}
+                                    className="px-2 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shadow transition"
+                                    title="Edit Personal Template"
+                                  >
+                                    ✏️
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteTemplate(tpl.specialtyId, tpl.id)}
+                                    className="px-2 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs transition"
+                                    title="Delete Personal Template"
+                                  >
+                                    🗑️
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ));
+                        }
+
+                        const filtered = protocols.filter((p) => {
+                          const matchesCat = protocolCategoryFilter === 'all' || p.category === protocolCategoryFilter;
+                          const matchesSearch = !protocolSearchTerm.trim() ||
+                            p.title.toLowerCase().includes(protocolSearchTerm.toLowerCase()) ||
+                            p.diagnosis.toLowerCase().includes(protocolSearchTerm.toLowerCase()) ||
+                            p.guidelinesSummary.toLowerCase().includes(protocolSearchTerm.toLowerCase());
+                          return matchesCat && matchesSearch;
+                        });
+
+                        if (filtered.length === 0) {
+                          return (
+                            <div className="text-center py-12 text-slate-400 space-y-2">
+                              <FileText className="h-10 w-10 mx-auto text-slate-300 animate-bounce" />
+                              <p className="font-bold text-xs text-slate-600">No clinical protocols found for this specialty.</p>
+                            </div>
+                          );
+                        }
+
+                        return filtered.map((proto) => (
+                          <div
+                            key={proto.id}
+                            onClick={() => setSelectedProtocol(proto)}
+                            className="p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-indigo-500 hover:shadow-md cursor-pointer transition space-y-2 text-xs"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                  <h4 className="font-black text-sm text-slate-900 hover:text-indigo-600 transition">{proto.title}</h4>
+                                  <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[10px] uppercase">
+                                    {proto.category}
+                                  </span>
+                                  {proto.targetGroup && (
+                                    <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold text-[10px]">
+                                      👥 {proto.targetGroup}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-slate-600 font-medium text-xs line-clamp-2 leading-relaxed">
+                                  {proto.guidelinesSummary}
+                                </p>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedProtocol(proto)}
+                                  className="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs transition"
+                                >
+                                  📄 Details
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleApplyProtocol(proto)}
+                                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1"
+                                >
+                                  <span>⚡ Apply</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditProtocolEditor(proto)}
+                                  className="px-2 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shadow transition"
+                                  title="Edit Protocol"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteProtocol(proto.id)}
+                                  className="px-2 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs transition"
+                                  title="Delete Protocol"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* RED FLAGS SHORT BADGE */}
+                            {proto.redFlags && (
+                              <div className="p-1.5 rounded-lg bg-red-50 border border-red-200 text-red-950 font-semibold text-[10.5px] truncate">
+                                ⚠️ Red Flags: {proto.redFlags}
+                              </div>
+                            )}
+                          </div>
+                        ));
+                      })()}
+                    </div>
+
+                    {/* FOOTER */}
+                    <div className="p-3 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-xs shrink-0">
+                      <span className="text-slate-500 font-semibold">Total Protocols Loaded: {protocols.length}</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsProtocolsModalOpen(false)}
+                        className="px-4 py-1.5 rounded-xl bg-slate-200 text-slate-800 font-bold text-xs hover:bg-slate-300 transition"
+                      >
+                        Close Screen
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -5488,13 +5754,11 @@ export default function UserWorkspacePage() {
                     onChange={(e: any) => setEditingProtocol({ ...editingProtocol, category: e.target.value })}
                     className="w-full rounded-xl border border-slate-300 p-2 font-semibold bg-white text-slate-900"
                   >
-                    <option value="general">General Medicine</option>
-                    <option value="infectious">Infectious Disease</option>
-                    <option value="pediatric">Pediatric</option>
-                    <option value="respiratory">Respiratory Care</option>
-                    <option value="cardio">Cardiovascular</option>
-                    <option value="gastro">Gastroenterology</option>
-                    <option value="emergency">Emergency / ER</option>
+                    {PROTOCOL_CATEGORIES.filter((c) => c.key !== 'all' && c.key !== 'personal').map((c) => (
+                      <option key={c.key} value={c.key}>
+                        {c.icon} {c.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
