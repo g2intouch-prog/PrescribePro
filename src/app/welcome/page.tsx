@@ -955,53 +955,53 @@ export default function UserWorkspacePage() {
     drug: { genericName: string; dosage?: string; keywords?: string },
     filter: 'all' | 'inj' | 'tab' | 'cap' | 'syp' | 'drops' | 'topical'
   ): boolean => {
-    if (filter === 'all') return true;
+    if (!filter || filter === 'all') return true;
 
-    const text = `${drug.genericName} ${drug.dosage || ''} ${drug.keywords || ''}`.toLowerCase();
-
-    const hasWord = (...words: string[]) => {
-      return words.some((w) => new RegExp(`\\b${w.replace('.', '\\.')}\\b`, 'i').test(text));
-    };
+    const name = (drug.genericName || '').toLowerCase();
+    const dose = (drug.dosage || '').toLowerCase();
+    const fullText = `${name} ${dose}`;
 
     if (filter === 'inj') {
       return (
-        text.startsWith('inj') ||
-        hasWord('inj', 'inj.', 'injection', 'infusion', 'vial', 'ampoule', 'amp', 'iv', 'im', 'stat iv', 'iv/im')
+        name.startsWith('inj') ||
+        /\b(inj|inj\.|injection|infusion|vial|ampoule|amp|iv|im|iv\/im)\b/i.test(fullText)
       );
     }
 
     if (filter === 'tab') {
-      if (text.startsWith('inj') || hasWord('inj', 'inj.', 'injection', 'vial', 'ampoule', 'infusion')) return false;
+      if (name.startsWith('inj') || /\b(inj|inj\.|injection|infusion|vial|ampoule)\b/i.test(name)) return false;
       return (
-        text.startsWith('tab') ||
-        hasWord('tab', 'tab.', 'tablet', 'tablets', 'dt', 'md', 'dispersible', 'chewable')
+        name.startsWith('tab') ||
+        /\b(tab|tab\.|tablet|tablets|dt|md|dispersible|chewable|sr|xl|er|cr|mr)\b/i.test(fullText)
       );
     }
 
     if (filter === 'cap') {
+      if (name.startsWith('inj') || /\b(inj|inj\.|injection|infusion|vial)\b/i.test(name)) return false;
       return (
-        text.startsWith('cap') ||
-        hasWord('cap', 'cap.', 'capsule', 'capsules', 'softgel')
+        name.startsWith('cap') ||
+        /\b(cap|cap\.|capsule|capsules|softgel)\b/i.test(fullText)
       );
     }
 
     if (filter === 'syp') {
       return (
-        text.startsWith('syp') ||
-        hasWord('syp', 'syp.', 'syrup', 'suspension', 'linctus', 'expectorant', 'elixir')
+        name.startsWith('syp') ||
+        /\b(syp|syp\.|syrup|suspension|linctus|expectorant|elixir|liquid)\b/i.test(fullText)
       );
     }
 
     if (filter === 'drops') {
-      if (text.startsWith('inj') || hasWord('inj', 'injection', 'vial')) return false;
+      if (name.startsWith('inj') || /\b(inj|inj\.|injection|infusion|vial)\b/i.test(name)) return false;
       return (
-        hasWord('drop', 'drops', 'drop.', 'drops.', 'ophthalmic', 'otic', 'eye drop', 'ear drop', 'nasal drop')
+        /\b(drop|drops|drop\.|drops\.|eyedrop|eardrop|nasaldrop)\b/i.test(fullText) ||
+        fullText.includes('eye drop') || fullText.includes('ear drop') || fullText.includes('nasal drop')
       );
     }
 
     if (filter === 'topical') {
       return (
-        hasWord('cream', 'ointment', 'oint', 'gel', 'lotion', 'shampoo', 'mouthwash', 'gargle', 'spray', 'patch')
+        /\b(cream|ointment|oint|oint\.|gel|lotion|shampoo|mouthwash|gargle|spray|patch|paste)\b/i.test(fullText)
       );
     }
 

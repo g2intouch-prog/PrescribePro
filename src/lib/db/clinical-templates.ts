@@ -119,8 +119,8 @@ export const CLINICAL_SYMPTOM_MAP: Record<string, string[]> = {
   cream: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'lotion', 'mupirocin', 'fucidin', 'tenovate', 'elocon', 'luliconazole'],
   ointment: ['dermatology', 'derma', 'skin', 'cream', 'ointment', 'mupirocin', 'burnol', 'silver sulfadiazine'],
 
-  orthopedics: ['aceclofenac', 'diclofenac', 'etoricoxib', 'thiocolchicoside', 'chymoral', 'tramadol', 'pregabalin', 'gabapentin', 'glucosamine', 'diacerein', 'methotrexate', 'sulfasalazine', 'hydroxychloroquine', 'tizanidine', 'baclofen', 'calcium', 'calcitriol'],
-  ortho: ['aceclofenac', 'diclofenac', 'etoricoxib', 'thiocolchicoside', 'chymoral', 'tramadol', 'pregabalin', 'gabapentin', 'glucosamine', 'diacerein', 'methotrexate', 'sulfasalazine', 'hydroxychloroquine', 'tizanidine', 'baclofen', 'calcium', 'calcitriol'],
+  orthopedics: ['aceclofenac', 'diclofenac', 'etoricoxib', 'thiocolchicoside', 'chymoral', 'tramadol', 'pregabalin', 'gabapentin', 'glucosamine', 'diacerein', 'methotrexate', 'sulfasalazine', 'hydroxychloroquine', 'tizanidine', 'baclofen', 'calcium carbonate', 'calcium citrate', 'calcitriol'],
+  ortho: ['aceclofenac', 'diclofenac', 'etoricoxib', 'thiocolchicoside', 'chymoral', 'tramadol', 'pregabalin', 'gabapentin', 'glucosamine', 'diacerein', 'methotrexate', 'sulfasalazine', 'hydroxychloroquine', 'tizanidine', 'baclofen', 'calcium carbonate', 'calcium citrate', 'calcitriol'],
   rheumatology: ['methotrexate', 'sulfasalazine', 'hydroxychloroquine', 'aceclofenac', 'etoricoxib', 'diacerein', 'prednisolone'],
 
   psychiatry: ['alprazolam', 'clonazepam', 'diazepam', 'lorazepam', 'zolpidem', 'escitalopram', 'sertraline', 'fluoxetine', 'duloxetine', 'amitriptyline', 'quetiapine', 'olanzapine', 'risperidone', 'valproate', 'levetiracetam', 'phenytoin', 'carbamazepine', 'donepezil'],
@@ -206,7 +206,21 @@ export function searchClinicalDrugs(query: string, catalog: DrugItem[]): DrugIte
   if (!q) return catalog;
 
   const tokens = q.split(/\s+/).filter(Boolean);
-  const aliasKeywords = CLINICAL_SYMPTOM_MAP[q] || [q];
+  const isSpecialtyKey = Object.prototype.hasOwnProperty.call(CLINICAL_SYMPTOM_MAP, q);
+
+  if (isSpecialtyKey) {
+    const targetAliases = CLINICAL_SYMPTOM_MAP[q] || [];
+    return catalog.filter((drug) => {
+      const name = drug.genericName.toLowerCase();
+      const kw = (drug.keywords || '').toLowerCase();
+
+      return targetAliases.some((alias) => {
+        const escaped = alias.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const pattern = new RegExp(`\\b${escaped}\\b`, 'i');
+        return pattern.test(name) || pattern.test(kw);
+      });
+    });
+  }
 
   return catalog.filter((drug) => {
     const name = drug.genericName.toLowerCase();
@@ -223,7 +237,12 @@ export function searchClinicalDrugs(query: string, catalog: DrugItem[]): DrugIte
       return true;
     }
 
-    return aliasKeywords.some((alias) => name.includes(alias) || dosage.includes(alias) || kw.includes(alias));
+    const aliasKeywords = CLINICAL_SYMPTOM_MAP[q] || [];
+    return aliasKeywords.some((alias) => {
+      const escaped = alias.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const pattern = new RegExp(`\\b${escaped}\\b`, 'i');
+      return pattern.test(name) || pattern.test(kw);
+    });
   });
 }
 
@@ -807,18 +826,18 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   { id: 'gen_nebicard5', genericName: 'Nebivolol 5mg Tablet (Nebicard 5)', category: 'adult', dosage: '1 tablet once daily morning after food (1-0-0)', duration: '30 days', keywords: 'nebivolol nebicard 5 beta 1 blocker nitric oxide hypertension high bp', minAge: 18 },
   { id: 'gen_vymada50', genericName: 'Sacubitril 24mg + Valsartan 26mg Tablet (Vymada 50mg)', category: 'adult', dosage: '1 tablet twice daily after meals (1-0-1)', duration: '30 days', keywords: 'sacubitril valsartan vymada 50 arni heart failure hfref ejection fraction hypertension', minAge: 18 },
   { id: 'gen_methyldopa250', genericName: 'Methyldopa 250mg Tablet (Alphadopa 250)', category: 'adult', dosage: '1 tablet 3 times daily after meals', duration: '30 days', keywords: 'methyldopa alphadopa pregnancy hypertension preeclampsia gestational high bp safe in pregnancy', minAge: 18 },
-  { id: 'fdc39', genericName: 'Telmisartan + Hydrochlorothiazide', category: 'adult', dosage: '40mg/12.5mg (1-0-0 morning)', duration: '30 days', minAge: 18, minWeight: 40 },
-  { id: 'fdc40', genericName: 'Amlodipine + Atenolol', category: 'adult', dosage: '5mg/50mg (1-0-0 morning)', duration: '30 days', minAge: 18, minWeight: 40 },
-  { id: 'fdc41', genericName: 'Losartan + Hydrochlorothiazide', category: 'adult', dosage: '50mg/12.5mg (1-0-0 morning)', duration: '30 days', minAge: 18, minWeight: 40 },
-  { id: 'fdc42', genericName: 'Sacubitril + Valsartan (ARNI)', category: 'adult', dosage: '50mg (1-0-1 after food)', duration: '30 days', minAge: 18, minWeight: 40 },
-  { id: 'fdc43', genericName: 'Aspirin + Clopidogrel', category: 'adult', dosage: '75mg/75mg (0-1-0 after lunch)', duration: '30 days', minAge: 18, minWeight: 40 },
-  { id: 'fdc44', genericName: 'Rosuvastatin + Fenofibrate', category: 'adult', dosage: '10mg/160mg (0-0-1 at night)', duration: '30 days', minAge: 18 },
-  { id: 'fdc45', genericName: 'Metformin + Glimepiride', category: 'adult', dosage: '500mg/1mg (1-0-1 before food)', duration: '30 days', minAge: 18, minWeight: 40 },
-  { id: 'fdc46', genericName: 'Metformin + Teneligliptin', category: 'adult', dosage: '500mg/20mg (1-0-1 after food)', duration: '30 days', minAge: 18 },
-  { id: 'fdc47', genericName: 'Metformin + Sitagliptin', category: 'adult', dosage: '500mg/50mg (1-0-1 after food)', duration: '30 days', minAge: 18 },
-  { id: 'fdc48', genericName: 'Metformin + Dapagliflozin', category: 'adult', dosage: '500mg/10mg (1-0-0 morning)', duration: '30 days', minAge: 18 },
-  { id: 'fdc49', genericName: 'Pregabalin + Methylcobalamin', category: 'adult', dosage: '75mg/1500mcg (0-0-1 at night)', duration: '30 days', minAge: 18 },
-  { id: 'fdc50', genericName: 'Gabapentin + Methylcobalamin', category: 'adult', dosage: '300mg/500mcg (0-0-1 at night)', duration: '30 days', minAge: 18 },
+  { id: 'fdc39', genericName: 'Telmisartan + Hydrochlorothiazide', category: 'adult', dosage: '40mg/12.5mg (1-0-0 morning)', duration: '30 days', keywords: 'telmisartan hydrochlorothiazide telma-h hypertension high bp blood pressure antihypertensive', minAge: 18, minWeight: 40 },
+  { id: 'fdc40', genericName: 'Amlodipine + Atenolol', category: 'adult', dosage: '5mg/50mg (1-0-0 morning)', duration: '30 days', keywords: 'amlodipine atenolol amcard-at hypertension high bp blood pressure antihypertensive', minAge: 18, minWeight: 40 },
+  { id: 'fdc41', genericName: 'Losartan + Hydrochlorothiazide', category: 'adult', dosage: '50mg/12.5mg (1-0-0 morning)', duration: '30 days', keywords: 'losartan hydrochlorothiazide covance-d hypertension high bp blood pressure antihypertensive', minAge: 18, minWeight: 40 },
+  { id: 'fdc42', genericName: 'Sacubitril + Valsartan (ARNI)', category: 'adult', dosage: '50mg (1-0-1 after food)', duration: '30 days', keywords: 'sacubitril valsartan vymada arni heart failure hypertension high bp cardiology', minAge: 18, minWeight: 40 },
+  { id: 'fdc43', genericName: 'Aspirin + Clopidogrel', category: 'adult', dosage: '75mg/75mg (0-1-0 after lunch)', duration: '30 days', keywords: 'aspirin clopidogrel ecosprin-av antiplatelet CAD stroke heart cardiology', minAge: 18, minWeight: 40 },
+  { id: 'fdc44', genericName: 'Rosuvastatin + Fenofibrate', category: 'adult', dosage: '10mg/160mg (0-0-1 at night)', duration: '30 days', keywords: 'rosuvastatin fenofibrate lipid cholesterol triglycerides cardiology', minAge: 18 },
+  { id: 'fdc45', genericName: 'Metformin + Glimepiride', category: 'adult', dosage: '500mg/1mg (1-0-1 before food)', duration: '30 days', keywords: 'metformin glimepiride amaryl-m glycomet-gp diabetes blood sugar t2dm antidiabetic endocrinology', minAge: 18, minWeight: 40 },
+  { id: 'fdc46', genericName: 'Metformin + Teneligliptin', category: 'adult', dosage: '500mg/20mg (1-0-1 after food)', duration: '30 days', keywords: 'metformin teneligliptin tenepure-m zita-plus-m diabetes blood sugar t2dm antidiabetic endocrinology', minAge: 18 },
+  { id: 'fdc47', genericName: 'Metformin + Sitagliptin', category: 'adult', dosage: '500mg/50mg (1-0-1 after food)', duration: '30 days', keywords: 'metformin sitagliptin janumet diabetes blood sugar t2dm antidiabetic endocrinology', minAge: 18 },
+  { id: 'fdc48', genericName: 'Metformin + Dapagliflozin', category: 'adult', dosage: '500mg/10mg (1-0-0 morning)', duration: '30 days', keywords: 'metformin dapagliflozin forxiga-m diabetes blood sugar t2dm antidiabetic endocrinology', minAge: 18 },
+  { id: 'fdc49', genericName: 'Pregabalin + Methylcobalamin', category: 'adult', dosage: '75mg/1500mcg (0-0-1 at night)', duration: '30 days', keywords: 'pregabalin methylcobalamin maxgalin-m neuropathy nerve pain diabetic neuropathy neurology', minAge: 18 },
+  { id: 'fdc50', genericName: 'Gabapentin + Methylcobalamin', category: 'adult', dosage: '300mg/500mcg (0-0-1 at night)', duration: '30 days', keywords: 'gabapentin methylcobalamin gabapin-m neuropathy nerve pain diabetic neuropathy neurology', minAge: 18 },
 
   // ==========================================
   // 1.5 VACCINES, IMMUNOGLOBULINS & BIOLOGICALS
