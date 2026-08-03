@@ -3954,11 +3954,7 @@ export default function UserWorkspacePage() {
               {/* 2-TIER ALPHABETICALLY SORTED SPECIALTY DRUGS CHECKLIST */}
               <div className="flex-1 overflow-y-auto space-y-3 pr-1">
                 {(() => {
-                  let matched = searchClinicalDrugs(drugSearchQuery, drugCatalog);
-
-                  if (drugFormulationFilter !== 'all') {
-                    matched = matched.filter((drug) => matchDrugFormulation(drug, drugFormulationFilter));
-                  }
+                  let matched = searchClinicalDrugs(drugSearchQuery, drugCatalog, '', drugFormulationFilter);
 
                   const w = parseFloat(vitals.weight) || 0;
                   const ageNum = parseFloat(patient.age) || 30;
@@ -4879,9 +4875,21 @@ export default function UserWorkspacePage() {
                   value={drugSearchQuery}
                   onChange={(e) => setDrugSearchQuery(e.target.value)}
                   placeholder="Type generic drug name, symptom or condition (e.g. Cefixime, Azithromycin, Toothache, Fits, Asthma)..."
-                  className="w-full rounded-xl pl-9 pr-4 py-2.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-semibold shadow-inner focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full rounded-xl pl-9 pr-24 py-2.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-semibold shadow-inner focus:ring-2 focus:ring-emerald-500 outline-none"
                   autoFocus
                 />
+                {(drugSearchQuery || drugFormulationFilter !== 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDrugSearchQuery('');
+                      setDrugFormulationFilter('all');
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 hover:bg-red-200 font-extrabold text-[10px] transition shadow-sm"
+                  >
+                    ✕ Clear Filters
+                  </button>
+                )}
               </div>
 
               {/* FORMULATION FILTER PILLS (INJ, TAB, CAP, SYP, DROPS, TOPICAL) */}
@@ -4919,6 +4927,20 @@ export default function UserWorkspacePage() {
                   className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition ${!drugSearchQuery ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300'}`}
                 >
                   All Generics
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('general')}
+                  className="px-2.5 py-1 rounded-lg bg-teal-100 text-teal-950 font-bold hover:bg-teal-200 shrink-0"
+                >
+                  🩺 General Medicine
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrugSearchQuery('nephrology')}
+                  className="px-2.5 py-1 rounded-lg bg-sky-100 text-sky-950 font-bold hover:bg-sky-200 shrink-0"
+                >
+                  🫘 Nephrology
                 </button>
                 <button
                   type="button"

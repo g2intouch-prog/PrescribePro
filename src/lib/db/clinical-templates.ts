@@ -355,7 +355,7 @@ export function searchClinicalDrugs(
       if (!matchesSpec) return false;
     }
 
-    // 2. Formulation Filter check
+    // 2. Formulation Filter check (CRITICAL: Must strictly filter formulation!)
     if (formFilter && formFilter !== 'all') {
       if (drug.formulation !== formFilter) return false;
     }
@@ -363,16 +363,17 @@ export function searchClinicalDrugs(
     // 3. Search text query check (if user typed something)
     if (!q) return true;
 
-    // Check if query matches specialty key directly (e.g. user typed "dental" or "ortho" into text box)
-    if (specFilter === '' && Object.prototype.hasOwnProperty.call(CLINICAL_SYMPTOM_MAP, q)) {
+    // Check if query matches specialty key directly (e.g. user selected "dental" or "ortho" or "hypertension")
+    if (Object.prototype.hasOwnProperty.call(CLINICAL_SYMPTOM_MAP, q)) {
       const targetAliases = CLINICAL_SYMPTOM_MAP[q] || [];
       const name = drug.genericName.toLowerCase();
       const kw = (drug.keywords || '').toLowerCase();
-      return targetAliases.some((alias) => {
+      const matchesAlias = targetAliases.some((alias) => {
         const escaped = alias.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
         const pattern = new RegExp(`\\b${escaped}\\b`, 'i');
         return pattern.test(name) || pattern.test(kw);
       });
+      if (matchesAlias) return true;
     }
 
     const name = drug.genericName.toLowerCase();
@@ -1791,7 +1792,7 @@ const DEFAULT_SPECIALTIES: Specialty[] = [
 export interface ClinicalProtocol {
   id: string;
   title: string;
-  category: 'emergency' | 'general' | 'pediatric' | 'gastro' | 'cardio' | 'respiratory' | 'infectious' | 'endocrine' | 'psychiatry' | 'neurology' | 'bites' | 'gynae' | 'ortho' | 'ent' | 'ophthalmology' | 'dermatology' | 'toxicology' | 'trauma';
+  category: 'emergency' | 'general' | 'pediatric' | 'gastro' | 'cardio' | 'respiratory' | 'infectious' | 'endocrine' | 'psychiatry' | 'neurology' | 'nephrology' | 'bites' | 'gynae' | 'ortho' | 'ent' | 'ophthalmology' | 'dermatology' | 'toxicology' | 'trauma';
   targetGroup: string;
   guidelinesSummary: string;
   redFlags: string;
@@ -4432,6 +4433,136 @@ export const DEFAULT_CLINICAL_PROTOCOLS: ClinicalProtocol[] = [
     ],
     tests: ['Serum Amylase & Lipase (Elevation > 3 times ULN)', 'Contrast-Enhanced CT Abdomen (CECT at 72 hours)', 'USG Abdomen (Check for gallstones)'],
     advice: 'KEEP ABSOLUTELY NPO UNTIL PAIN & VOMITING SUBSIDE! ICU admission for fluid monitoring & nutrition management.',
+  },
+
+  // --- GENERAL MEDICINE PROTOCOLS ---
+  {
+    id: 'proto_gen_fever_puo',
+    title: 'Acute Febrile Illness / PUO OPD Evaluation Protocol',
+    category: 'general',
+    targetGroup: 'Adults & Elderly',
+    guidelinesSummary: 'Empiric evaluation of fever with chills. Rule out Dengue, Malaria, Typhoid & UTI. Paracetamol for fever control. Strictly avoid NSAIDs (Ibuprofen/Mefenamic Acid) until Dengue is ruled out.',
+    redFlags: 'Petechial skin rash, persistent vomiting, altered sensorium, SpO2 < 95%, severe abdominal pain or bleeding.',
+    diagnosis: 'Acute Febrile Illness (Suspected Viral / Dengue / Typhoid)',
+    chiefComplaints: ['High fever with chills & rigors', 'Severe body ache, headache & fatigue', 'Nausea & loss of appetite'],
+    drugs: [
+      'Tab. Paracetamol 650mg (1-0-1 after food or SOS max 4 tabs/day) x 5 days',
+      'Cap. Pantoprazole 40mg (1-0-0 on empty stomach) x 5 days',
+      'ORS Sachet (1 sachet dissolved in 1 Liter boiled cool water, sip throughout day)',
+      'Tab. Doxycycline 100mg (1-0-1 after food) x 7 days (if rickettsial / leptospirosis endemic)',
+    ],
+    tests: ['CBC with Complete Platelet Count', 'Dengue NS1 Antigen & IgM/IgG', 'Malaria Smear (MP) & Rapid Antigen Test', 'Urine Routine & Microscopy'],
+    advice: 'Maintain high oral fluid intake (>3L daily). Recheck CBC with platelet count in 48 hours if fever persists.',
+  },
+  {
+    id: 'proto_gen_cap_pneumonia',
+    title: 'Community Acquired Pneumonia (CAP) Low-Risk OPD Protocol',
+    category: 'general',
+    targetGroup: 'Adults',
+    guidelinesSummary: 'Empiric monotherapy for low-risk CAP (CURB-65 Score 0-1). Amoxicillin-Clavulanate 625mg BD + Macrolide (Azithromycin 500mg OD) for 7 days.',
+    redFlags: 'CURB-65 >= 2 (Confusion, Urea >7 mmol/L, RR >= 30, BP < 90/60, Age >= 65), severe dyspnea, SpO2 < 90%.',
+    diagnosis: 'Community Acquired Pneumonia (Low Risk)',
+    chiefComplaints: ['Cough with rusty or purulent sputum', 'High fever with chills & pleuritic chest pain', 'Shortness of breath on exertion'],
+    drugs: [
+      'Tab. Amoxicillin + Clavulanate 625mg (1-0-1 after food) x 7 days',
+      'Tab. Azithromycin 500mg (1-0-0 after food) x 5 days',
+      'Syp. Levosalbutamol + Ambroxol + Guaifenesin 10ml (1-1-1 after food) x 5 days',
+      'Tab. Paracetamol 650mg (1-0-1 after food SOS)',
+    ],
+    tests: ['Chest X-Ray PA View (Check for lobar consolidation)', 'CBC with ESR & CRP', 'Sputum Gram Stain & Culture'],
+    advice: 'Steam inhalation twice daily. Return immediately if breathlessness worsens or chest pain intensifies.',
+  },
+  {
+    id: 'proto_gen_typhoid',
+    title: 'Typhoid / Enteric Fever Outpatient Treatment Protocol',
+    category: 'general',
+    targetGroup: 'Adults & Adolescents',
+    guidelinesSummary: 'First-line empiric treatment for enteric fever: Cefixime 200mg BD or Azithromycin 500mg OD for 10-14 days. Monitor for intestinal perforation or bleeding.',
+    redFlags: 'Sudden severe abdominal pain with rigidity (intestinal perforation), melena (black stools), persistent high delirium.',
+    diagnosis: 'Enteric Fever (Salmonella Typhi / Paratyphi Infection)',
+    chiefComplaints: ['Step-ladder rising fever with severe headache', 'Abdominal discomfort & constipation followed by diarrhea', 'Coated tongue & loss of appetite'],
+    drugs: [
+      'Tab. Cefixime 200mg (1-0-1 after food) x 10 days',
+      'Tab. Azithromycin 500mg (1-0-0 after food) x 7 days',
+      'Tab. Paracetamol 650mg (1-0-1 after food SOS)',
+      'Syp. Bacillus Clausii 5ml Spores (1-0-1 after food) x 5 days',
+    ],
+    tests: ['TyphiDot IgM / Widal Test (after 7 days of fever)', 'Blood Culture & Antibiotic Sensitivity', 'CBC with Peripheral Blood Smear'],
+    advice: 'Consume strictly boiled or purified water. Avoid street food, raw salads, and unpeeled fruits.',
+  },
+
+  // --- NEPHROLOGY PROTOCOLS ---
+  {
+    id: 'proto_nephro_dkd_proteinuria',
+    title: 'Diabetic Kidney Disease (DKD) & Proteinuria OPD Protocol',
+    category: 'nephrology',
+    targetGroup: 'Diabetic Patients with Renal Involvement',
+    guidelinesSummary: 'First-line renal protection: Telmisartan (ACEi/ARB) + Dapagliflozin 10mg (SGLT2 inhibitor) + BP control target < 130/80 mmHg + Dietary protein restriction.',
+    redFlags: 'Serum Potassium > 5.5 mEq/L, Acute eGFR drop > 30% after starting ARB, oliguria, shortness of breath from fluid overload.',
+    diagnosis: 'Diabetic Nephropathy / CKD Stage 2-3 with Microalbuminuria',
+    chiefComplaints: ['Foamy urine (proteinuria)', 'Bilateral pedal edema (leg swelling)', 'Elevated blood pressure & long-standing diabetes'],
+    drugs: [
+      'Tab. Telmisartan 40mg (1-0-0 after breakfast) x 30 days',
+      'Tab. Dapagliflozin 10mg (1-0-0 after breakfast) x 30 days',
+      'Tab. Cilnidipine 10mg (0-0-1 at bedtime) x 30 days',
+      'Tab. Torsemide 10mg (1-0-0 morning) x 15 days (if pedal edema present)',
+    ],
+    tests: ['Urine Albumin-to-Creatinine Ratio (UACR)', 'Serum Creatinine & eGFR (CKD-EPI equation)', 'Serum Electrolytes (Na+, K+)', 'HbA1c & Fasting Blood Sugar'],
+    advice: 'Restrict dietary sodium (< 2g/day). Strictly avoid all OTC NSAIDs (Ibuprofen, Diclofenac) which impair renal autoregulation.',
+  },
+  {
+    id: 'proto_nephro_ckd_conservative',
+    title: 'CKD Stage 3b-4 Conservative Medical OPD Management Protocol',
+    category: 'nephrology',
+    targetGroup: 'Adults with Stage 3b-4 CKD',
+    guidelinesSummary: 'Medical management of CKD complications: BP control target < 130/80 mmHg + Acidosis correction with Sodium Bicarbonate + Phosphate binders + Anemia management.',
+    redFlags: 'Refractory hyperkalemia (K+ > 6.0 mEq/L), uremic pericarditis, fluid overload with pulmonary edema, severe metabolic acidosis (HCO3 < 15).',
+    diagnosis: 'Chronic Kidney Disease Stage 3b/4 (eGFR 15-44 ml/min)',
+    chiefComplaints: ['Anorexia, morning nausea & metallic taste', 'Bilateral leg edema & generalized weakness', 'Nocturnal leg muscle cramps & dry skin'],
+    drugs: [
+      'Tab. Sodium Bicarbonate 500mg (1-1-1 after food) x 30 days',
+      'Tab. Calcium Carbonate 500mg (1-1-1 with meals as phosphate binder) x 30 days',
+      'Tab. Alpha Ketoanalogue 600mg (1-1-1 after food) x 30 days',
+      'Tab. Torsemide 20mg (1-0-0 morning) x 30 days',
+      'Inj. Erythropoietin (EPO) 4000 IU Subcutaneous Weekly (if Hb < 10 g/dL)',
+    ],
+    tests: ['Renal Function Test (BUN, Serum Creatinine, eGFR)', 'Serum Electrolytes (K+, Na+, Cl-, HCO3-)', 'Serum Calcium & Inorganic Phosphate', 'Hemoglobin & Serum Ferritin / TSAT'],
+    advice: 'Limit high-potassium foods (bananas, citrus fruits, coconut water, dark leafy greens). Fluid intake restricted to 1L + previous day urine volume.',
+  },
+  {
+    id: 'proto_nephro_aki_initial',
+    title: 'Acute Kidney Injury (Prerenal vs Intrinsic AKI) OPD Protocol',
+    category: 'nephrology',
+    targetGroup: 'Adults',
+    guidelinesSummary: 'Discontinue all nephrotoxic agents (NSAIDs, ACEi/ARBs, Aminoglycosides). Volume repletion with 0.9% Normal Saline if volume depleted. Monitor hourly urine output.',
+    redFlags: 'Anuria (<100ml/24hr), acute pulmonary edema, hyperkalemic ECG changes (peaked T waves), uremic encephalopathy requiring urgent dialysis.',
+    diagnosis: 'Acute Kidney Injury (Prerenal Azotemia / Drug-Induced AKI)',
+    chiefComplaints: ['Sudden decrease in urine output', 'Nausea & weakness following diarrhea / NSAID overuse', 'Swelling of feet & puffiness of face'],
+    drugs: [
+      'Infusion Normal Saline 0.9% 500ml IV over 4 hours (volume expansion if prerenal deficit)',
+      'Inj. Pantoprazole 40mg IV stat then Tab. Pantoprazole 40mg (1-0-0) x 5 days',
+      'Tab. Ondansetron 4mg (1-0-1 after food SOS)',
+    ],
+    tests: ['Serial Serum Creatinine & BUN (Q24H)', 'Serum Electrolytes (Na+, K+, Cl-)', 'USG KUB (Rule out post-renal urinary obstruction)', 'Urine Sodium & Fractional Excretion of Na (FENa)'],
+    advice: 'Strict 24-hour urine output charting. Absolutely NO NSAIDs, aminoglycosides, or IV contrast media.',
+  },
+  {
+    id: 'proto_nephro_uti_pyelo',
+    title: 'Acute UTI / Pyelonephritis OPD Management Protocol',
+    category: 'nephrology',
+    targetGroup: 'Adults & Females',
+    guidelinesSummary: 'First-line antibiotic for lower UTI: Nitrofurantoin 100mg SR BD for 7 days or Cefixime 200mg BD. Urinary alkalinizer for symptomatic dysuria relief.',
+    redFlags: 'High fever with rigors, severe flank/CVA tenderness (pyelonephritis), urosepsis in diabetic or elderly patients.',
+    diagnosis: 'Urinary Tract Infection / Acute Uncomplicated Pyelonephritis',
+    chiefComplaints: ['Severe dysuria (burning micturition)', 'Urinary frequency, urgency & suprapubic pain', 'Flank pain with fever (if pyelonephritis)'],
+    drugs: [
+      'Cap. Nitrofurantoin 100mg SR (1-0-1 after food) x 7 days',
+      'Syp. Disodium Hydrogen Citrate 10ml in 1 glass water (1-1-1) x 5 days',
+      'Tab. Cefixime 200mg (1-0-1 after food) x 7 days (if pyelonephritis suspected)',
+      'Tab. Paracetamol 650mg (1-0-1 after food SOS)',
+    ],
+    tests: ['Urine Routine & Microscopy (Pus cells, Bacteria, RBCs)', 'Urine Culture & Antibiotic Sensitivity (STAT)', 'USG KUB (Rule out renal calculi or hydronephrosis)'],
+    advice: 'Drink 3-4 liters of water daily. Complete full 7-day course of antibiotics even if symptoms resolve earlier.',
   },
 ];
 
