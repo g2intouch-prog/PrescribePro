@@ -672,6 +672,7 @@ export default function UserWorkspacePage() {
     if (proto.advice) setSpecificAdviceText(proto.advice);
     setIsProtocolsModalOpen(false);
     setSaveStatus(`Applied Clinical Protocol: "${proto.title}"`);
+    setMobilePage('section2');
     setTimeout(() => setSaveStatus(null), 3500);
   };
 
@@ -1179,8 +1180,8 @@ export default function UserWorkspacePage() {
     setSelectedDrugs((prev) => prev.filter((d) => !drugsToRemove.has(d)));
   };
 
-  // Mobile View Slide-Over Drawer State ('none' | 'left' | 'right')
-  const [mobileDrawer, setMobileDrawer] = useState<'none' | 'left' | 'right'>('none');
+  // Mobile View 3-Page Fullscreen State ('section1' | 'section2' | 'section3')
+  const [mobilePage, setMobilePage] = useState<'section1' | 'section2' | 'section3'>('section1');
 
   // Pad Config & Millimeter Spacing Calibration
   const [padMode, setPadMode] = useState<'digital' | 'preprinted'>('digital');
@@ -1391,6 +1392,7 @@ export default function UserWorkspacePage() {
       }
 
       setSaveStatus(`Restored SQLite Rx (${rec.actionSource.toUpperCase()}) from ${new Date(rec.createdAt).toLocaleDateString('en-GB')}!`);
+      setMobilePage('section2');
       setTimeout(() => setSaveStatus(null), 3500);
     } catch (err) {
       console.error('Error restoring prescription from SQLite:', err);
@@ -1939,6 +1941,7 @@ export default function UserWorkspacePage() {
     setSelectedDrugs(tpl.drugs || []);
     if (tpl.notes) setCustomAdviceText(tpl.notes);
     setSaveStatus(`Template "${tpl.name}" applied to prescription!`);
+    setMobilePage('section2');
     setTimeout(() => setSaveStatus(null), 3000);
   };
 
@@ -2151,7 +2154,7 @@ export default function UserWorkspacePage() {
             <button
               type="button"
               onClick={() => {
-                setMobileDrawer('none');
+                setMobilePage('section2');
                 const el = document.getElementById('top-safety-warning-banner');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
@@ -2186,53 +2189,58 @@ export default function UserWorkspacePage() {
         </div>
       </header>
 
-      {/* 2. THREE VERTICAL SECTIONS (WITH RESPONSIVE MOBILE DRAWERS) */}
-      <main className="flex-1 p-2.5 grid grid-cols-1 lg:grid-cols-12 gap-2.5 overflow-hidden h-[calc(100vh-42px)] relative">
-        
-        {/* MOBILE BACKDROP OVERLAY FOR SLIDE-OVER DRAWERS */}
-        {mobileDrawer !== 'none' && (
-          <div 
-            onClick={() => setMobileDrawer('none')} 
-            className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-40 lg:hidden transition-opacity" 
-          />
-        )}
-
-        {/* LEFT FLOATING EDGE TOGGLE BUTTON (MOBILE ONLY) */}
+      {/* MOBILE 3-PAGE FULLSCREEN TAB RIBBON (VISIBLE ON MOBILE ONLY) */}
+      <div className="lg:hidden shrink-0 px-2 py-1 bg-white/75 backdrop-blur-xl border-b border-white/60 flex items-center justify-between gap-1 z-20 text-xs shadow-sm">
         <button
           type="button"
-          onClick={() => setMobileDrawer(mobileDrawer === 'left' ? 'none' : 'left')}
-          className={`fixed left-0 top-1/2 -translate-y-1/2 z-50 lg:hidden font-extrabold text-[11px] py-4 px-2 rounded-r-2xl shadow-2xl flex flex-col items-center gap-1.5 border-r-2 border-y-2 transition-all transform active:scale-95 cursor-pointer ${
-            mobileDrawer === 'left'
-              ? 'bg-emerald-600 border-emerald-300 text-white shadow-emerald-600/60'
-              : 'bg-blue-600 hover:bg-blue-700 border-blue-300 text-white shadow-blue-600/60 animate-pulse'
+          onClick={() => setMobilePage('section1')}
+          className={`flex-1 py-1.5 px-1.5 rounded-xl font-extrabold flex items-center justify-center gap-1.5 transition text-[11px] ${
+            mobilePage === 'section1'
+              ? (theme === 'day' ? 'bg-blue-600 text-white shadow-md' : 'bg-emerald-500 text-gray-950 shadow-md')
+              : (theme === 'day' ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-gray-900 text-gray-400 hover:text-white')
           }`}
-          title="Slide Open Section 1 (Patient Details & Inputs)"
         >
-          <ChevronRight className={`h-5 w-5 transition-transform ${mobileDrawer === 'left' ? 'rotate-180' : ''}`} />
-          <span className="[writing-mode:vertical-lr] tracking-widest uppercase font-mono text-[10px] font-extrabold">
-            {mobileDrawer === 'left' ? '✕ Close' : '◀ Inputs'}
-          </span>
+          <UserCheck className="h-3.5 w-3.5" />
+          <span>1. Patient Inputs</span>
         </button>
 
-        {/* RIGHT FLOATING EDGE TOGGLE BUTTON (MOBILE ONLY) */}
         <button
           type="button"
-          onClick={() => setMobileDrawer(mobileDrawer === 'right' ? 'none' : 'right')}
-          className={`fixed right-0 top-1/2 -translate-y-1/2 z-50 lg:hidden font-extrabold text-[11px] py-4 px-2 rounded-l-2xl shadow-2xl flex flex-col items-center gap-1.5 border-l-2 border-y-2 transition-all transform active:scale-95 cursor-pointer ${
-            mobileDrawer === 'right'
-              ? 'bg-emerald-600 border-emerald-300 text-white shadow-emerald-600/60'
-              : 'bg-purple-600 hover:bg-purple-700 border-purple-300 text-white shadow-purple-600/60 animate-pulse'
+          onClick={() => setMobilePage('section2')}
+          className={`flex-1 py-1.5 px-1.5 rounded-xl font-extrabold flex items-center justify-center gap-1.5 transition text-[11px] relative ${
+            mobilePage === 'section2'
+              ? (theme === 'day' ? 'bg-blue-600 text-white shadow-md' : 'bg-emerald-500 text-gray-950 shadow-md')
+              : (theme === 'day' ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-gray-900 text-gray-400 hover:text-white')
           }`}
-          title="Slide Open Section 3 (Clinical Templates & Drug Catalog)"
         >
-          <ChevronLeft className={`h-5 w-5 transition-transform ${mobileDrawer === 'right' ? 'rotate-180' : ''}`} />
-          <span className="[writing-mode:vertical-lr] tracking-widest uppercase font-mono text-[10px] font-extrabold">
-            {mobileDrawer === 'right' ? '✕ Close' : 'Drugs ▶'}
-          </span>
+          <FileSpreadsheet className="h-3.5 w-3.5" />
+          <span>2. Rx Pad</span>
+          {detectedSafetyWarnings.length > 0 && (
+            <span className="h-2 w-2 rounded-full bg-red-500 animate-ping absolute top-1 right-1" />
+          )}
         </button>
+
+        <button
+          type="button"
+          onClick={() => setMobilePage('section3')}
+          className={`flex-1 py-1.5 px-1.5 rounded-xl font-extrabold flex items-center justify-center gap-1.5 transition text-[11px] ${
+            mobilePage === 'section3'
+              ? (theme === 'day' ? 'bg-blue-600 text-white shadow-md' : 'bg-emerald-500 text-gray-950 shadow-md')
+              : (theme === 'day' ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-gray-900 text-gray-400 hover:text-white')
+          }`}
+        >
+          <Clock className="h-3.5 w-3.5" />
+          <span>3. Catalog & Tpl</span>
+        </button>
+      </div>
+
+      {/* 2. THREE SECTIONS (FULLSCREEN PAGES ON MOBILE, 3-COLUMN GRID ON DESKTOP) */}
+      <main className="flex-1 p-2 sm:p-2.5 grid grid-cols-1 lg:grid-cols-12 gap-2.5 overflow-hidden relative">
 
         {/* SECTION 1 (LEFT COLUMN - 3 COLS): PATIENT REGISTRATION & INPUT SUB-PANES */}
-        <section className={`fixed lg:static inset-y-0 left-0 z-50 w-[88vw] max-w-[360px] sm:max-w-[380px] lg:w-auto lg:col-span-3 rounded-none lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full shadow-2xl lg:shadow-none transition-transform duration-300 ease-in-out ${cardBg} ${mobileDrawer === 'left' ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <section className={`lg:col-span-3 rounded-xl lg:rounded-2xl p-3.5 flex-col justify-between overflow-hidden h-full ${cardBg} ${
+          mobilePage === 'section1' ? 'flex w-full' : 'hidden lg:flex'
+        }`}>
           <div className="flex flex-col h-full space-y-3">
             
             <div className={`flex items-center justify-between border-b pb-2 shrink-0 ${theme === 'day' ? 'border-pink-200' : 'border-gray-800/80'}`}>
@@ -2246,11 +2254,12 @@ export default function UserWorkspacePage() {
                 )}
                 <button
                   type="button"
-                  onClick={() => setMobileDrawer('none')}
-                  className="lg:hidden text-xs bg-slate-800 text-white hover:bg-slate-700 px-2 py-0.5 rounded-lg font-extrabold transition"
-                  title="Close Drawer"
+                  onClick={() => setMobilePage('section2')}
+                  className="lg:hidden text-[10px] bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded-lg font-bold shadow flex items-center gap-1 transition"
+                  title="Proceed to Rx Pad"
                 >
-                  ✕ Close
+                  <span>View Rx Pad</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
@@ -2893,7 +2902,9 @@ export default function UserWorkspacePage() {
         </section>
 
         {/* SECTION 2 (CENTER COLUMN - 6 COLS): PRESCRIPTION PREVIEW IN CENTER & BOTTOM ACTION BAR */}
-        <section className={`lg:col-span-6 rounded-none lg:rounded-2xl p-2 sm:p-3.5 flex flex-col justify-between overflow-hidden h-full w-full ${cardBg}`}>
+        <section className={`lg:col-span-6 rounded-xl lg:rounded-2xl p-2 sm:p-3.5 flex-col justify-between overflow-hidden h-full w-full ${cardBg} ${
+          mobilePage === 'section2' ? 'flex w-full' : 'hidden lg:flex'
+        }`}>
 
           {/* ULTRA-COMPACT ADAPTIVE TOP CONTROL STRIP (NO HORIZONTAL SCROLL) */}
           <div className={`px-2 py-1 rounded-xl text-[10px] shrink-0 mb-1.5 border flex flex-wrap items-center justify-between gap-1.5 ${
@@ -3660,7 +3671,9 @@ export default function UserWorkspacePage() {
         </section>
 
         {/* SECTION 3 (RIGHT COLUMN - 3 COLS): SPECIALTIES, TEMPLATES & DRUGS CATALOG */}
-        <section className={`fixed lg:static inset-y-0 right-0 z-50 w-[88vw] max-w-[360px] sm:max-w-[380px] lg:w-auto lg:col-span-3 rounded-none lg:rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden h-full shadow-2xl lg:shadow-none transition-transform duration-300 ease-in-out ${cardBg} ${mobileDrawer === 'right' ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
+        <section className={`lg:col-span-3 rounded-xl lg:rounded-2xl p-3.5 flex-col justify-between overflow-hidden h-full ${cardBg} ${
+          mobilePage === 'section3' ? 'flex w-full' : 'hidden lg:flex'
+        }`}>
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
             
             {/* Header */}
@@ -3672,11 +3685,12 @@ export default function UserWorkspacePage() {
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  onClick={() => setMobileDrawer('none')}
-                  className="lg:hidden text-xs bg-slate-800 text-white hover:bg-slate-700 px-2 py-0.5 rounded-lg font-extrabold transition"
-                  title="Close Drawer"
+                  onClick={() => setMobilePage('section2')}
+                  className="lg:hidden text-[10px] bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded-lg font-bold shadow flex items-center gap-1 transition"
+                  title="Return to Rx Pad"
                 >
-                  ✕ Close
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  <span>Back to Rx Pad</span>
                 </button>
               </div>
             </div>
