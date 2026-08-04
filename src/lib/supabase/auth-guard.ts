@@ -95,23 +95,41 @@ export async function checkInviteStatus(email: string): Promise<{ allowed: boole
     return { allowed: true };
   }
 
-  // Server-side fallback check via /api/verify-invite
+  // Direct Supabase query fallback
   try {
-    const res = await fetch(`/api/verify-invite?email=${encodeURIComponent(normalizedEmail)}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.allowed) {
-        // Add to local cache
-        const current = await getInvitedUserRecords();
-        if (!current.some((r) => r.email === normalizedEmail)) {
-          saveLocally([...current, { email: normalizedEmail, status: data.status || 'active', createdAt: new Date().toISOString() }]);
-        }
-        return { allowed: true };
-      } else if (data.reason) {
-        return { allowed: false, reason: data.reason };
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('invited_users')
+      .select('*')
+      .eq('email', normalizedEmail);
+
+    if (!error && data && data.length > 0) {
+      const match = data[0];
+      if (match.status === 'paused') {
+        return { allowed: false, reason: `Access Paused: Account for "${email}" is currently suspended.` };
       }
+      return { allowed: true };
     }
   } catch (e) {}
+
+  // Client-side fallback check via API if in browser
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch(`/api/verify-invite?email=${encodeURIComponent(normalizedEmail)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.allowed) {
+          const current = await getInvitedUserRecords();
+          if (!current.some((r) => r.email === normalizedEmail)) {
+            saveLocally([...current, { email: normalizedEmail, status: data.status || 'active', createdAt: new Date().toISOString() }]);
+          }
+          return { allowed: true };
+        } else if (data.reason) {
+          return { allowed: false, reason: data.reason };
+        }
+      }
+    } catch (e) {}
+  }
 
   return { allowed: false, reason: `Access Denied: "${email}" is not on the invited list.` };
 }

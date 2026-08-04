@@ -14,7 +14,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { isEmailInvited } from '@/lib/supabase/auth-guard';
+import { isEmailInvited, checkInviteStatus } from '@/lib/supabase/auth-guard';
 
 export function SplitAuthLayout() {
   const router = useRouter();
@@ -95,24 +95,17 @@ export function SplitAuthLayout() {
       return;
     }
 
-    // Verify Invite Status
-    const invited = await isEmailInvited(email);
-    if (!invited) {
-      setLoading(false);
-      setErrorMsg(`Access Denied: "${email}" has not been invited by system admin.`);
-      return;
-    }
-
-    const supabase = createClient();
     const cleanEmail = email.trim().toLowerCase();
+    const supabase = createClient();
 
+    // 1. Try Supabase Auth First
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
         password: password || 'demo123456',
       });
 
-      if (error) {
+      if (!error && data?.user) {
         localStorage.setItem('prescribepro_session_email', cleanEmail);
         if (cleanEmail === 'g2intouch@gmail.com') {
           router.push('/admin');
@@ -121,21 +114,22 @@ export function SplitAuthLayout() {
         }
         return;
       }
+    } catch (err: any) {}
 
-      if (cleanEmail === 'g2intouch@gmail.com') {
-        router.push('/admin');
-      } else {
-        router.push('/welcome');
-      }
-    } catch (err: any) {
-      localStorage.setItem('prescribepro_session_email', cleanEmail);
-      if (cleanEmail === 'g2intouch@gmail.com') {
-        router.push('/admin');
-      } else {
-        router.push('/welcome');
-      }
-    } finally {
+    // 2. Verify Invite Guard Status
+    const inviteCheck = await checkInviteStatus(cleanEmail);
+    if (!inviteCheck.allowed) {
       setLoading(false);
+      setErrorMsg(inviteCheck.reason || `Access Denied: "${cleanEmail}" has not been invited by system admin.`);
+      return;
+    }
+
+    // 3. Store local session & proceed to welcome
+    localStorage.setItem('prescribepro_session_email', cleanEmail);
+    if (cleanEmail === 'g2intouch@gmail.com') {
+      router.push('/admin');
+    } else {
+      router.push('/welcome');
     }
   };
 
