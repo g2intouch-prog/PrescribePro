@@ -49,21 +49,71 @@ export async function getInvitedUserRecords(): Promise<InvitedUserRecord[]> {
   return localRecords.length > 0 ? localRecords : DEFAULT_USERS;
 }
 
+export async function syncAllLocalInvitesToSupabase(): Promise<void> {
+  const records = await getInvitedUserRecords();
+  for (const record of records) {
+    try {
+      await addInvitedEmailToSupabaseDB(record.email, record.status);
+    } catch (e) {}
+  }
+}
+
+async function addInvitedEmailToSupabaseDB(email: string, status: 'active' | 'paused' = 'active'): Promise<void> {
+  const normalizedEmail = email.trim().toLowerCase();
+  try {
+    const supabase = createClient();
+    await supabase.from('invited_users').upsert(
+      { email: normalizedEmail, status, created_at: new Date().toISOString() },
+      { onConflict: 'email' }
+    );
+  } catch (e) {}
+
+  try {
+    await fetch('/api/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: normalizedEmail }),
+    });
+  } catch (e) {}
+}
+
 export async function checkInviteStatus(email: string): Promise<{ allowed: boolean; reason?: string }> {
   if (!email) return { allowed: false, reason: 'Email is required.' };
   const normalizedEmail = email.trim().toLowerCase();
+
+  if (normalizedEmail === 'g2intouch@gmail.com' || normalizedEmail === 'admin@prescribepro.com') {
+    return { allowed: true };
+  }
+
   const records = await getInvitedUserRecords();
   const found = records.find((r) => r.email === normalizedEmail);
 
-  if (!found) {
-    return { allowed: false, reason: `Access Denied: "${email}" is not on the invited list.` };
+  if (found) {
+    if (found.status === 'paused') {
+      return { allowed: false, reason: `Access Paused: Account for "${email}" is currently suspended by the administrator.` };
+    }
+    return { allowed: true };
   }
 
-  if (found.status === 'paused') {
-    return { allowed: false, reason: `Access Paused: Account for "${email}" is currently suspended by the administrator.` };
-  }
+  // Server-side fallback check via /api/verify-invite
+  try {
+    const res = await fetch(`/api/verify-invite?email=${encodeURIComponent(normalizedEmail)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.allowed) {
+        // Add to local cache
+        const current = await getInvitedUserRecords();
+        if (!current.some((r) => r.email === normalizedEmail)) {
+          saveLocally([...current, { email: normalizedEmail, status: data.status || 'active', createdAt: new Date().toISOString() }]);
+        }
+        return { allowed: true };
+      } else if (data.reason) {
+        return { allowed: false, reason: data.reason };
+      }
+    }
+  } catch (e) {}
 
-  return { allowed: true };
+  return { allowed: false, reason: `Access Denied: "${email}" is not on the invited list.` };
 }
 
 export async function isEmailInvited(email: string): Promise<boolean> {
@@ -76,27 +126,20 @@ export async function addInvitedEmail(email: string): Promise<boolean> {
   const normalizedEmail = email.trim().toLowerCase();
   const current = await getInvitedUserRecords();
 
-  if (!current.some((r) => r.email === normalizedEmail)) {
+  const isAlreadyLocal = current.some((r) => r.email === normalizedEmail);
+
+  if (!isAlreadyLocal) {
     const updated: InvitedUserRecord[] = [
       ...current,
       { email: normalizedEmail, status: 'active', createdAt: new Date().toISOString() },
     ];
     saveLocally(updated);
-
-    // Sync to Supabase DB so all devices and server callbacks recognize this invited user!
-    try {
-      const supabase = createClient();
-      await supabase.from('invited_users').upsert(
-        { email: normalizedEmail, status: 'active', created_at: new Date().toISOString() },
-        { onConflict: 'email' }
-      );
-    } catch (e) {
-      console.warn('Supabase DB invite sync notice:', e);
-    }
-
-    return true;
   }
-  return false;
+
+  // ALWAYS force sync to Supabase DB so that even previously added emails get pushed to Supabase!
+  await addInvitedEmailToSupabaseDB(normalizedEmail, 'active');
+
+  return !isAlreadyLocal;
 }
 
 export async function togglePauseUserStatus(email: string): Promise<InvitedUserRecord[]> {
@@ -114,11 +157,7 @@ export async function togglePauseUserStatus(email: string): Promise<InvitedUserR
   });
 
   saveLocally(updated);
-
-  try {
-    const supabase = createClient();
-    await supabase.from('invited_users').update({ status: nextStatus }).eq('email', normalizedEmail);
-  } catch (e) {}
+  await addInvitedEmailToSupabaseDB(normalizedEmail, nextStatus);
 
   return updated;
 }

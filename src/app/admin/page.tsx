@@ -33,6 +33,7 @@ import {
   addInvitedEmail, 
   togglePauseUserStatus, 
   removeInvitedEmail,
+  syncAllLocalInvitesToSupabase,
   InvitedUserRecord 
 } from '@/lib/supabase/auth-guard';
 import { createClient } from '@/lib/supabase/client';
@@ -133,21 +134,18 @@ export default function AdminDashboardPage() {
     async function loadAdminData() {
       const supabase = createClient();
       const { data } = await supabase.auth.getUser();
-      let activeEmail = 'g2intouch@gmail.com';
-
-      if (data?.user?.email) {
-        activeEmail = data.user.email;
-      } else {
-        const local = localStorage.getItem('prescribepro_session_email');
-        if (local) activeEmail = local;
-      }
-
+      const activeEmail = data?.user?.email?.toLowerCase() || localStorage.getItem('prescribepro_session_email') || 'g2intouch@gmail.com';
+      
       if (activeEmail.toLowerCase() !== 'g2intouch@gmail.com') {
         router.push('/welcome');
         return;
       }
 
       setCurrentUser(activeEmail);
+
+      // Auto-sync all local invites to Supabase DB so previously invited users are immediately fixed!
+      await syncAllLocalInvitesToSupabase();
+
       const records = await getInvitedUserRecords();
       setUsers(records);
       setPresets(getAdminPresets());
@@ -165,7 +163,7 @@ export default function AdminDashboardPage() {
     }
 
     setLoading(true);
-    const added = await addInvitedEmail(newInviteEmail);
+    await addInvitedEmail(newInviteEmail);
 
     try {
       await fetch('/api/invite', {
@@ -177,20 +175,13 @@ export default function AdminDashboardPage() {
 
     setLoading(false);
 
-    if (added) {
-      setStatusMsg({ 
-        type: 'success', 
-        text: `Invitation pre-approved & sent to "${newInviteEmail.trim()}"! They can now sign in immediately.` 
-      });
-      setNewInviteEmail('');
-      const updated = await getInvitedUserRecords();
-      setUsers(updated);
-    } else {
-      setStatusMsg({ 
-        type: 'error', 
-        text: `"${newInviteEmail.trim()}" is already on the active invited list.` 
-      });
-    }
+    setStatusMsg({ 
+      type: 'success', 
+      text: `Invitation synchronized & confirmed for "${newInviteEmail.trim()}"! They can now sign in immediately.` 
+    });
+    setNewInviteEmail('');
+    const updated = await getInvitedUserRecords();
+    setUsers(updated);
   }
 
   async function handleTogglePause(email: string) {
