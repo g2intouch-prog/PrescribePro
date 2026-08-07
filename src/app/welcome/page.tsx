@@ -1414,6 +1414,37 @@ export default function UserWorkspacePage() {
       return `${ml} ml (${mg}mg @ 4mg/kg) twice daily (1-0-1 for 5 days)`;
     }
 
+    // 9. Ambroxol + Terbutaline + Guaifenesin Syrup (Ascoril LS / Mucolite / Ambrolite)
+    if (lowerName.includes('ambroxol') && (lowerName.includes('terbutaline') || lowerName.includes('guaifenesin'))) {
+      const ml = Math.min(5, Math.max(1.25, parseFloat((weightKg * 0.3).toFixed(1))));
+      return `${ml} ml (0.3 ml/kg) 3 times daily after food`;
+    }
+
+    // 10. Levosalbutamol + Ambroxol + Guaifenesin Syrup
+    if (lowerName.includes('levosalbutamol') || (lowerName.includes('salbutamol') && lowerName.includes('ambroxol'))) {
+      const ml = Math.min(5, Math.max(1.25, parseFloat((weightKg * 0.25).toFixed(1))));
+      return `${ml} ml (0.25 ml/kg) 3 times daily after food`;
+    }
+
+    // 11. Salbutamol 2mg/5ml Syrup
+    if (lowerName.includes('salbutamol') && lowerName.includes('2mg')) {
+      const ml = Math.min(5, Math.max(1.25, parseFloat((weightKg * 0.25).toFixed(1))));
+      return `${ml} ml (0.1mg/kg) 3 times daily`;
+    }
+
+    // 12. Cetirizine 5mg/5ml Syrup
+    if (lowerName.includes('cetirizine') && (lowerName.includes('syrup') || lowerName.includes('5mg/5ml'))) {
+      const ml = Math.min(5, Math.max(1.25, parseFloat((weightKg * 0.25).toFixed(1))));
+      return `${ml} ml once daily at bedtime`;
+    }
+
+    // 13. General Pediatric Cough Syrup / Liquid Safety Override for Weight < 30kg:
+    // If dosage contains adult 10ml, recalculate to safe pediatric dose (0.25-0.3 ml/kg)
+    if (weightKg < 30 && (d.category === 'pediatric' || lowerName.includes('syrup') || lowerName.includes('suspension')) && /\b(10\s*ml|10ml)\b/i.test(d.dosage)) {
+      const safeMl = Math.min(5, Math.max(1.25, parseFloat((weightKg * 0.3).toFixed(1))));
+      return `${safeMl} ml (Calculated for ${weightKg}kg) 3 times daily S.O.S`;
+    }
+
     return d.dosage;
   };
 
