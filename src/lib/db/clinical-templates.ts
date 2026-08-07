@@ -638,6 +638,39 @@ export function calculatePediatricDose(
   const hrigTotalIu = Math.round(weightKg * 20);
   const hrigMl = (hrigTotalIu / 150).toFixed(1);
 
+  // 12. Cefpodoxime (10 mg/kg/day divided BD = 5 mg/kg/dose BD)
+  const cefpodDoseMg = Math.round(weightKg * 5);
+  const cefpodMl50 = (cefpodDoseMg / 10).toFixed(1);
+  const cefpodMl100 = (cefpodDoseMg / 20).toFixed(1);
+
+  // 13. Amoxicillin (40 mg/kg/day divided TDS = 13.3 mg/kg/dose TDS)
+  const amoxDoseMg = Math.round(weightKg * 13.3);
+  const amoxMl125 = (amoxDoseMg / 25).toFixed(1);
+  const amoxMl250 = (amoxDoseMg / 50).toFixed(1);
+
+  // 14. Metronidazole (30 mg/kg/day divided TDS = 10 mg/kg/dose TDS)
+  const metroDoseMg = Math.round(weightKg * 10);
+  const metroMl100 = (metroDoseMg / 20).toFixed(1);
+
+  // 15. Ofloxacin (10 mg/kg/day divided BD = 5 mg/kg/dose BD)
+  const ofloxDoseMg = Math.round(weightKg * 5);
+  const ofloxMl50 = (ofloxDoseMg / 10).toFixed(1);
+
+  // 16. Co-trimoxazole (8 mg TMP / kg / day divided BD = 4 mg/kg/dose BD)
+  const cotrimDoseMg = Math.round(weightKg * 4);
+  const cotrimMl = (cotrimDoseMg / 8).toFixed(1); // 40mg TMP / 5ml = 8mg/ml
+
+  // 17. Prednisolone (1 mg/kg/day OD)
+  const predDoseMg = Math.round(weightKg * 1);
+  const predMl5 = (predDoseMg / 1).toFixed(1);
+
+  // 18. Deflazacort (0.25 mg/kg/dose BD)
+  const deflaDoseMg = (weightKg * 0.25).toFixed(1);
+  const deflaMl6 = (parseFloat(deflaDoseMg) / 1.2).toFixed(1);
+
+  // 19. Zinc Sulfate (10mg <7kg, 20mg >7kg)
+  const zincMl = weightKg < 7 ? '2.5 ml (10mg)' : '5.0 ml (20mg)';
+
   // Rabies Immunoglobulin items
   const erig300Item: CalculatedPediatricDose = {
     drugName: 'Equine Rabies Immunoglobulin (ERIG 300 IU/ml - Equirab / Vinrab 1500 IU / 5ml)',
@@ -822,6 +855,86 @@ export function calculatePediatricDose(
       calculatedVolumeMl: `${dompMl} ml`,
       frequency: '3 times daily 15 mins before meals',
       notes: `Target: 0.25mg/kg (${dompDoseMg}mg per dose)`,
+    },
+    {
+      drugName: 'Cefpodoxime Proxetil 50mg/5ml Dry Syrup',
+      recommendedDoseMg: cefpodDoseMg,
+      formulation: 'Syrup 50mg/5ml',
+      calculatedVolumeMl: `${cefpodMl50} ml`,
+      frequency: 'Twice daily (1-0-1 for 5 days)',
+      notes: `Target: 10mg/kg/day divided BD (${cefpodDoseMg}mg per dose)`,
+    },
+    {
+      drugName: 'Cefpodoxime Proxetil 100mg/5ml Dry Syrup',
+      recommendedDoseMg: cefpodDoseMg,
+      formulation: 'Syrup 100mg/5ml',
+      calculatedVolumeMl: `${cefpodMl100} ml`,
+      frequency: 'Twice daily (1-0-1 for 5 days)',
+      notes: `Target: 10mg/kg/day divided BD (${cefpodDoseMg}mg per dose)`,
+    },
+    {
+      drugName: 'Amoxicillin 125mg/5ml Syrup',
+      recommendedDoseMg: amoxDoseMg,
+      formulation: 'Syrup 125mg/5ml',
+      calculatedVolumeMl: `${amoxMl125} ml`,
+      frequency: '3 times daily (1-1-1 for 7 days)',
+      notes: `Target: 40mg/kg/day divided TDS (${amoxDoseMg}mg per dose)`,
+    },
+    {
+      drugName: 'Amoxicillin 250mg/5ml Syrup',
+      recommendedDoseMg: amoxDoseMg,
+      formulation: 'Syrup 250mg/5ml',
+      calculatedVolumeMl: `${amoxMl250} ml`,
+      frequency: '3 times daily (1-1-1 for 7 days)',
+      notes: `Target: 40mg/kg/day divided TDS (${amoxDoseMg}mg per dose)`,
+    },
+    {
+      drugName: 'Metronidazole 100mg/5ml Suspension',
+      recommendedDoseMg: metroDoseMg,
+      formulation: 'Suspension 100mg/5ml',
+      calculatedVolumeMl: `${metroMl100} ml`,
+      frequency: '3 times daily after food (1-1-1 for 5 days)',
+      notes: `Target: 30mg/kg/day divided TDS (${metroDoseMg}mg per dose)`,
+    },
+    {
+      drugName: 'Ofloxacin 50mg/5ml Suspension',
+      recommendedDoseMg: ofloxDoseMg,
+      formulation: 'Suspension 50mg/5ml',
+      calculatedVolumeMl: `${ofloxMl50} ml`,
+      frequency: 'Twice daily after food (1-0-1 for 5 days)',
+      notes: `Target: 10mg/kg/day divided BD (${ofloxDoseMg}mg per dose)`,
+    },
+    {
+      drugName: 'Co-trimoxazole Syrup (Trimethoprim 40mg + Sulfamethoxazole 200mg / 5ml)',
+      recommendedDoseMg: cotrimDoseMg,
+      formulation: 'Syrup (40mg/200mg / 5ml)',
+      calculatedVolumeMl: `${cotrimMl} ml`,
+      frequency: 'Twice daily after food (1-0-1 for 5 days)',
+      notes: `Target: 8mg TMP/kg/day divided BD (${cotrimDoseMg}mg TMP per dose)`,
+    },
+    {
+      drugName: 'Prednisolone 5mg/5ml Syrup',
+      recommendedDoseMg: predDoseMg,
+      formulation: 'Syrup 5mg/5ml',
+      calculatedVolumeMl: `${predMl5} ml`,
+      frequency: 'Once daily after breakfast (1-0-0 for 5 days)',
+      notes: `Target: 1mg/kg/day (${predDoseMg}mg per day)`,
+    },
+    {
+      drugName: 'Deflazacort 6mg/5ml Suspension',
+      recommendedDoseMg: parseFloat(deflaDoseMg),
+      formulation: 'Suspension 6mg/5ml',
+      calculatedVolumeMl: `${deflaMl6} ml`,
+      frequency: 'Twice daily after meals (1-0-1 for 5 days)',
+      notes: `Target: 0.25mg/kg/dose (${deflaDoseMg}mg per dose)`,
+    },
+    {
+      drugName: 'Zinc Sulfate 20mg/5ml Oral Solution',
+      recommendedDoseMg: weightKg < 7 ? 10 : 20,
+      formulation: 'Syrup 20mg/5ml',
+      calculatedVolumeMl: zincMl,
+      frequency: 'Once daily for 14 days during/after diarrhea',
+      notes: 'WHO recommended zinc supplementation for pediatric diarrhea',
     },
   ];
 }

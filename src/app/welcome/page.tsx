@@ -1432,13 +1432,70 @@ export default function UserWorkspacePage() {
       return `${ml} ml (0.1mg/kg) 3 times daily`;
     }
 
-    // 12. Cetirizine 5mg/5ml Syrup
+    // 13. Cetirizine 5mg/5ml Syrup
     if (lowerName.includes('cetirizine') && (lowerName.includes('syrup') || lowerName.includes('5mg/5ml'))) {
       const ml = Math.min(5, Math.max(1.25, parseFloat((weightKg * 0.25).toFixed(1))));
       return `${ml} ml once daily at bedtime`;
     }
 
-    // 13. General Pediatric Cough Syrup / Liquid Safety Override for Weight < 30kg:
+    // 14. Cefpodoxime Proxetil 50mg/5ml & 100mg/5ml Dry Syrup (5 mg/kg/dose BD)
+    if (lowerName.includes('cefpodoxime')) {
+      const mg = Math.round(weightKg * 5);
+      const is100 = lowerName.includes('100mg');
+      const ml = (mg / (is100 ? 20 : 10)).toFixed(1);
+      return `${ml} ml (${mg}mg @ 5mg/kg) twice daily (1-0-1 for 5 days)`;
+    }
+
+    // 15. Amoxicillin 125mg/5ml & 250mg/5ml Syrup (13.3 mg/kg/dose TDS)
+    if (lowerName.includes('amoxicillin') && !lowerName.includes('clav')) {
+      const mg = Math.round(weightKg * 13.3);
+      const is250 = lowerName.includes('250mg');
+      const ml = (mg / (is250 ? 50 : 25)).toFixed(1);
+      return `${ml} ml (${mg}mg @ 13.3mg/kg) 3 times daily (1-1-1 for 7 days)`;
+    }
+
+    // 16. Metronidazole 100mg/5ml Suspension (10 mg/kg/dose TDS)
+    if (lowerName.includes('metronidazole') || lowerName.includes('flagyl')) {
+      const mg = Math.round(weightKg * 10);
+      const ml = (mg / 20).toFixed(1);
+      return `${ml} ml (${mg}mg @ 10mg/kg) 3 times daily after food`;
+    }
+
+    // 17. Ofloxacin 50mg/5ml Suspension (5 mg/kg/dose BD)
+    if (lowerName.includes('ofloxacin') || lowerName.includes('oflox')) {
+      const mg = Math.round(weightKg * 5);
+      const ml = (mg / 10).toFixed(1);
+      return `${ml} ml (${mg}mg @ 5mg/kg) twice daily after food`;
+    }
+
+    // 18. Co-trimoxazole Syrup (4 mg TMP / kg / dose BD)
+    if (lowerName.includes('trimethoprim') || lowerName.includes('cotrimoxazole') || lowerName.includes('co-trimoxazole') || lowerName.includes('septran')) {
+      const mg = Math.round(weightKg * 4);
+      const ml = (mg / 8).toFixed(1);
+      return `${ml} ml (${mg}mg TMP @ 4mg/kg) twice daily after food`;
+    }
+
+    // 19. Prednisolone 5mg/5ml Syrup (1 mg/kg/day OD)
+    if (lowerName.includes('prednisolone') || lowerName.includes('wysolone')) {
+      const mg = Math.round(weightKg * 1);
+      const ml = (mg / 1).toFixed(1);
+      return `${ml} ml (${mg}mg @ 1mg/kg) once daily after breakfast`;
+    }
+
+    // 20. Deflazacort 6mg/5ml Suspension (0.25 mg/kg/dose BD)
+    if (lowerName.includes('deflazacort') || lowerName.includes('defcort')) {
+      const mg = (weightKg * 0.25).toFixed(1);
+      const ml = (parseFloat(mg) / 1.2).toFixed(1);
+      return `${ml} ml (${mg}mg @ 0.25mg/kg) twice daily after meals`;
+    }
+
+    // 21. Zinc Sulfate Syrup (20mg/5ml)
+    if (lowerName.includes('zinc') && (lowerName.includes('syrup') || lowerName.includes('solution') || lowerName.includes('20mg'))) {
+      const ml = weightKg < 7 ? '2.5 ml (10mg)' : '5.0 ml (20mg)';
+      return `${ml} once daily for 14 days during/after diarrhea`;
+    }
+
+    // 22. General Pediatric Cough Syrup / Liquid Safety Override for Weight < 30kg:
     // If dosage contains adult 10ml, recalculate to safe pediatric dose (0.25-0.3 ml/kg)
     if (weightKg < 30 && (d.category === 'pediatric' || lowerName.includes('syrup') || lowerName.includes('suspension')) && /\b(10\s*ml|10ml)\b/i.test(d.dosage)) {
       const safeMl = Math.min(5, Math.max(1.25, parseFloat((weightKg * 0.3).toFixed(1))));
