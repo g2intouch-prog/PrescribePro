@@ -25,6 +25,7 @@ export interface SavedPrescriptionRecord {
   selectedDrugsJson: string;
   selectedTestsJson: string;
   testResultsText: string;
+  customLabTestsText?: string;
   selectedAdviceJson: string;
   customAdviceText: string;
   selectedProceduresJson: string;

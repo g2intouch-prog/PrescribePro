@@ -1353,6 +1353,7 @@ export default function UserWorkspacePage() {
   const [testFilterQuery, setTestFilterQuery] = useState('');
   const [newCustomTestInput, setNewCustomTestInput] = useState('');
   const [testResultsText, setTestResultsText] = useState('');
+  const [customLabTestsText, setCustomLabTestsText] = useState('');
 
   // Additional Advice State
   const [selectedAdvice, setSelectedAdvice] = useState<string[]>([]);
@@ -1553,6 +1554,7 @@ export default function UserWorkspacePage() {
       selectedDrugsJson: JSON.stringify(selectedDrugs),
       selectedTestsJson: JSON.stringify(selectedTests),
       testResultsText: testResultsText || '',
+      customLabTestsText: customLabTestsText || '',
       selectedAdviceJson: JSON.stringify(selectedAdvice),
       customAdviceText: customAdviceText || '',
       selectedProceduresJson: JSON.stringify(selectedProcedures),
@@ -1586,6 +1588,7 @@ export default function UserWorkspacePage() {
       if (rec.selectedDrugsJson) setSelectedDrugs(JSON.parse(rec.selectedDrugsJson));
       if (rec.selectedTestsJson) setSelectedTests(JSON.parse(rec.selectedTestsJson));
       if (rec.testResultsText) setTestResultsText(rec.testResultsText);
+      if ((rec as any).customLabTestsText) setCustomLabTestsText((rec as any).customLabTestsText);
       if (rec.selectedAdviceJson) setSelectedAdvice(JSON.parse(rec.selectedAdviceJson));
       if (rec.customAdviceText) setCustomAdviceText(rec.customAdviceText);
       if (rec.selectedProceduresJson) setSelectedProcedures(JSON.parse(rec.selectedProceduresJson));
@@ -3463,23 +3466,52 @@ export default function UserWorkspacePage() {
                 {/* LEFT PANE: LAB TEST REPORTS & ADDITIONAL ADVICE (4 COLUMNS - PERMANENT RIGHT BORDER) */}
                 <div className="col-span-4 border-r-2 border-slate-300 dark:border-slate-600 pr-1.5 space-y-2 text-[8.5px] h-full min-h-full">
                   {/* LAB TEST ORDERS & REPORTS */}
-                  <div className={`space-y-1 ${selectedTests.length === 0 && !testResultsText.trim() ? 'print:hidden' : ''}`}>
+                  <div className={`space-y-1 ${selectedTests.length === 0 && !customLabTestsText.trim() && !testResultsText.trim() ? 'print:hidden' : ''}`}>
                     <div className="flex items-center justify-between border-b border-teal-200 pb-0.5 mb-1">
                       <strong className="text-teal-900 block font-extrabold text-[9px] uppercase tracking-tighter">
                         🔬 Lab Test Orders & Reports:
                       </strong>
+                      {(selectedTests.length > 0 || customLabTestsText.trim() !== '') && (
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedTests([]); setCustomLabTestsText(''); }}
+                          className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1"
+                          title="Clear lab test orders"
+                        >
+                          ✕ Clear
+                        </button>
+                      )}
                     </div>
-                    {selectedTests.length > 0 ? (
+                    {selectedTests.length > 0 && (
                       <ul className="list-disc pl-3 text-gray-800 space-y-0.5 font-medium text-[8.5px]">
                         {selectedTests.map((t) => (
                           <li key={t}>{t}</li>
                         ))}
                       </ul>
-                    ) : (
-                      <p className="text-[8px] text-gray-400 italic">
-                        [No Lab Tests selected]
-                      </p>
                     )}
+                    <p
+                      contentEditable
+                      suppressContentEditableWarning
+                      onFocus={(e) => {
+                        if (e.currentTarget.textContent?.startsWith('Click to')) {
+                          e.currentTarget.textContent = '';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = e.currentTarget.textContent?.trim() || '';
+                        if (!val || val.startsWith('Click to')) {
+                          setCustomLabTestsText('');
+                          e.currentTarget.textContent = 'Click to edit or add custom lab test orders (e.g. CBC, LFT, Lipid Profile, Chest X-Ray)...';
+                        } else {
+                          setCustomLabTestsText(val);
+                        }
+                      }}
+                      className={`text-gray-800 font-medium text-[8.5px] outline-none hover:bg-teal-100/50 p-0.5 rounded cursor-text ${
+                        !customLabTestsText.trim() && selectedTests.length > 0 ? 'print:hidden' : ''
+                      }`}
+                    >
+                      {customLabTestsText || 'Click to edit or add custom lab test orders (e.g. CBC, LFT, Lipid Profile, Chest X-Ray)...'}
+                    </p>
                     <div className={`bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px] ${!testResultsText.trim() ? 'print:hidden' : ''}`}>
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-teal-950 block">Results:</span>
