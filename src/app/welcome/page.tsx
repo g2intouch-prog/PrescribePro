@@ -39,6 +39,7 @@ import {
   Edit2,
   X,
   Check,
+  CheckCircle2,
   BookmarkPlus,
   AlertTriangle,
   Calculator,
@@ -1327,6 +1328,32 @@ export default function UserWorkspacePage() {
       .trim();
 
     return `${prefix} ${clean}`;
+  };
+
+  const isDrugInSelectedList = (rawName: string) => {
+    if (!rawName) return false;
+    const cleanRaw = rawName
+      .split('(')[0]
+      .toLowerCase()
+      .replace(/^(tab\.|cap\.|syp\.|susp\.|inj\.|drop\.\s*\(eye\)|drop\.\s*\(ent\)|drop\.|drops\.|oint\.|inj|tab|cap|syp|susp|drop|drops|oint)\s+/g, '')
+      .replace(/\b(tablet|tablets|capsule|capsules|syrup|suspension|injection|eye drops|ear drops|nasal drops|eyedrops|eardrops|eye drop|ear drop|nasal drop|nasal spray|spray|oral drops|oral drop|ophthalmic solution|opthalmic solution|ent solution|eye solution|ear solution|nasal solution|topical solution|skin solution|cutaneous solution)\b/g, '')
+      .replace(/[^a-z0-9]/g, '')
+      .trim();
+
+    if (!cleanRaw) return false;
+
+    return selectedDrugs.some((s) => {
+      const cleanS = s
+        .split('(')[0]
+        .toLowerCase()
+        .replace(/^(tab\.|cap\.|syp\.|susp\.|inj\.|drop\.\s*\(eye\)|drop\.\s*\(ent\)|drop\.|drops\.|oint\.|inj|tab|cap|syp|susp|drop|drops|oint)\s+/g, '')
+        .replace(/\b(tablet|tablets|capsule|capsules|syrup|suspension|injection|eye drops|ear drops|nasal drops|eyedrops|eardrops|eye drop|ear drop|nasal drop|nasal spray|spray|oral drops|oral drop|ophthalmic solution|opthalmic solution|ent solution|eye solution|ear solution|nasal solution|topical solution|skin solution|cutaneous solution)\b/g, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+
+      if (!cleanS) return false;
+      return cleanS.includes(cleanRaw) || cleanRaw.includes(cleanS);
+    });
   };
 
   const handleEditableFocus = (e: React.FocusEvent<HTMLElement>) => {
@@ -4570,7 +4597,7 @@ export default function UserWorkspacePage() {
                     const w = parseFloat(vitals.weight) || 0;
                     const isContraindicated = w > 0 && w < 30 && d.category === 'adult';
                     const label = `${d.genericName} (${d.dosage})`;
-                    const isChecked = selectedDrugs.includes(label) || selectedDrugs.some((s) => s.includes(d.genericName));
+                    const isChecked = isDrugInSelectedList(d.genericName);
 
                     return (
                       <div
@@ -4603,6 +4630,7 @@ export default function UserWorkspacePage() {
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-slate-900 truncate flex items-center gap-1">
                               {isContraindicated && <AlertTriangle className="h-3 w-3 text-red-600 shrink-0" />}
+                              {isChecked && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0 font-extrabold" />}
                               {d.genericName}
                             </span>
                             <span className={`text-[8px] px-1 py-0.5 rounded font-mono uppercase font-bold ${
@@ -5689,7 +5717,7 @@ export default function UserWorkspacePage() {
 
                       return matched.map((drug) => {
                         const doseLabel = `${drug.genericName} - ${drug.dosage} for ${drug.duration}`;
-                        const isChecked = selectedDrugs.includes(doseLabel);
+                        const isChecked = isDrugInSelectedList(drug.genericName);
                         return (
                           <div
                             key={drug.id}
@@ -5702,8 +5730,9 @@ export default function UserWorkspacePage() {
                           >
                             <div>
                               <div className="flex items-start justify-between gap-1.5 mb-1">
-                                <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-snug">
-                                  {drug.genericName}
+                                <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-snug flex items-center gap-1">
+                                  {isChecked && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />}
+                                  <span>{drug.genericName}</span>
                                 </h4>
                                 <div className="flex items-center gap-1 shrink-0">
                                   <button
