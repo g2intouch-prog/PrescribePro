@@ -3495,8 +3495,20 @@ export default function UserWorkspacePage() {
                       <p
                         contentEditable
                         suppressContentEditableWarning
-                        onFocus={handleEditableFocus}
-                        onBlur={(e) => setTestResultsText(e.currentTarget.textContent || '')}
+                        onFocus={(e) => {
+                          if (e.currentTarget.textContent?.startsWith('Click to')) {
+                            e.currentTarget.textContent = '';
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const val = e.currentTarget.textContent?.trim() || '';
+                          if (!val || val.startsWith('Click to')) {
+                            setTestResultsText('');
+                            e.currentTarget.textContent = 'Click to type test results...';
+                          } else {
+                            setTestResultsText(val);
+                          }
+                        }}
                         className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-teal-100/50 p-0.5 rounded cursor-text"
                       >
                         {testResultsText || 'Click to type test results...'}
@@ -3536,8 +3548,20 @@ export default function UserWorkspacePage() {
                     <p
                       contentEditable
                       suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setCustomProcedureText(e.currentTarget.textContent || '')}
+                      onFocus={(e) => {
+                        if (e.currentTarget.textContent?.startsWith('Click to')) {
+                          e.currentTarget.textContent = '';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = e.currentTarget.textContent?.trim() || '';
+                        if (!val || val.startsWith('Click to')) {
+                          setCustomProcedureText('');
+                          e.currentTarget.textContent = 'Click to edit procedures (e.g. Valsalva maneuver, Sitz bath, Physio)...';
+                        } else {
+                          setCustomProcedureText(val);
+                        }
+                      }}
                       className={`text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-indigo-100/50 p-0.5 rounded cursor-text ${
                         !customProcedureText.trim() ? 'print:hidden' : ''
                       }`}
@@ -3555,8 +3579,20 @@ export default function UserWorkspacePage() {
                     <span
                       contentEditable
                       suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setChiefComplaints(e.currentTarget.textContent || '')}
+                      onFocus={(e) => {
+                        if (e.currentTarget.textContent?.startsWith('Click to')) {
+                          e.currentTarget.textContent = '';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = e.currentTarget.textContent?.trim() || '';
+                        if (!val || val.startsWith('Click to')) {
+                          setChiefComplaints('');
+                          e.currentTarget.textContent = 'Click to edit chief complaints...';
+                        } else {
+                          setChiefComplaints(val);
+                        }
+                      }}
                       className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {chiefComplaints || 'Click to edit chief complaints...'}
@@ -3577,8 +3613,20 @@ export default function UserWorkspacePage() {
                     <span
                       contentEditable
                       suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setSignsSymptoms(e.currentTarget.textContent || '')}
+                      onFocus={(e) => {
+                        if (e.currentTarget.textContent?.startsWith('Click to')) {
+                          e.currentTarget.textContent = '';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = e.currentTarget.textContent?.trim() || '';
+                        if (!val || val.startsWith('Click to')) {
+                          setSignsSymptoms('');
+                          e.currentTarget.textContent = 'Click to edit signs & symptoms...';
+                        } else {
+                          setSignsSymptoms(val);
+                        }
+                      }}
                       className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {signsSymptoms || 'Click to edit signs & symptoms...'}
@@ -3599,8 +3647,20 @@ export default function UserWorkspacePage() {
                     <span
                       contentEditable
                       suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setClinicalHistory(e.currentTarget.textContent || '')}
+                      onFocus={(e) => {
+                        if (e.currentTarget.textContent?.startsWith('Click to')) {
+                          e.currentTarget.textContent = '';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = e.currentTarget.textContent?.trim() || '';
+                        if (!val || val.startsWith('Click to')) {
+                          setClinicalHistory('');
+                          e.currentTarget.textContent = 'Click to edit clinical history...';
+                        } else {
+                          setClinicalHistory(val);
+                        }
+                      }}
                       className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {clinicalHistory || 'Click to edit clinical history...'}
@@ -3621,8 +3681,20 @@ export default function UserWorkspacePage() {
                     <span
                       contentEditable
                       suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setFamilyHistory(e.currentTarget.textContent || '')}
+                      onFocus={(e) => {
+                        if (e.currentTarget.textContent?.startsWith('Click to')) {
+                          e.currentTarget.textContent = '';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = e.currentTarget.textContent?.trim() || '';
+                        if (!val || val.startsWith('Click to')) {
+                          setFamilyHistory('');
+                          e.currentTarget.textContent = 'Click to edit family history...';
+                        } else {
+                          setFamilyHistory(val);
+                        }
+                      }}
                       className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {familyHistory || 'Click to edit family history...'}
@@ -3643,8 +3715,20 @@ export default function UserWorkspacePage() {
                     <span
                       contentEditable
                       suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setDrugHistory(e.currentTarget.textContent || '')}
+                      onFocus={(e) => {
+                        if (e.currentTarget.textContent?.startsWith('Click to')) {
+                          e.currentTarget.textContent = '';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = e.currentTarget.textContent?.trim() || '';
+                        if (!val || val.startsWith('Click to')) {
+                          setDrugHistory('');
+                          e.currentTarget.textContent = 'Click to edit drug history...';
+                        } else {
+                          setDrugHistory(val);
+                        }
+                      }}
                       className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {drugHistory || 'Click to edit drug history...'}
@@ -3665,8 +3749,20 @@ export default function UserWorkspacePage() {
                     <span
                       contentEditable
                       suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setExaminationFindings(e.currentTarget.textContent || '')}
+                      onFocus={(e) => {
+                        if (e.currentTarget.textContent?.startsWith('Click to')) {
+                          e.currentTarget.textContent = '';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = e.currentTarget.textContent?.trim() || '';
+                        if (!val || val.startsWith('Click to')) {
+                          setExaminationFindings('');
+                          e.currentTarget.textContent = 'Click to edit exam findings...';
+                        } else {
+                          setExaminationFindings(val);
+                        }
+                      }}
                       className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {examinationFindings || 'Click to edit exam findings...'}
@@ -3687,8 +3783,20 @@ export default function UserWorkspacePage() {
                     <span
                       contentEditable
                       suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setProvisionalDiagnosis(e.currentTarget.textContent || '')}
+                      onFocus={(e) => {
+                        if (e.currentTarget.textContent?.startsWith('Click to')) {
+                          e.currentTarget.textContent = '';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = e.currentTarget.textContent?.trim() || '';
+                        if (!val || val.startsWith('Click to')) {
+                          setProvisionalDiagnosis('');
+                          e.currentTarget.textContent = 'Click to edit provisional diagnosis...';
+                        } else {
+                          setProvisionalDiagnosis(val);
+                        }
+                      }}
                       className="outline-none hover:bg-yellow-200/70 p-0.5 rounded cursor-text flex-1"
                     >
                       {provisionalDiagnosis || 'Click to edit provisional diagnosis...'}
@@ -3709,8 +3817,20 @@ export default function UserWorkspacePage() {
                     <span
                       contentEditable
                       suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setDifferentialDiagnosis(e.currentTarget.textContent || '')}
+                      onFocus={(e) => {
+                        if (e.currentTarget.textContent?.startsWith('Click to')) {
+                          e.currentTarget.textContent = '';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = e.currentTarget.textContent?.trim() || '';
+                        if (!val || val.startsWith('Click to')) {
+                          setDifferentialDiagnosis('');
+                          e.currentTarget.textContent = 'Click to edit differential diagnosis...';
+                        } else {
+                          setDifferentialDiagnosis(val);
+                        }
+                      }}
                       className="outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {differentialDiagnosis || 'Click to edit differential diagnosis...'}
@@ -3854,7 +3974,20 @@ export default function UserWorkspacePage() {
                     <p
                       contentEditable
                       suppressContentEditableWarning
-                      onBlur={(e) => setSpecificAdviceText(e.currentTarget.textContent || '')}
+                      onFocus={(e) => {
+                        if (e.currentTarget.textContent?.startsWith('Click to')) {
+                          e.currentTarget.textContent = '';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = e.currentTarget.textContent?.trim() || '';
+                        if (!val || val.startsWith('Click to')) {
+                          setSpecificAdviceText('');
+                          e.currentTarget.textContent = 'Click to edit specific clinical advice...';
+                        } else {
+                          setSpecificAdviceText(val);
+                        }
+                      }}
                       className="whitespace-pre-wrap outline-none hover:bg-amber-100/70 p-0.5 rounded cursor-text"
                     >
                       {specificAdviceText || 'Click to edit specific clinical advice...'}
