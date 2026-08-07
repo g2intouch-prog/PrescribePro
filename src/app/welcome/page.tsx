@@ -694,7 +694,7 @@ export default function UserWorkspacePage() {
   const [genericFormKeywords, setGenericFormKeywords] = useState('');
   const [genericFormPediDoseType, setGenericFormPediDoseType] = useState<'per_kg' | 'per_bsa' | 'fixed_flat' | 'age_tiered'>('per_kg');
   const [genericFormPediDoseValue, setGenericFormPediDoseValue] = useState('');
-  const [genericFormPediDoseUnit, setGenericFormPediDoseUnit] = useState<'mg/kg' | 'ml/kg' | 'mg/m2' | 'IU/kg' | 'fixed'>('mg/kg');
+  const [genericFormPediDoseUnit, setGenericFormPediDoseUnit] = useState<'mg/kg' | 'ml/kg' | 'g/kg' | 'mg/m2' | 'IU/kg' | 'fixed'>('mg/kg');
   const [genericFormPediConcentration, setGenericFormPediConcentration] = useState('');
   const [genericFormPediRuleText, setGenericFormPediRuleText] = useState('');
 
@@ -1418,6 +1418,23 @@ export default function UserWorkspacePage() {
     }
 
     const lowerName = d.genericName.toLowerCase();
+
+    // SAFETY GUARD: LIQUID PARAFFIN / CREMAFFIN CONTRAINDICATION IN CHILDREN (< 3 YEARS / < 30 KG)
+    if (lowerName.includes('liquid paraffin') || lowerName.includes('cremaffin') || (lowerName.includes('milk of magnesia') && weightKg < 30)) {
+      if (weightKg < 30) {
+        return '⚠️ CONTRAINDICATED in children < 3 yrs (Aspiration Lipid Pneumonia Risk!). Use Lactulose 5ml OD or PEG 3350 for pediatric constipation.';
+      }
+    }
+
+    if (lowerName.includes('lactulose')) {
+      const ml = (weightKg * 0.5).toFixed(1);
+      return `${ml} ml (0.5 ml/kg) once daily at bedtime (Max 15ml)`;
+    }
+
+    if (lowerName.includes('polyethylene glycol') || lowerName.includes('peg 3350')) {
+      const g = (weightKg * 0.5).toFixed(1);
+      return `${g} grams (0.5 g/kg) dissolved in glass of water once daily in morning`;
+    }
 
     if (lowerName.includes('paracetamol') && lowerName.includes('250mg')) {
       const mg = Math.round(weightKg * 15);
