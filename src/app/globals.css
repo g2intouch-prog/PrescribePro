@@ -78,7 +78,8 @@ body {
     margin: 0 auto !important;
     padding: 8mm 6mm !important;
     box-shadow: none !important;
-    border: none !important;
+    border: 2px solid #1e293b !important;
+    border-radius: 8px !important;
     background: #ffffff !important;
     color: #0f172a !important;
     box-sizing: border-box !important;
@@ -87,6 +88,11 @@ body {
 
   #printable-prescription-pad * {
     visibility: visible !important;
+  }
+
+  #printable-prescription-pad .col-span-4 {
+    border-right: 2px solid #cbd5e1 !important;
+    min-height: 100% !important;
   }
 
   #isolated-print-area .break-inside-avoid,

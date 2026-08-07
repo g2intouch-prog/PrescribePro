@@ -567,6 +567,7 @@ export default function UserWorkspacePage() {
   const [drugSearchQuery, setDrugSearchQuery] = useState('');
   const [drugFormulationFilter, setDrugFormulationFilter] = useState<'all' | 'inj' | 'tab' | 'cap' | 'syp' | 'drops' | 'topical'>('all');
   const [pharmaCategoryFilter, setPharmaCategoryFilter] = useState<string | null>(null);
+  const [isPharmaSidebarCollapsed, setIsPharmaSidebarCollapsed] = useState(false);
   const [isPediatricModalOpen, setIsPediatricModalOpen] = useState(false);
   const [pediatricSearchQuery, setPediatricSearchQuery] = useState('');
 
@@ -624,6 +625,7 @@ export default function UserWorkspacePage() {
   const [isProtocolsModalOpen, setIsProtocolsModalOpen] = useState(false);
   const [protocolSearchTerm, setProtocolSearchTerm] = useState('');
   const [protocolCategoryFilter, setProtocolCategoryFilter] = useState<string | null>(null);
+  const [isProtocolSidebarCollapsed, setIsProtocolSidebarCollapsed] = useState(false);
   const [selectedProtocol, setSelectedProtocol] = useState<any | null>(null);
 
   // Template Editor Popup State
@@ -2057,6 +2059,13 @@ export default function UserWorkspacePage() {
       return;
     }
 
+    const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      window.print();
+      return;
+    }
+
     const printWindow = window.open('', '_blank', 'width=900,height=1000');
     if (!printWindow) {
       window.print();
@@ -2114,7 +2123,8 @@ export default function UserWorkspacePage() {
               flex-direction: column !important;
               justify-content: space-between !important;
               box-shadow: none !important;
-              border: none !important;
+              border: 2px solid #1e293b !important;
+              border-radius: 8px !important;
               background: white !important;
               color: #0f172a !important;
               font-size: ${isA5 ? '11.5px' : '13.5px'} !important;
@@ -2331,21 +2341,46 @@ export default function UserWorkspacePage() {
   return (
     <div className={`h-screen flex flex-col overflow-hidden transition-colors duration-300 ${containerBg}`}>
       
-      {/* 1. ULTRA-COMPACT TOP BANNER (~5PX PADDING / ~38PX HEIGHT) */}
-      <header className={`h-[38px] px-3 sm:px-4 py-1 flex items-center justify-between shrink-0 ${headerBg}`}>
-        <div className="flex items-center gap-2">
-          <img src="/icon.png" alt="PrescribePro Logo" className="h-6 w-6 rounded-lg shadow-md border border-slate-200/50" />
-          <h1 className="font-extrabold text-xs tracking-wide text-slate-900">
-            PrescribePro
-          </h1>
+      {/* 1. COMPACT TOP BANNER WITH 2-LINE MOBILE RESPONSIVE LAYOUT */}
+      <header className={`py-1.5 px-3 sm:px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between shrink-0 gap-1.5 ${headerBg}`}>
+        {/* LINE 1 ON MOBILE: LOGO, NAME, DAY/NIGHT TOGGLE ICON, AND LOGOUT ICON */}
+        <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+          <div className="flex items-center gap-2">
+            <img src="/icon.png" alt="PrescribePro Logo" className="h-6 w-6 rounded-lg shadow-md border border-slate-200/50" />
+            <h1 className="font-extrabold text-xs tracking-wide text-slate-900 dark:text-white">
+              PrescribePro
+            </h1>
+          </div>
+
+          {/* MOBILE ONLY (LINE 1 RIGHT SIDE): DAY/NIGHT ICON TOGGLE & LOGOUT ICON */}
+          <div className="flex items-center gap-1.5 sm:hidden">
+            <button
+              type="button"
+              onClick={() => setTheme(theme === 'dark' ? 'day' : 'dark')}
+              className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-300 dark:hover:bg-slate-700 transition shadow-sm"
+              title={`Switch to ${theme === 'dark' ? 'Day Light' : 'Night Dark'} Mode`}
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-600" />}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="p-1.5 rounded-lg bg-white/80 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950 text-red-600 dark:text-red-400 transition shadow-sm"
+              title="Sign Out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          {/* DAY / NIGHT MODE TOGGLE BUTTON */}
+        {/* LINE 2 ON MOBILE (OTHER BUTTONS ARRANGED TO AVOID OVERFLOW) / DESKTOP RIGHT CONTAINER */}
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto text-[10px]">
+          {/* DAY / NIGHT MODE TOGGLE BUTTON (DESKTOP VIEW) */}
           <button
             type="button"
             onClick={() => setTheme(theme === 'dark' ? 'day' : 'dark')}
-            className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-300 transition shadow-sm"
+            className="hidden sm:flex items-center gap-1 px-2.5 py-0.5 rounded-lg font-extrabold bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-300 transition shadow-sm"
             title={`Switch to ${theme === 'dark' ? 'Day Light' : 'Night Dark'} Mode`}
           >
             {theme === 'dark' ? <Sun className="h-3 w-3 text-amber-400" /> : <Moon className="h-3 w-3 text-indigo-600" />}
@@ -2420,22 +2455,23 @@ export default function UserWorkspacePage() {
             </button>
           )}
 
-          <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-white/80 border border-white/70 text-slate-700 shadow-sm">
-            <User className="h-3 w-3 text-emerald-600" />
+          <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-white/80 dark:bg-slate-800/90 border border-white/70 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm">
+            <User className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
             <span className="font-mono font-bold truncate max-w-[110px]">{email}</span>
           </div>
 
           <button
             onClick={() => router.push('/change-password')}
-            className="p-1 rounded-lg bg-white/80 hover:bg-white text-slate-600 transition shadow-sm"
+            className="p-1 rounded-lg bg-white/80 dark:bg-slate-800 hover:bg-white text-slate-600 dark:text-slate-300 transition shadow-sm"
             title="Change Password"
           >
             <KeyRound className="h-3 w-3" />
           </button>
 
+          {/* SIGN OUT BUTTON (DESKTOP VIEW) */}
           <button
             onClick={handleSignOut}
-            className="p-1 rounded-lg bg-white/80 hover:bg-red-50 text-red-600 transition shadow-sm"
+            className="hidden sm:flex p-1 rounded-lg bg-white/80 dark:bg-slate-800 hover:bg-red-50 text-red-600 transition shadow-sm"
             title="Sign Out"
           >
             <LogOut className="h-3 w-3" />
@@ -3306,7 +3342,7 @@ export default function UserWorkspacePage() {
           {/* CENTERED LIVE PRESCRIPTION PAD PREVIEW CARD (A4 / A5 DYNAMIC PORTRAIT MODE) */}
           <div
             id="printable-prescription-pad"
-            className={`flex-1 bg-white text-gray-900 rounded-xl p-3 sm:p-4 shadow-2xl space-y-3 font-sans border border-gray-200 overflow-y-auto flex flex-col justify-between w-full max-w-full lg:mx-auto transition-all duration-300 ${
+            className={`flex-1 bg-white text-gray-900 rounded-2xl p-3 sm:p-4 shadow-2xl space-y-3 font-sans border-2 border-slate-800 dark:border-slate-600 overflow-y-auto flex flex-col justify-between w-full max-w-full lg:mx-auto transition-all duration-300 ${
               pageSize === 'A5'
                 ? 'lg:aspect-[148/210] lg:max-w-[440px] text-[10px]'
                 : 'lg:aspect-[210/297] lg:max-w-[560px] text-[11px]'
@@ -3384,46 +3420,50 @@ export default function UserWorkspacePage() {
                 <span><strong>BMI:</strong> {calcBmi()}</span>
               </div>
 
-              {/* TWO PANES CONTAINER */}
-              <div className="grid grid-cols-12 gap-1.5 pt-1 border-t border-gray-200 text-[9px]">
+              {/* TWO PANES CONTAINER WITH PERMANENT TOP-TO-BOTTOM VERTICAL DIVIDING LINE */}
+              <div className="grid grid-cols-12 gap-1.5 pt-1 border-t border-gray-300 text-[9px] flex-1 min-h-[350px]">
                 
-                {/* LEFT PANE: LAB TEST REPORTS & ADDITIONAL ADVICE (4 COLUMNS) */}
-                <div className="col-span-4 border-r border-gray-200 pr-1.5 space-y-2 text-[8.5px]">
-                  {/* LAB TEST REPORTS & RESULTS */}
-                  <div>
-                    <strong className="text-teal-900 block font-bold border-b border-teal-200 pb-0.5 mb-1 uppercase tracking-tighter">
-                      🔬 Lab Tests & Reports:
-                    </strong>
-                    {selectedTests.length > 0 && (
-                      <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5">
-                        {selectedTests.map((t) => (
-                          <li key={t}>{t}</li>
-                        ))}
-                      </ul>
-                    )}
-                    <div className="bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px]">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-teal-950 block">Results:</span>
-                        <button
-                          type="button"
-                          onClick={() => setTestResultsText('')}
-                          className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1"
-                          title="Clear test results"
-                        >
-                          ✕ Clear
-                        </button>
-                      </div>
-                      <p
-                        contentEditable
-                        suppressContentEditableWarning
-                        onFocus={handleEditableFocus}
-                        onBlur={(e) => setTestResultsText(e.currentTarget.textContent || '')}
-                        className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-teal-100/50 p-0.5 rounded cursor-text"
-                      >
-                        {testResultsText || 'Click to type test results...'}
-                      </p>
+                {/* LEFT PANE: LAB TEST REPORTS & ADDITIONAL ADVICE (4 COLUMNS - PERMANENT RIGHT BORDER) */}
+                <div className="col-span-4 border-r-2 border-slate-300 dark:border-slate-600 pr-1.5 space-y-2 text-[8.5px] h-full min-h-full">
+                  {/* LAB TEST REPORTS & RESULTS (ONLY SHOW IF TESTS SELECTED OR RESULTS TYPED) */}
+                  {(selectedTests.length > 0 || testResultsText.trim() !== '') && (
+                    <div>
+                      <strong className="text-teal-900 block font-bold border-b border-teal-200 pb-0.5 mb-1 uppercase tracking-tighter">
+                        🔬 Lab Tests & Reports:
+                      </strong>
+                      {selectedTests.length > 0 && (
+                        <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5">
+                          {selectedTests.map((t) => (
+                            <li key={t}>{t}</li>
+                          ))}
+                        </ul>
+                      )}
+                      {testResultsText.trim() !== '' && (
+                        <div className="bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px]">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-teal-950 block">Results:</span>
+                            <button
+                              type="button"
+                              onClick={() => setTestResultsText('')}
+                              className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1"
+                              title="Clear test results"
+                            >
+                              ✕ Clear
+                            </button>
+                          </div>
+                          <p
+                            contentEditable
+                            suppressContentEditableWarning
+                            onFocus={handleEditableFocus}
+                            onBlur={(e) => setTestResultsText(e.currentTarget.textContent || '')}
+                            className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-teal-100/50 p-0.5 rounded cursor-text"
+                          >
+                            {testResultsText}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  )}
 
                   {/* PROCEDURES (ALL NON-DRUG CARE, MANEUVERS & REHAB - ONLY SHOW IF CHECKED OR TYPED) */}
                   {(selectedProcedures.length > 0 || selectedAdvice.length > 0 || customProcedureText.trim() !== '') && (
@@ -3455,198 +3495,214 @@ export default function UserWorkspacePage() {
                           ))}
                         </ul>
                       )}
-                      <p
-                        contentEditable
-                        suppressContentEditableWarning
-                        onFocus={handleEditableFocus}
-                        onBlur={(e) => setCustomProcedureText(e.currentTarget.textContent || '')}
-                        className={`text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-indigo-100/50 p-0.5 rounded cursor-text ${
-                          !customProcedureText ? 'print:hidden' : ''
-                        }`}
-                      >
-                        {customProcedureText || 'Click to edit procedures (e.g. Valsalva maneuver, Sitz bath, Physio)...'}
-                      </p>
+                      {customProcedureText.trim() !== '' && (
+                        <p
+                          contentEditable
+                          suppressContentEditableWarning
+                          onFocus={handleEditableFocus}
+                          onBlur={(e) => setCustomProcedureText(e.currentTarget.textContent || '')}
+                          className="text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-indigo-100/50 p-0.5 rounded cursor-text"
+                        >
+                          {customProcedureText}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
 
                 {/* RIGHT PANE: CLINICAL ASSESSMENT, RX DRUGS & SPECIFIC ADVICE (8 COLUMNS) */}
-                <div className="col-span-8 pl-1 space-y-1 text-[9px]">
-                  {/* 1. CHIEF COMPLAINT */}
-                  <div className="flex items-center gap-1 group">
-                    <strong className="text-gray-900 font-bold shrink-0">C/O (Chief Complaints): </strong>
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setChiefComplaints(e.currentTarget.textContent || '')}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                    >
-                      {chiefComplaints || 'Click to edit chief complaints...'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setChiefComplaints('')}
-                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                      title="Clear Chief Complaints"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                <div className="col-span-8 pl-1 space-y-1 text-[9px] h-full min-h-full">
+                  {/* 1. CHIEF COMPLAINT (ONLY SHOW IF NON-EMPTY) */}
+                  {chiefComplaints.trim() !== '' && (
+                    <div className="flex items-center gap-1 group">
+                      <strong className="text-gray-900 font-bold shrink-0">C/O (Chief Complaints): </strong>
+                      <span
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={handleEditableFocus}
+                        onBlur={(e) => setChiefComplaints(e.currentTarget.textContent || '')}
+                        className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      >
+                        {chiefComplaints}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setChiefComplaints('')}
+                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                        title="Clear Chief Complaints"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
 
-                  {/* 2. SIGNS & SYMPTOMS */}
-                  <div className="flex items-center gap-1 group">
-                    <strong className="text-gray-900 font-bold shrink-0">Signs & Symptoms: </strong>
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setSignsSymptoms(e.currentTarget.textContent || '')}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                    >
-                      {signsSymptoms || 'Click to edit signs & symptoms...'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setSignsSymptoms('')}
-                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                      title="Clear Signs & Symptoms"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  {/* 2. SIGNS & SYMPTOMS (ONLY SHOW IF NON-EMPTY) */}
+                  {signsSymptoms.trim() !== '' && (
+                    <div className="flex items-center gap-1 group">
+                      <strong className="text-gray-900 font-bold shrink-0">Signs & Symptoms: </strong>
+                      <span
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={handleEditableFocus}
+                        onBlur={(e) => setSignsSymptoms(e.currentTarget.textContent || '')}
+                        className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      >
+                        {signsSymptoms}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setSignsSymptoms('')}
+                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                        title="Clear Signs & Symptoms"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
 
-                  {/* 3. CLINICAL HISTORY */}
-                  <div className="flex items-center gap-1 group">
-                    <strong className="text-gray-900 font-bold shrink-0">H/O (Clinical History): </strong>
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setClinicalHistory(e.currentTarget.textContent || '')}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                    >
-                      {clinicalHistory || 'Click to edit clinical history...'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setClinicalHistory('')}
-                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                      title="Clear Clinical History"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  {/* 3. CLINICAL HISTORY (ONLY SHOW IF NON-EMPTY) */}
+                  {clinicalHistory.trim() !== '' && (
+                    <div className="flex items-center gap-1 group">
+                      <strong className="text-gray-900 font-bold shrink-0">H/O (Clinical History): </strong>
+                      <span
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={handleEditableFocus}
+                        onBlur={(e) => setClinicalHistory(e.currentTarget.textContent || '')}
+                        className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      >
+                        {clinicalHistory}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setClinicalHistory('')}
+                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                        title="Clear Clinical History"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
 
-                  {/* 4. FAMILY HISTORY */}
-                  <div className="flex items-center gap-1 group">
-                    <strong className="text-gray-900 font-bold shrink-0">Family History: </strong>
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setFamilyHistory(e.currentTarget.textContent || '')}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                    >
-                      {familyHistory || 'Click to edit family history...'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setFamilyHistory('')}
-                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                      title="Clear Family History"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  {/* 4. FAMILY HISTORY (ONLY SHOW IF NON-EMPTY) */}
+                  {familyHistory.trim() !== '' && (
+                    <div className="flex items-center gap-1 group">
+                      <strong className="text-gray-900 font-bold shrink-0">Family History: </strong>
+                      <span
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={handleEditableFocus}
+                        onBlur={(e) => setFamilyHistory(e.currentTarget.textContent || '')}
+                        className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      >
+                        {familyHistory}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setFamilyHistory('')}
+                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                        title="Clear Family History"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
 
-                  {/* 5. DRUG HISTORY */}
-                  <div className="flex items-center gap-1 group">
-                    <strong className="text-gray-900 font-bold shrink-0">Drug History / Allergies: </strong>
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setDrugHistory(e.currentTarget.textContent || '')}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                    >
-                      {drugHistory || 'Click to edit drug history...'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setDrugHistory('')}
-                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                      title="Clear Drug History"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  {/* 5. DRUG HISTORY (ONLY SHOW IF NON-EMPTY) */}
+                  {drugHistory.trim() !== '' && (
+                    <div className="flex items-center gap-1 group">
+                      <strong className="text-gray-900 font-bold shrink-0">Drug History / Allergies: </strong>
+                      <span
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={handleEditableFocus}
+                        onBlur={(e) => setDrugHistory(e.currentTarget.textContent || '')}
+                        className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      >
+                        {drugHistory}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setDrugHistory('')}
+                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                        title="Clear Drug History"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
 
-                  {/* 6. CLINICAL & EXAMINATION FINDINGS */}
-                  <div className="flex items-center gap-1 group">
-                    <strong className="text-gray-900 font-bold shrink-0">Clinical & Exam Findings: </strong>
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setExaminationFindings(e.currentTarget.textContent || '')}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                    >
-                      {examinationFindings || 'Click to edit exam findings...'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setExaminationFindings('')}
-                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                      title="Clear Exam Findings"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  {/* 6. CLINICAL & EXAMINATION FINDINGS (ONLY SHOW IF NON-EMPTY) */}
+                  {examinationFindings.trim() !== '' && (
+                    <div className="flex items-center gap-1 group">
+                      <strong className="text-gray-900 font-bold shrink-0">Clinical & Exam Findings: </strong>
+                      <span
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={handleEditableFocus}
+                        onBlur={(e) => setExaminationFindings(e.currentTarget.textContent || '')}
+                        className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      >
+                        {examinationFindings}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setExaminationFindings('')}
+                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                        title="Clear Exam Findings"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
 
-                  {/* 7. PROVISIONAL DIAGNOSIS */}
-                  <div className="bg-gray-100/90 p-1 rounded font-bold text-gray-900 flex items-center gap-1 group">
-                    <strong className="shrink-0">Provisional Diagnosis: </strong>
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setProvisionalDiagnosis(e.currentTarget.textContent || '')}
-                      className="outline-none hover:bg-yellow-200/70 p-0.5 rounded cursor-text flex-1"
-                    >
-                      {provisionalDiagnosis || 'Click to edit provisional diagnosis...'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setProvisionalDiagnosis('')}
-                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                      title="Clear Diagnosis"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  {/* 7. PROVISIONAL DIAGNOSIS (ONLY SHOW IF NON-EMPTY) */}
+                  {provisionalDiagnosis.trim() !== '' && (
+                    <div className="bg-gray-100/90 p-1 rounded font-bold text-gray-900 flex items-center gap-1 group">
+                      <strong className="shrink-0">Provisional Diagnosis: </strong>
+                      <span
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={handleEditableFocus}
+                        onBlur={(e) => setProvisionalDiagnosis(e.currentTarget.textContent || '')}
+                        className="outline-none hover:bg-yellow-200/70 p-0.5 rounded cursor-text flex-1"
+                      >
+                        {provisionalDiagnosis}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setProvisionalDiagnosis('')}
+                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                        title="Clear Diagnosis"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
 
-                  {/* 8. DIFFERENTIAL DIAGNOSIS */}
-                  <div className="text-gray-700 italic text-[8.5px] flex items-center gap-1 group">
-                    <strong className="shrink-0">Differential Diagnosis (D/D): </strong>
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      onFocus={handleEditableFocus}
-                      onBlur={(e) => setDifferentialDiagnosis(e.currentTarget.textContent || '')}
-                      className="outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                    >
-                      {differentialDiagnosis || 'Click to edit differential diagnosis...'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setDifferentialDiagnosis('')}
-                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                      title="Clear Differential Diagnosis"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  {/* 8. DIFFERENTIAL DIAGNOSIS (ONLY SHOW IF NON-EMPTY) */}
+                  {differentialDiagnosis.trim() !== '' && (
+                    <div className="text-gray-700 italic text-[8.5px] flex items-center gap-1 group">
+                      <strong className="shrink-0">Differential Diagnosis (D/D): </strong>
+                      <span
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={handleEditableFocus}
+                        onBlur={(e) => setDifferentialDiagnosis(e.currentTarget.textContent || '')}
+                        className="outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      >
+                        {differentialDiagnosis}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setDifferentialDiagnosis('')}
+                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                        title="Clear Differential Diagnosis"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
 
                   {/* LIVE DRUG SAFETY & INTERACTION WARNING BANNER (PRINT-HIDDEN) */}
                   {detectedSafetyWarnings.length > 0 && (
@@ -3771,18 +3827,20 @@ export default function UserWorkspacePage() {
                     )}
                   </div>
 
-                  {/* 10. SPECIFIC ADVICE */}
-                  <div className="bg-amber-50 p-1 rounded border border-amber-200 text-amber-950 mt-1 text-[8.5px]">
-                    <strong className="font-bold text-amber-900 block">Specific Clinical Advice:</strong>
-                    <p
-                      contentEditable
-                      suppressContentEditableWarning
-                      onBlur={(e) => setSpecificAdviceText(e.currentTarget.textContent || '')}
-                      className="whitespace-pre-wrap outline-none hover:bg-amber-100/70 p-0.5 rounded cursor-text"
-                    >
-                      {specificAdviceText || 'Click to edit specific clinical advice...'}
-                    </p>
-                  </div>
+                  {/* 10. SPECIFIC ADVICE (ONLY SHOW IF NON-EMPTY) */}
+                  {specificAdviceText.trim() !== '' && (
+                    <div className="bg-amber-50 p-1 rounded border border-amber-200 text-amber-950 mt-1 text-[8.5px]">
+                      <strong className="font-bold text-amber-900 block">Specific Clinical Advice:</strong>
+                      <p
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => setSpecificAdviceText(e.currentTarget.textContent || '')}
+                        className="whitespace-pre-wrap outline-none hover:bg-amber-100/70 p-0.5 rounded cursor-text"
+                      >
+                        {specificAdviceText}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
               </div>
@@ -5029,22 +5087,22 @@ export default function UserWorkspacePage() {
       {isPharmacopeiaModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-6xl w-full h-[88vh] flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
-            {/* MODAL HEADER */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900 text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-emerald-600 text-white font-extrabold text-base shadow">
-                  💊
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-base text-white">
+            {/* MODAL HEADER - 2 LINES: NAME IN 1ST LINE (DESCRIPTION REMOVED), BUTTONS IN 2ND LINE */}
+            <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900 text-white flex flex-col gap-2 shrink-0">
+              {/* 1ST LINE: NAME / TITLE ONLY */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-600 text-white font-extrabold text-base shadow">
+                    💊
+                  </div>
+                  <h3 className="font-extrabold text-sm sm:text-base text-white">
                     Universal USFDA & IP Generic Drug Pharmacopeia
                   </h3>
-                  <p className="text-xs text-slate-300 font-medium">
-                    100% Pure Generic Preparations • Tick or click to append to Live Prescription Pad ({drugCatalog.length} loaded)
-                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+
+              {/* 2ND LINE: BUTTONS ARRANGED AVOIDING OVERFLOW */}
+              <div className="flex flex-wrap items-center gap-2 justify-end">
                 <button
                   type="button"
                   onClick={handleOpenAddDrug}
@@ -5065,7 +5123,7 @@ export default function UserWorkspacePage() {
                     setIsPharmacopeiaModalOpen(false);
                     setPharmaCategoryFilter(null);
                   }}
-                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition"
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition shrink-0"
                 >
                   ✕ Close
                 </button>
@@ -5074,10 +5132,24 @@ export default function UserWorkspacePage() {
 
             {/* MAIN 2-COLUMN SIDEBAR LAYOUT MATCHING CLINICAL PROTOCOLS */}
             <div className="flex-1 flex overflow-hidden min-h-0 bg-white dark:bg-slate-950">
-              {/* LEFT SIDEBAR: ALPHABETICALLY SORTED SPECIALTIES WITH DRUG COUNTS */}
-              <div className="w-64 md:w-72 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/90 p-2.5 overflow-y-auto space-y-1">
-                <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                  Specialties (A-Z)
+              {/* LEFT SIDEBAR: ALPHABETICALLY SORTED SPECIALTIES WITH DRUG COUNTS (COLLAPSIBLE TO ICON-ONLY) */}
+              <div className={`${
+                isPharmaSidebarCollapsed ? 'w-14 sm:w-16' : 'w-64 md:w-72'
+              } shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/90 p-1.5 sm:p-2.5 overflow-y-auto space-y-1 transition-all duration-200`}>
+                <div className="flex items-center justify-between px-1 py-1 border-b border-slate-200/60 dark:border-slate-800/60 mb-1">
+                  {!isPharmaSidebarCollapsed && (
+                    <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                      Specialties (A-Z)
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setIsPharmaSidebarCollapsed(!isPharmaSidebarCollapsed)}
+                    className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition text-xs flex items-center justify-center ml-auto"
+                    title={isPharmaSidebarCollapsed ? "Expand specialty list" : "Shrink specialty list to icons"}
+                  >
+                    {isPharmaSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                  </button>
                 </div>
 
                 {PROTOCOL_CATEGORIES.filter((c) => c.key !== 'personal').map((cat) => {
@@ -5097,23 +5169,31 @@ export default function UserWorkspacePage() {
                         setPharmaCategoryFilter(cat.key === 'all' ? null : cat.key);
                         if (cat.key !== 'all') {
                           setDrugSearchQuery('');
+                          setIsPharmaSidebarCollapsed(true);
                         }
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-xl font-bold text-xs flex items-center justify-between transition ${
+                      title={`${cat.label} (${catCount} drugs)`}
+                      className={`w-full text-left rounded-xl font-bold transition flex items-center ${
+                        isPharmaSidebarCollapsed
+                          ? 'justify-center p-2 text-base'
+                          : 'px-3 py-2 text-xs justify-between'
+                      } ${
                         isActive
                           ? 'bg-emerald-600 text-white shadow-md'
                           : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-800 hover:text-slate-900 bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800'
                       }`}
                     >
                       <span className="flex items-center gap-2 truncate">
-                        <span className="text-sm">{cat.icon}</span>
-                        <span className="truncate">{cat.label}</span>
+                        <span className={isPharmaSidebarCollapsed ? 'text-lg' : 'text-sm'}>{cat.icon}</span>
+                        {!isPharmaSidebarCollapsed && <span className="truncate">{cat.label}</span>}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold transition ${
-                        isActive ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                      }`}>
-                        {catCount}
-                      </span>
+                      {!isPharmaSidebarCollapsed && (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold transition ${
+                          isActive ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}>
+                          {catCount}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
@@ -5825,26 +5905,26 @@ export default function UserWorkspacePage() {
       {isProtocolsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-6xl w-full h-[88vh] flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
-            {/* HEADER */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900 text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-indigo-600 text-white font-extrabold text-base shadow">
-                  📜
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-base text-white">
+            {/* HEADER - 2 LINES: NAME IN 1ST LINE (DESCRIPTION REMOVED), BUTTONS IN 2ND LINE */}
+            <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900 text-white flex flex-col gap-2 shrink-0">
+              {/* 1ST LINE: NAME / TITLE ONLY */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 sm:p-2 rounded-xl bg-indigo-600 text-white font-extrabold text-base shadow">
+                    📜
+                  </div>
+                  <h3 className="font-extrabold text-sm sm:text-base text-white">
                     Clinical Practice Protocols & ER Order Sets
                   </h3>
-                  <p className="text-xs text-slate-300 font-medium">
-                    Evidence-based clinical protocols, emergency guidelines, and 1-click prescription order sets
-                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+
+              {/* 2ND LINE: BUTTONS ARRANGED AVOIDING OVERFLOW */}
+              <div className="flex flex-wrap items-center gap-2 justify-end">
                 <button
                   type="button"
                   onClick={handleOpenNewProtocolEditor}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow flex items-center gap-1 transition"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow flex items-center gap-1 transition shrink-0"
                 >
                   <Plus className="h-4 w-4" /> + Create New Protocol
                 </button>
@@ -5854,7 +5934,7 @@ export default function UserWorkspacePage() {
                     setIsProtocolsModalOpen(false);
                     setSelectedProtocol(null);
                   }}
-                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition"
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition shrink-0"
                 >
                   ✕ Close
                 </button>
@@ -5863,11 +5943,26 @@ export default function UserWorkspacePage() {
 
             {/* MAIN 2-COLUMN SIDEBAR LAYOUT */}
             <div className="flex-1 flex overflow-hidden min-h-0 bg-white dark:bg-slate-950">
-              {/* LEFT SIDEBAR: ALPHABETICALLY SORTED SPECIALTIES WITH PROTOCOL COUNTS */}
-              <div className="w-64 md:w-72 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/90 p-2.5 overflow-y-auto space-y-1">
-                <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                  Specialties (A-Z)
+              {/* LEFT SIDEBAR: ALPHABETICALLY SORTED SPECIALTIES WITH PROTOCOL COUNTS (COLLAPSIBLE TO ICON-ONLY) */}
+              <div className={`${
+                isProtocolSidebarCollapsed ? 'w-14 sm:w-16' : 'w-64 md:w-72'
+              } shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/90 p-1.5 sm:p-2.5 overflow-y-auto space-y-1 transition-all duration-200`}>
+                <div className="flex items-center justify-between px-1 py-1 border-b border-slate-200/60 dark:border-slate-800/60 mb-1">
+                  {!isProtocolSidebarCollapsed && (
+                    <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                      Specialties (A-Z)
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setIsProtocolSidebarCollapsed(!isProtocolSidebarCollapsed)}
+                    className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition text-xs flex items-center justify-center ml-auto"
+                    title={isProtocolSidebarCollapsed ? "Expand specialty list" : "Shrink specialty list to icons"}
+                  >
+                    {isProtocolSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                  </button>
                 </div>
+
                 {PROTOCOL_CATEGORIES.map((cat) => {
                   const isActive = protocolCategoryFilter === cat.key;
                   let catCount = 0;
@@ -5886,22 +5981,30 @@ export default function UserWorkspacePage() {
                       onClick={() => {
                         setProtocolCategoryFilter(cat.key);
                         setSelectedProtocol(null);
+                        setIsProtocolSidebarCollapsed(true);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-xl font-bold text-xs flex items-center justify-between transition ${
+                      title={`${cat.label} (${catCount} items)`}
+                      className={`w-full text-left rounded-xl font-bold transition flex items-center ${
+                        isProtocolSidebarCollapsed
+                          ? 'justify-center p-2 text-base'
+                          : 'px-3 py-2 text-xs justify-between'
+                      } ${
                         isActive
                           ? 'bg-indigo-600 text-white shadow-md'
                           : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-800 hover:text-slate-900 bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800'
                       }`}
                     >
                       <span className="flex items-center gap-2 truncate">
-                        <span className="text-sm">{cat.icon}</span>
-                        <span className="truncate">{cat.label}</span>
+                        <span className={isProtocolSidebarCollapsed ? 'text-lg' : 'text-sm'}>{cat.icon}</span>
+                        {!isProtocolSidebarCollapsed && <span className="truncate">{cat.label}</span>}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold transition ${
-                        isActive ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                      }`}>
-                        {catCount}
-                      </span>
+                      {!isProtocolSidebarCollapsed && (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold transition ${
+                          isActive ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}>
+                          {catCount}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
