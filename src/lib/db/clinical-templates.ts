@@ -590,6 +590,7 @@ export function calculatePediatricDose(
   // 1. Paracetamol (15 mg/kg/dose Q6H)
   const pcmDoseMg = Math.round(weightKg * 15);
   const pcmMl250 = (pcmDoseMg / 50).toFixed(1);
+  const pcmMl125 = (pcmDoseMg / 25).toFixed(1);
   const pcmMl120 = (pcmDoseMg / 24).toFixed(1);
   const pcmDrops = (pcmDoseMg / 100).toFixed(1);
 
@@ -703,11 +704,19 @@ export function calculatePediatricDose(
       notes: `Target: 8mg/kg/day divided BD (${cefixDoseMg}mg per dose)`,
     },
     {
-      drugName: 'Paracetamol Syrup (250mg/5ml)',
+      drugName: 'Paracetamol Syrup / Suspension (250mg/5ml)',
       recommendedDoseMg: pcmDoseMg,
       formulation: 'Syrup 250mg/5ml',
       calculatedVolumeMl: `${pcmMl250} ml`,
-      frequency: '3 times daily (t.d.s after food)',
+      frequency: '3-4 times daily (t.d.s S.O.S for fever)',
+      notes: `Target: 15mg/kg (${pcmDoseMg}mg per dose)`,
+    },
+    {
+      drugName: 'Paracetamol Syrup / Suspension (125mg/5ml)',
+      recommendedDoseMg: pcmDoseMg,
+      formulation: 'Syrup 125mg/5ml',
+      calculatedVolumeMl: `${pcmMl125} ml`,
+      frequency: '3-4 times daily (t.d.s S.O.S for fever)',
       notes: `Target: 15mg/kg (${pcmDoseMg}mg per dose)`,
     },
     {
@@ -715,7 +724,7 @@ export function calculatePediatricDose(
       recommendedDoseMg: pcmDoseMg,
       formulation: 'Syrup 120mg/5ml',
       calculatedVolumeMl: `${pcmMl120} ml`,
-      frequency: '3 times daily (t.d.s after food)',
+      frequency: '3-4 times daily (t.d.s S.O.S for fever)',
       notes: `Target: 15mg/kg (${pcmDoseMg}mg per dose)`,
     },
     {
@@ -723,7 +732,7 @@ export function calculatePediatricDose(
       recommendedDoseMg: pcmDoseMg,
       formulation: 'Drops 100mg/ml',
       calculatedVolumeMl: `${pcmDrops} ml (${Math.round(parseFloat(pcmDrops) * 20)} drops)`,
-      frequency: '3 times daily (t.d.s)',
+      frequency: '3-4 times daily (t.d.s S.O.S)',
       notes: `Target: 15mg/kg (${pcmDoseMg}mg per dose)`,
     },
     {
@@ -907,7 +916,8 @@ export const COMPREHENSIVE_GENERIC_DRUGS: DrugItem[] = [
   // ==========================================
   { id: 'gen_dolo650', genericName: 'Paracetamol 650mg Tablet', category: 'adult', dosage: '1 tablet 3 to 4 times daily after meals (S.O.S max 4g/day)', duration: '3 days', keywords: 'paracetamol acetaminophen dolo calpol crocin fever pain headache bodyache temperature', minAge: 12, minWeight: 40 },
   { id: 'gen_pcm500', genericName: 'Paracetamol 500mg Tablet', category: 'all', dosage: '1 tablet 3 to 4 times daily S.O.S', duration: '3 days', keywords: 'paracetamol acetaminophen crocin calpol fever pain' },
-  { id: 'gen_calpol_syp', genericName: 'Paracetamol 250mg/5ml Suspension', category: 'pediatric', dosage: '5ml to 7.5ml 3-4 times daily as per weight S.O.S', duration: '3 days', keywords: 'paracetamol calpol dolo syrup pediatric fever pain suspension', maxAge: 12 },
+  { id: 'gen_calpol125_syp', genericName: 'Paracetamol 125mg/5ml Suspension (Calpol 125 / Crocin 125 / Dolo 125)', category: 'pediatric', dosage: '15mg/kg/dose (15 mg/kg Q6H S.O.S)', duration: '3 days', keywords: 'paracetamol 125 calpol 125 crocin 125 dolo 125 syrup pediatric fever pain suspension 125mg', maxAge: 12 },
+  { id: 'gen_calpol_syp', genericName: 'Paracetamol 250mg/5ml Suspension (Calpol 250 / Crocin 250 / Dolo 250)', category: 'pediatric', dosage: '15mg/kg/dose (15 mg/kg Q6H S.O.S)', duration: '3 days', keywords: 'paracetamol calpol dolo syrup pediatric fever pain suspension 250mg', maxAge: 12 },
   { id: 'gen_zero100', genericName: 'Aceclofenac 100mg Tablet', category: 'adult', dosage: '1 tablet twice daily after meals', duration: '5 days', keywords: 'aceclofenac zerodol pain arthritis joint pain backache swelling', minAge: 12, minWeight: 40 },
   { id: 'gen_vov50', genericName: 'Diclofenac Sodium 50mg Tablet', category: 'adult', dosage: '1 tablet 2 to 3 times daily after meals', duration: '3 days', keywords: 'diclofenac voveran pain swelling joint fracture trauma', minAge: 12, minWeight: 40 },
   { id: 'gen_brufen400', genericName: 'Ibuprofen 400mg Tablet', category: 'adult', dosage: '1 tablet 3 times daily after meals', duration: '3 days', keywords: 'ibuprofen brufen pain fever swelling joint pain toothache', minAge: 12, minWeight: 40 },

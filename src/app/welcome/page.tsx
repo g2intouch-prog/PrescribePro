@@ -1360,6 +1360,63 @@ export default function UserWorkspacePage() {
     });
   };
 
+  const getDynamicDosageForPatient = (d: DrugItem, weightKg: number): string => {
+    if (weightKg <= 0) return d.dosage;
+
+    const lowerName = d.genericName.toLowerCase();
+
+    if (lowerName.includes('paracetamol') && lowerName.includes('250mg')) {
+      const mg = Math.round(weightKg * 15);
+      const ml = (mg / 50).toFixed(1);
+      return `${ml} ml (${mg}mg @ 15mg/kg) 3-4 times daily S.O.S`;
+    }
+
+    if (lowerName.includes('paracetamol') && lowerName.includes('125mg')) {
+      const mg = Math.round(weightKg * 15);
+      const ml = (mg / 25).toFixed(1);
+      return `${ml} ml (${mg}mg @ 15mg/kg) 3-4 times daily S.O.S`;
+    }
+
+    if (lowerName.includes('paracetamol') && lowerName.includes('120mg')) {
+      const mg = Math.round(weightKg * 15);
+      const ml = (mg / 24).toFixed(1);
+      return `${ml} ml (${mg}mg @ 15mg/kg) 3-4 times daily S.O.S`;
+    }
+
+    if (lowerName.includes('paracetamol') && (lowerName.includes('100mg/ml') || lowerName.includes('drops'))) {
+      const mg = Math.round(weightKg * 15);
+      const ml = (mg / 100).toFixed(1);
+      const drops = Math.round(parseFloat(ml) * 20);
+      return `${ml} ml (${drops} drops, ${mg}mg @ 15mg/kg) 3-4 times daily S.O.S`;
+    }
+
+    if (lowerName.includes('ibuprofen') && lowerName.includes('100mg')) {
+      const mg = Math.round(weightKg * 10);
+      const ml = (mg / 20).toFixed(1);
+      return `${ml} ml (${mg}mg @ 10mg/kg) 3 times daily after food`;
+    }
+
+    if ((lowerName.includes('mefenamic') || lowerName.includes('meftal')) && lowerName.includes('100mg')) {
+      const mg = Math.round(weightKg * 6.5);
+      const ml = (mg / 20).toFixed(1);
+      return `${ml} ml (${mg}mg @ 6.5mg/kg) 2-3 times daily`;
+    }
+
+    if ((lowerName.includes('amoxicillin') || lowerName.includes('amox')) && lowerName.includes('228')) {
+      const mg = Math.round(weightKg * 15);
+      const ml = (mg / 40).toFixed(1);
+      return `${ml} ml (${mg}mg @ 15mg/kg) twice daily (1-0-1 for 5 days)`;
+    }
+
+    if (lowerName.includes('cefixime') && lowerName.includes('50mg')) {
+      const mg = Math.round(weightKg * 4);
+      const ml = (mg / 10).toFixed(1);
+      return `${ml} ml (${mg}mg @ 4mg/kg) twice daily (1-0-1 for 5 days)`;
+    }
+
+    return d.dosage;
+  };
+
   const handleEditableFocus = (e: React.FocusEvent<HTMLElement>) => {
     const text = e.currentTarget.textContent || '';
     if (text.trim().startsWith('Click to edit')) {
@@ -4600,7 +4657,8 @@ export default function UserWorkspacePage() {
                   const renderDrugItem = (d: DrugItem) => {
                     const w = parseFloat(vitals.weight) || 0;
                     const isContraindicated = w > 0 && w < 30 && d.category === 'adult';
-                    const label = `${d.genericName} (${d.dosage})`;
+                    const dynamicDosage = getDynamicDosageForPatient(d, w);
+                    const label = `${d.genericName} (${dynamicDosage})`;
                     const isChecked = isDrugInSelectedList(d.genericName);
 
                     return (
@@ -4646,7 +4704,7 @@ export default function UserWorkspacePage() {
                             </span>
                           </div>
                           <span className="text-[9px] text-slate-500 block truncate pt-0.5">
-                            {isContraindicated ? `⚠️ Adult dose unsafe for ${w}kg child` : `${d.dosage} • ${d.duration}`}
+                            {isContraindicated ? `⚠️ Adult dose unsafe for ${w}kg child` : `${dynamicDosage} • ${d.duration}`}
                           </span>
                         </div>
                       </div>
@@ -5719,7 +5777,9 @@ export default function UserWorkspacePage() {
                       }
 
                       return matched.map((drug) => {
-                        const doseLabel = `${drug.genericName} - ${drug.dosage} for ${drug.duration}`;
+                        const w = parseFloat(vitals.weight) || 0;
+                        const dynamicDosage = getDynamicDosageForPatient(drug, w);
+                        const doseLabel = `${drug.genericName} - ${dynamicDosage} for ${drug.duration}`;
                         const isChecked = isDrugInSelectedList(drug.genericName);
                         return (
                           <div
@@ -5761,7 +5821,7 @@ export default function UserWorkspacePage() {
                                 </div>
                               </div>
                               <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-                                Dose: <strong className="text-slate-800 dark:text-slate-200">{drug.dosage}</strong>
+                                Dose: <strong className="text-slate-800 dark:text-slate-200">{getDynamicDosageForPatient(drug, parseFloat(vitals.weight) || 0)}</strong>
                               </p>
                               <p className="text-[10px] text-slate-500 dark:text-slate-500">
                                 Standard Duration: {drug.duration}
