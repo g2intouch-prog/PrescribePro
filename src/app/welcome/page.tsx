@@ -2195,10 +2195,29 @@ export default function UserWorkspacePage() {
 
   // Apply Template
   const applyTemplate = (tpl: PrescriptionTemplate) => {
-    setSelectedTests(tpl.tests || []);
-    setSelectedAdvice(tpl.advice || []);
-    setSelectedDrugs(tpl.drugs || []);
-    if (tpl.notes) setCustomAdviceText(tpl.notes);
+    if (tpl.complaints) {
+      const ccStr = Array.isArray(tpl.complaints) ? tpl.complaints.join(', ') : tpl.complaints;
+      setChiefComplaints(ccStr);
+    }
+    if (tpl.diagnosis) {
+      setProvisionalDiagnosis(tpl.diagnosis);
+    }
+    if (tpl.drugs && tpl.drugs.length > 0) {
+      setSelectedDrugs(tpl.drugs.map((d) => formatDrugLineForDisplay(d)));
+    }
+    if (tpl.tests && tpl.tests.length > 0) {
+      setSelectedTests(tpl.tests);
+    }
+    if (tpl.advice) {
+      if (Array.isArray(tpl.advice)) {
+        setSelectedAdvice(tpl.advice);
+      } else {
+        setSpecificAdviceText(tpl.advice);
+      }
+    }
+    if (tpl.notes) {
+      setSpecificAdviceText(tpl.notes);
+    }
     setSaveStatus(`Template "${tpl.name}" applied to prescription!`);
     setMobilePage('section2');
     setTimeout(() => setSaveStatus(null), 3000);
@@ -4259,13 +4278,13 @@ export default function UserWorkspacePage() {
             <div className="space-y-1.5 shrink-0 bg-slate-50 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                  <span>⚡ Quick-Load Specialty Templates</span>
+                  <span>⚡ Quick-Load Templates</span>
                 </label>
                 <button
                   type="button"
                   onClick={() => setIsTemplateModalOpen(true)}
                   className="text-[9px] font-extrabold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline flex items-center gap-0.5"
-                  title="Manage & Add Custom Specialty Templates"
+                  title="Manage & Add Custom Templates"
                 >
                   <span>⚙️ Manage</span>
                 </button>
@@ -4295,7 +4314,7 @@ export default function UserWorkspacePage() {
                   type="button"
                   onClick={() => handleOpenNewTemplateEditor(selectedSpecialtyId)}
                   className="px-2 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[10px] shadow transition flex items-center gap-1 shrink-0"
-                  title="Add new template under current specialty"
+                  title="Add new template"
                 >
                   <Plus className="h-3 w-3" />
                   <span>+ New</span>
@@ -4342,7 +4361,7 @@ export default function UserWorkspacePage() {
                 </div>
               ) : (
                 <div className="p-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-1 bg-white/50 dark:bg-slate-900/50">
-                  <p className="text-[10px] text-slate-500 font-medium">No templates created under {currentSpecialty?.name || 'this specialty'} yet.</p>
+                  <p className="text-[10px] text-slate-500 font-medium">No templates created under {currentSpecialty?.name || 'this category'} yet.</p>
                   <button
                     type="button"
                     onClick={() => handleOpenNewTemplateEditor(selectedSpecialtyId)}
