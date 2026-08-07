@@ -1296,6 +1296,12 @@ export default function UserWorkspacePage() {
     if (!trimmed) return trimmed;
 
     const lower = trimmed.toLowerCase();
+
+    // OPTION 3 FOR TOPICAL: NO PREFIX (Keep exact formulation name without prepending Oint. or Top.)
+    if (/\b(topical solution|skin solution|cutaneous solution|oint|oint\.|ointment|cream|gel|lotion|shampoo|mouthwash|gargle|patch|paste|toothpaste)\b/i.test(lower)) {
+      return trimmed.replace(/^(Oint\.|Top\.|oint\.|top\.)\s+/i, '').trim();
+    }
+
     let prefix = 'Tab.';
 
     if (/\b(inj|inj\.|injection|infusion|vial|ampoule|amp|iv|im)\b/i.test(lower)) {
@@ -1312,8 +1318,6 @@ export default function UserWorkspacePage() {
       prefix = 'Drop. (ENT)';
     } else if (/\b(drop|drops|drop\.|drops\.|oral drop|oral drops|pediatric drop|pediatric drops)\b/i.test(lower)) {
       prefix = 'Drop.';
-    } else if (/\b(topical solution|skin solution|cutaneous solution|oint|oint\.|ointment|cream|gel|lotion|patch)\b/i.test(lower)) {
-      prefix = 'Oint.';
     } else if (/\b(tab|tab\.|tablet|tablets|dt|md|dispersible)\b/i.test(lower)) {
       prefix = 'Tab.';
     }
@@ -1323,7 +1327,7 @@ export default function UserWorkspacePage() {
       .trim();
 
     clean = clean
-      .replace(/\b(tablet|tablets|capsule|capsules|syrup|suspension|injection|eye drops|ear drops|nasal drops|eyedrops|eardrops|eye drop|ear drop|nasal drop|nasal spray|spray|oral drops|oral drop|ophthalmic solution|opthalmic solution|ent solution|eye solution|ear solution|nasal solution|topical solution|skin solution|cutaneous solution)\b/gi, '')
+      .replace(/\b(tablet|tablets|capsule|capsules|syrup|suspension|injection|eye drops|ear drops|nasal drops|eyedrops|eardrops|eye drop|ear drop|nasal drop|nasal spray|spray|oral drops|oral drop|ophthalmic solution|opthalmic solution|ent solution|eye solution|ear solution|nasal solution)\b/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
 
@@ -1352,7 +1356,7 @@ export default function UserWorkspacePage() {
         .trim();
 
       if (!cleanS) return false;
-      return cleanS.includes(cleanRaw) || cleanRaw.includes(cleanS);
+      return cleanS === cleanRaw;
     });
   };
 
@@ -4630,7 +4634,6 @@ export default function UserWorkspacePage() {
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-slate-900 truncate flex items-center gap-1">
                               {isContraindicated && <AlertTriangle className="h-3 w-3 text-red-600 shrink-0" />}
-                              {isChecked && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0 font-extrabold" />}
                               {d.genericName}
                             </span>
                             <span className={`text-[8px] px-1 py-0.5 rounded font-mono uppercase font-bold ${
@@ -5730,9 +5733,8 @@ export default function UserWorkspacePage() {
                           >
                             <div>
                               <div className="flex items-start justify-between gap-1.5 mb-1">
-                                <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-snug flex items-center gap-1">
-                                  {isChecked && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />}
-                                  <span>{drug.genericName}</span>
+                                <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-snug">
+                                  {drug.genericName}
                                 </h4>
                                 <div className="flex items-center gap-1 shrink-0">
                                   <button
