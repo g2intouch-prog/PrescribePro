@@ -1305,13 +1305,13 @@ export default function UserWorkspacePage() {
       prefix = 'Susp.';
     } else if (/\b(syp|syp\.|syrup|elixir|liquid|linctus|expectorant)\b/i.test(lower)) {
       prefix = 'Syp.';
-    } else if (/\b(eyedrop|eyedrops|eye drop|eye drops|ophthalmic|eye)\b/i.test(lower)) {
+    } else if (/\b(eyedrop|eyedrops|eye drop|eye drops|ophthalmic|opthalmic|ophthalmic solution|opthalmic solution|eye solution|eye)\b/i.test(lower)) {
       prefix = 'Drop. (Eye)';
-    } else if (/\b(eardrop|eardrops|ear drop|ear drops|nasaldrop|nasaldrops|nasal drop|nasal drops|otic|ear|nasal)\b/i.test(lower)) {
+    } else if (/\b(eardrop|eardrops|ear drop|ear drops|nasaldrop|nasaldrops|nasal drop|nasal drops|ent solution|ear solution|nasal solution|otic|ear|nasal)\b/i.test(lower)) {
       prefix = 'Drop. (ENT)';
     } else if (/\b(drop|drops|drop\.|drops\.|oral drop|oral drops|pediatric drop|pediatric drops)\b/i.test(lower)) {
       prefix = 'Drop.';
-    } else if (/\b(oint|oint\.|ointment|cream|gel|lotion|patch)\b/i.test(lower)) {
+    } else if (/\b(topical solution|skin solution|cutaneous solution|oint|oint\.|ointment|cream|gel|lotion|patch)\b/i.test(lower)) {
       prefix = 'Oint.';
     } else if (/\b(tab|tab\.|tablet|tablets|dt|md|dispersible)\b/i.test(lower)) {
       prefix = 'Tab.';
@@ -1322,7 +1322,7 @@ export default function UserWorkspacePage() {
       .trim();
 
     clean = clean
-      .replace(/\b(tablet|tablets|capsule|capsules|syrup|suspension|injection|eye drops|ear drops|nasal drops|eyedrops|eardrops|eye drop|ear drop|nasal drop|oral drops|oral drop)\b/gi, '')
+      .replace(/\b(tablet|tablets|capsule|capsules|syrup|suspension|injection|eye drops|ear drops|nasal drops|eyedrops|eardrops|eye drop|ear drop|nasal drop|oral drops|oral drop|ophthalmic solution|opthalmic solution|ent solution|eye solution|ear solution|nasal solution|topical solution|skin solution|cutaneous solution)\b/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
 
