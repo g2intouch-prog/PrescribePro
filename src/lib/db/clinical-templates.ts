@@ -54,6 +54,13 @@ export interface DrugItem {
   maxAge?: number;
   minWeight?: number;
   maxWeight?: number;
+
+  // Pediatric & BSA Dosing Assistant Rule Configuration
+  pediatricDoseType?: 'per_kg' | 'per_bsa' | 'fixed_flat' | 'age_tiered';
+  pediatricDoseValue?: number;
+  pediatricDoseUnit?: 'mg/kg' | 'ml/kg' | 'mg/m2' | 'IU/kg' | 'fixed';
+  pediatricConcentrationMgPerMl?: number;
+  pediatricDoseRuleText?: string;
 }
 
 export const CLINICAL_SYMPTOM_MAP: Record<string, string[]> = {
@@ -5081,6 +5088,11 @@ export function getDrugCatalog(): DrugItem[] {
                   ...defaultItem,
                   dosage: item.dosage || defaultItem.dosage,
                   duration: item.duration || defaultItem.duration,
+                  pediatricDoseType: item.pediatricDoseType !== undefined ? item.pediatricDoseType : defaultItem.pediatricDoseType,
+                  pediatricDoseValue: item.pediatricDoseValue !== undefined ? item.pediatricDoseValue : defaultItem.pediatricDoseValue,
+                  pediatricDoseUnit: item.pediatricDoseUnit || defaultItem.pediatricDoseUnit,
+                  pediatricConcentrationMgPerMl: item.pediatricConcentrationMgPerMl !== undefined ? item.pediatricConcentrationMgPerMl : defaultItem.pediatricConcentrationMgPerMl,
+                  pediatricDoseRuleText: item.pediatricDoseRuleText || defaultItem.pediatricDoseRuleText,
                 })
               );
             } else {
@@ -5122,5 +5134,28 @@ export function getDrugCatalog(): DrugItem[] {
 export function saveDrugCatalog(data: DrugItem[]): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem(DRUGS_STORAGE_KEY, JSON.stringify(data));
+  }
+}
+
+export function saveCustomDrug(item: DrugItem): void {
+  if (typeof window !== 'undefined') {
+    const catalog = getDrugCatalog();
+    const existingIdx = catalog.findIndex((d) => d.id === item.id);
+    let updated: DrugItem[] = [];
+    if (existingIdx >= 0) {
+      updated = [...catalog];
+      updated[existingIdx] = item;
+    } else {
+      updated = [item, ...catalog];
+    }
+    saveDrugCatalog(updated);
+  }
+}
+
+export function deleteCustomDrug(id: string): void {
+  if (typeof window !== 'undefined') {
+    const catalog = getDrugCatalog();
+    const updated = catalog.filter((d) => d.id !== id);
+    saveDrugCatalog(updated);
   }
 }

@@ -80,6 +80,8 @@ import {
   ClinicalProtocol,
   getDrugCatalog, 
   saveDrugCatalog, 
+  saveCustomDrug,
+  deleteCustomDrug,
   calculatePediatricDose,
   calculateBsaDose,
   calculateBsa,
@@ -682,65 +684,83 @@ export default function UserWorkspacePage() {
     keywords: '',
   });
 
+  // Generic Drug Editor Modal State & Handlers
+  const [isGenericDrugModalOpen, setIsGenericDrugModalOpen] = useState(false);
+  const [editingGenericDrugId, setEditingGenericDrugId] = useState<string | null>(null);
+  const [genericFormName, setGenericFormName] = useState('');
+  const [genericFormCategory, setGenericFormCategory] = useState<'all' | 'pediatric' | 'adult' | 'infant'>('all');
+  const [genericFormDosage, setGenericFormDosage] = useState('');
+  const [genericFormDuration, setGenericFormDuration] = useState('5 days');
+  const [genericFormKeywords, setGenericFormKeywords] = useState('');
+  const [genericFormPediDoseType, setGenericFormPediDoseType] = useState<'per_kg' | 'per_bsa' | 'fixed_flat' | 'age_tiered'>('per_kg');
+  const [genericFormPediDoseValue, setGenericFormPediDoseValue] = useState('');
+  const [genericFormPediDoseUnit, setGenericFormPediDoseUnit] = useState<'mg/kg' | 'ml/kg' | 'mg/m2' | 'IU/kg' | 'fixed'>('mg/kg');
+  const [genericFormPediConcentration, setGenericFormPediConcentration] = useState('');
+  const [genericFormPediRuleText, setGenericFormPediRuleText] = useState('');
+
   const handleOpenAddDrug = () => {
-    setEditingDrug({
-      genericName: '',
-      category: 'adult',
-      dosage: '',
-      duration: '5 days',
-      keywords: '',
-    });
-    setIsDrugEditorOpen(true);
+    setEditingGenericDrugId(null);
+    setGenericFormName('');
+    setGenericFormCategory('all');
+    setGenericFormDosage('');
+    setGenericFormDuration('5 days');
+    setGenericFormKeywords('');
+    setGenericFormPediDoseType('per_kg');
+    setGenericFormPediDoseValue('');
+    setGenericFormPediDoseUnit('mg/kg');
+    setGenericFormPediConcentration('');
+    setGenericFormPediRuleText('');
+    setIsGenericDrugModalOpen(true);
   };
 
   const handleOpenEditDrug = (drug: DrugItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setEditingDrug({
-      id: drug.id,
-      genericName: drug.genericName || '',
-      category: drug.category || 'adult',
-      dosage: drug.dosage || '',
-      duration: drug.duration || '5 days',
-      keywords: drug.keywords || '',
-    });
-    setIsDrugEditorOpen(true);
-  };
-
-  const handleSaveDrugEditor = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingDrug.genericName || !editingDrug.genericName.trim()) {
-      alert('Please enter a generic drug name.');
-      return;
-    }
-
-    const newDrugItem: DrugItem = {
-      id: editingDrug.id || `custom_drug_${Date.now()}`,
-      genericName: editingDrug.genericName.trim(),
-      category: editingDrug.category || 'adult',
-      dosage: editingDrug.dosage?.trim() || '1 tablet once daily',
-      duration: editingDrug.duration?.trim() || '5 days',
-      keywords: editingDrug.keywords?.trim() || '',
-    };
-
-    let updatedCatalog: DrugItem[];
-    if (editingDrug.id) {
-      updatedCatalog = drugCatalog.map((d) => (d.id === editingDrug.id ? newDrugItem : d));
-    } else {
-      updatedCatalog = [newDrugItem, ...drugCatalog];
-    }
-
-    saveDrugCatalog(updatedCatalog);
-    setDrugCatalog(getDrugCatalog());
-    setIsDrugEditorOpen(false);
+    setEditingGenericDrugId(drug.id);
+    setGenericFormName(drug.genericName);
+    setGenericFormCategory(drug.category || 'all');
+    setGenericFormDosage(drug.dosage || '');
+    setGenericFormDuration(drug.duration || '5 days');
+    setGenericFormKeywords(drug.keywords || '');
+    setGenericFormPediDoseType(drug.pediatricDoseType || 'per_kg');
+    setGenericFormPediDoseValue(drug.pediatricDoseValue !== undefined ? String(drug.pediatricDoseValue) : '');
+    setGenericFormPediDoseUnit(drug.pediatricDoseUnit || 'mg/kg');
+    setGenericFormPediConcentration(drug.pediatricConcentrationMgPerMl !== undefined ? String(drug.pediatricConcentrationMgPerMl) : '');
+    setGenericFormPediRuleText(drug.pediatricDoseRuleText || '');
+    setIsGenericDrugModalOpen(true);
   };
 
   const handleDeleteDrug = (drugId: string, drugName: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (confirm(`Are you sure you want to delete "${drugName}" from your drug catalog?`)) {
-      const updatedCatalog = drugCatalog.filter((d) => d.id !== drugId);
-      saveDrugCatalog(updatedCatalog);
+      deleteCustomDrug(drugId);
       setDrugCatalog(getDrugCatalog());
     }
+  };
+
+  const handleSaveGenericDrug = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!genericFormName.trim() || !genericFormDosage.trim()) {
+      alert('Please enter both Generic Drug Name and Default Dosage.');
+      return;
+    }
+
+    const newOrUpdated: DrugItem = {
+      id: editingGenericDrugId || `custom_drug_${Date.now()}`,
+      genericName: genericFormName.trim(),
+      category: genericFormCategory,
+      dosage: genericFormDosage.trim(),
+      duration: genericFormDuration.trim() || '5 days',
+      keywords: genericFormKeywords.trim(),
+      pediatricDoseType: genericFormPediDoseType,
+      pediatricDoseValue: genericFormPediDoseValue ? parseFloat(genericFormPediDoseValue) : undefined,
+      pediatricDoseUnit: genericFormPediDoseUnit,
+      pediatricConcentrationMgPerMl: genericFormPediConcentration ? parseFloat(genericFormPediConcentration) : undefined,
+      pediatricDoseRuleText: genericFormPediRuleText.trim() || undefined,
+    };
+
+    saveCustomDrug(newOrUpdated);
+    setDrugCatalog(getDrugCatalog());
+    setIsGenericDrugModalOpen(false);
   };
 
   const handleResetDrugCatalogToDefault = () => {
@@ -1362,6 +1382,40 @@ export default function UserWorkspacePage() {
 
   const getDynamicDosageForPatient = (d: DrugItem, weightKg: number): string => {
     if (weightKg <= 0) return d.dosage;
+
+    // 1. EVALUATE EXPLICIT PEDIATRIC & BSA DOSING ASSISTANT CUSTOM RULES
+    if (d.pediatricDoseType === 'fixed_flat') {
+      return d.pediatricDoseRuleText || d.dosage;
+    }
+
+    if (d.pediatricDoseType === 'age_tiered' && d.pediatricDoseRuleText) {
+      return d.pediatricDoseRuleText;
+    }
+
+    if (d.pediatricDoseType === 'per_kg' && d.pediatricDoseValue) {
+      const val = d.pediatricDoseValue;
+      const unit = d.pediatricDoseUnit || 'mg/kg';
+      const mg = Math.round(weightKg * val);
+
+      if (d.pediatricConcentrationMgPerMl && d.pediatricConcentrationMgPerMl > 0) {
+        const ml = (mg / d.pediatricConcentrationMgPerMl).toFixed(1);
+        return `${ml} ml (${mg}mg @ ${val} ${unit}) 3 times daily S.O.S`;
+      }
+      return `${mg} ${unit.replace('/kg', '')} (${val} ${unit})`;
+    }
+
+    if (d.pediatricDoseType === 'per_bsa' && d.pediatricDoseValue) {
+      const h = parseFloat(vitals.height) || 0;
+      const bsa = calculateBsa(h, weightKg);
+      const val = d.pediatricDoseValue;
+      const totalDose = Math.round(bsa * val);
+
+      if (d.pediatricConcentrationMgPerMl && d.pediatricConcentrationMgPerMl > 0) {
+        const ml = (totalDose / d.pediatricConcentrationMgPerMl).toFixed(1);
+        return `${ml} ml (${totalDose}mg @ ${val} mg/m² BSA)`;
+      }
+      return `${totalDose} mg (${val} mg/m² BSA)`;
+    }
 
     const lowerName = d.genericName.toLowerCase();
 
@@ -5770,6 +5824,16 @@ export default function UserWorkspacePage() {
                         Brand Rx
                       </button>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={handleOpenAddDrug}
+                      className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] transition shadow flex items-center gap-1 shrink-0"
+                      title="Add a new generic drug with custom per-kg or per-BSA dosing rules"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>+ Add Generic Drug</span>
+                    </button>
                   </div>
 
                   {/* FORMULATION SELECTOR: MOBILE DROPDOWN SELECT + DESKTOP PILLS */}
@@ -6344,108 +6408,7 @@ export default function UserWorkspacePage() {
         </div>
       )}
 
-      {/* GENERIC DRUG EDITOR MODAL */}
-      {isDrugEditorOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white text-slate-900 rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
-            <div className="p-4 border-b border-slate-200 bg-emerald-700 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">💊</span>
-                <h3 className="font-extrabold text-sm">
-                  {editingDrug.id ? 'Edit Generic Drug Details' : 'Add New Generic Drug'}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsDrugEditorOpen(false)}
-                className="p-1 rounded-lg bg-emerald-800 hover:bg-emerald-600 text-white font-bold text-xs"
-              >
-                ✕ Close
-              </button>
-            </div>
 
-            <form onSubmit={handleSaveDrugEditor} className="p-4 space-y-3 overflow-y-auto text-xs">
-              <div>
-                <label className="block font-bold text-slate-900 mb-1">Generic Drug Name & Brand Alias *</label>
-                <input
-                  type="text"
-                  required
-                  value={editingDrug.genericName || ''}
-                  onChange={(e) => setEditingDrug({ ...editingDrug, genericName: e.target.value })}
-                  placeholder="e.g. Cefixime 200mg Tablet (Taxim-O)"
-                  className="w-full rounded-xl border border-slate-300 p-2 font-bold bg-white text-slate-900"
-                  autoFocus
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block font-bold text-slate-900 mb-1">Target Patient Category</label>
-                  <select
-                    value={editingDrug.category || 'adult'}
-                    onChange={(e) => setEditingDrug({ ...editingDrug, category: e.target.value as any })}
-                    className="w-full rounded-xl border border-slate-300 p-2 font-semibold bg-white text-slate-900"
-                  >
-                    <option value="adult">Adult</option>
-                    <option value="pediatric">Pediatric</option>
-                    <option value="infant">Infant</option>
-                    <option value="all">Universal / All</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-900 mb-1">Standard Duration</label>
-                  <input
-                    type="text"
-                    value={editingDrug.duration || ''}
-                    onChange={(e) => setEditingDrug({ ...editingDrug, duration: e.target.value })}
-                    placeholder="e.g. 5 days or 30 days"
-                    className="w-full rounded-xl border border-slate-300 p-2 font-semibold bg-white text-slate-900"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-900 mb-1">Standard Regimen & Directions</label>
-                <input
-                  type="text"
-                  value={editingDrug.dosage || ''}
-                  onChange={(e) => setEditingDrug({ ...editingDrug, dosage: e.target.value })}
-                  placeholder="e.g. 1 tablet twice daily after food (1-0-1)"
-                  className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-900 mb-1">Search Keywords / Symptom Aliases</label>
-                <input
-                  type="text"
-                  value={editingDrug.keywords || ''}
-                  onChange={(e) => setEditingDrug({ ...editingDrug, keywords: e.target.value })}
-                  placeholder="e.g. cefixime taxim-o antibiotic fever infection dysuria"
-                  className="w-full rounded-xl border border-slate-300 p-2 font-medium bg-white text-slate-900"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsDrugEditorOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md"
-                >
-                  Save Generic Drug
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* CLINICAL PROTOCOLS & ER ORDER SETS LIST VIEW MODAL */}
       {isProtocolsModalOpen && (
@@ -7754,6 +7717,215 @@ export default function UserWorkspacePage() {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* GENERIC DRUG EDITOR MODAL (+ ADD / EDIT GENERIC DRUG WITH PEDIATRIC & BSA DOSING ASSISTANT) */}
+      {isGenericDrugModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/75 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+            {/* MODAL HEADER */}
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <Pill className="h-5 w-5" />
+                <h3 className="font-extrabold text-base">
+                  {editingGenericDrugId ? '✏️ Edit Generic Drug & Pediatric Dosing Rule' : '🧪 Add New Generic Drug to Catalog'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsGenericDrugModalOpen(false)}
+                className="p-1 rounded-full hover:bg-white/20 text-white transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* MODAL FORM BODY */}
+            <form onSubmit={handleSaveGenericDrug} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+              {/* BASIC DRUG INFO */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-extrabold text-slate-700 dark:text-slate-300 mb-1">
+                    Generic Drug Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={genericFormName}
+                    onChange={(e) => setGenericFormName(e.target.value)}
+                    placeholder="e.g. Cefaclor 125mg/5ml Syrup"
+                    className="w-full p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900 dark:text-slate-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-extrabold text-slate-700 dark:text-slate-300 mb-1">
+                    Target Patient Category
+                  </label>
+                  <select
+                    value={genericFormCategory}
+                    onChange={(e) => setGenericFormCategory(e.target.value as any)}
+                    className="w-full p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900 dark:text-slate-100"
+                  >
+                    <option value="all">👥 All (Adult & Pediatric)</option>
+                    <option value="pediatric">👶 Pediatric Only (Child)</option>
+                    <option value="infant">🍼 Infant Only (&lt; 1 Year)</option>
+                    <option value="adult">🧑 Adult Only (Adult)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-extrabold text-slate-700 dark:text-slate-300 mb-1">
+                    Default Adult / Fallback Dosage <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={genericFormDosage}
+                    onChange={(e) => setGenericFormDosage(e.target.value)}
+                    placeholder="e.g. 5ml 3 times daily or 1 tablet twice daily"
+                    className="w-full p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900 dark:text-slate-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-extrabold text-slate-700 dark:text-slate-300 mb-1">
+                    Standard Treatment Duration
+                  </label>
+                  <input
+                    type="text"
+                    value={genericFormDuration}
+                    onChange={(e) => setGenericFormDuration(e.target.value)}
+                    placeholder="e.g. 5 days or 3 days"
+                    className="w-full p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-bold focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900 dark:text-slate-100"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-extrabold text-slate-700 dark:text-slate-300 mb-1">
+                  Search Keywords & Symptoms / Aliases
+                </label>
+                <input
+                  type="text"
+                  value={genericFormKeywords}
+                  onChange={(e) => setGenericFormKeywords(e.target.value)}
+                  placeholder="e.g. fever pain antibiotic cefaclor zinnat ear infection"
+                  className="w-full p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-medium focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900 dark:text-slate-100"
+                />
+              </div>
+
+              {/* 🌟 DEDICATED PEDIATRIC & BSA DOSING ASSISTANT CONFIGURATION BOX */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-300 dark:border-emerald-800/60 space-y-3">
+                <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-300">
+                  <Calculator className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <h4 className="font-extrabold text-xs uppercase tracking-wider">
+                    Pediatric & BSA Dosing Assistant Rule Configuration
+                  </h4>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                  Configure how this medication dynamically calculates dose per kg weight or BSA m², or define explicit clinical rules (like Albendazole fixed 400mg dose).
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-extrabold text-slate-800 dark:text-slate-200 mb-1">
+                      Dosing Calculation Strategy
+                    </label>
+                    <select
+                      value={genericFormPediDoseType}
+                      onChange={(e) => setGenericFormPediDoseType(e.target.value as any)}
+                      className="w-full p-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    >
+                      <option value="per_kg">⚖️ Per-Kg Weight Calculation (mg/kg or ml/kg)</option>
+                      <option value="per_bsa">📐 Per-m² Body Surface Area (mg/m² BSA)</option>
+                      <option value="fixed_flat">📌 Fixed Flat Dose (e.g. Albendazole / Vaccines / Probiotics)</option>
+                      <option value="age_tiered">👶 Age-Tiered Bracket Dosing (&lt; 2 yrs vs &gt; 2 yrs)</option>
+                    </select>
+                  </div>
+
+                  {(genericFormPediDoseType === 'per_kg' || genericFormPediDoseType === 'per_bsa') && (
+                    <div>
+                      <label className="block font-extrabold text-slate-800 dark:text-slate-200 mb-1">
+                        Target Dose Value per {genericFormPediDoseType === 'per_kg' ? 'kg' : 'm² BSA'}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          step="any"
+                          value={genericFormPediDoseValue}
+                          onChange={(e) => setGenericFormPediDoseValue(e.target.value)}
+                          placeholder={genericFormPediDoseType === 'per_kg' ? "e.g. 15 (for 15mg/kg)" : "e.g. 250 (for 250mg/m²)"}
+                          className="flex-1 p-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none"
+                        />
+                        <select
+                          value={genericFormPediDoseUnit}
+                          onChange={(e) => setGenericFormPediDoseUnit(e.target.value as any)}
+                          className="p-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-slate-100"
+                        >
+                          <option value="mg/kg">mg/kg</option>
+                          <option value="ml/kg">ml/kg</option>
+                          <option value="mg/m2">mg/m²</option>
+                          <option value="IU/kg">IU/kg</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {(genericFormPediDoseType === 'per_kg' || genericFormPediDoseType === 'per_bsa') && (
+                  <div>
+                    <label className="block font-extrabold text-slate-800 dark:text-slate-200 mb-1">
+                      Liquid Concentration (mg per ml)
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={genericFormPediConcentration}
+                      onChange={(e) => setGenericFormPediConcentration(e.target.value)}
+                      placeholder="e.g. 50 (for 250mg/5ml), 25 (for 125mg/5ml), 40 (for 200mg/5ml)"
+                      className="w-full p-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Leave blank if drug is tablet/powder or does not require ml volume conversion.
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block font-extrabold text-slate-800 dark:text-slate-200 mb-1">
+                    Conscious Clinical Dosing Rule / Exception Explanation
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={genericFormPediRuleText}
+                    onChange={(e) => setGenericFormPediRuleText(e.target.value)}
+                    placeholder="e.g. Albendazole: Fixed 400mg single chewable tablet at bedtime for children > 2 yrs; 200mg single dose for 1-2 yrs. No per-kg formula required."
+                    className="w-full p-2.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 font-medium text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* MODAL FOOTER */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsGenericDrugModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 text-slate-700 dark:text-slate-300 font-bold text-xs transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition"
+                >
+                  💾 Save Generic Drug & Rule
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
