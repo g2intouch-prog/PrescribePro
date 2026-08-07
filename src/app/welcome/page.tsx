@@ -751,32 +751,42 @@ export default function UserWorkspacePage() {
     }
   };
 
-  const handleOpenNewTemplateEditor = (specialtyId: string) => {
+  const handleOpenNewProtocolEditorForSpecialty = (specialtyId: string) => {
     setTemplateEditorSpecialtyId(specialtyId);
-    setEditingTemplate({
-      name: '',
-      complaints: '',
+    const specName = specialties.find((s) => s.id === specialtyId)?.name || 'General';
+    setEditingProtocol({
+      id: '',
+      title: '',
+      category: (specName.toLowerCase() as any),
+      targetGroup: 'Adult & Pediatric',
+      guidelinesSummary: '',
+      redFlags: '',
       diagnosis: '',
-      drugsText: '',
-      testsText: '',
+      chiefComplaints: [],
+      drugs: [],
+      tests: [],
       advice: '',
     });
-    setIsTemplateEditorOpen(true);
+    setIsProtocolEditorOpen(true);
   };
 
-  const handleOpenEditTemplateEditor = (specialtyId: string, tpl: PrescriptionTemplate) => {
+  const handleOpenEditProtocolEditorFromTemplate = (specialtyId: string, tpl: PrescriptionTemplate) => {
     setTemplateEditorSpecialtyId(specialtyId);
     const advStr = Array.isArray(tpl.advice) ? tpl.advice.join('\n') : (tpl.advice || '');
-    setEditingTemplate({
+    setEditingProtocol({
       id: tpl.id,
-      name: tpl.name,
-      complaints: (tpl.complaints || []).join(', '),
+      title: tpl.name,
+      category: (specialties.find((s) => s.id === specialtyId)?.name?.toLowerCase() as any) || 'general',
+      targetGroup: 'Adult & Pediatric',
+      guidelinesSummary: tpl.notes || '',
+      redFlags: '',
       diagnosis: tpl.diagnosis || '',
-      drugsText: (tpl.drugs || []).join('\n'),
-      testsText: (tpl.tests || []).join(', '),
+      chiefComplaints: tpl.complaints || [],
+      drugs: tpl.drugs || [],
+      tests: tpl.tests || [],
       advice: advStr,
     });
-    setIsTemplateEditorOpen(true);
+    setIsProtocolEditorOpen(true);
   };
 
   const handleSaveTemplateEditor = (e: React.FormEvent) => {
@@ -893,6 +903,39 @@ export default function UserWorkspacePage() {
 
     setProtocols(updatedProtocols);
     saveClinicalProtocols(updatedProtocols);
+
+    if (templateEditorSpecialtyId) {
+      const advArr = typeof editingProtocol.advice === 'string'
+        ? editingProtocol.advice.split('\n').map(s => s.trim()).filter(Boolean)
+        : editingProtocol.advice;
+
+      const newTpl: PrescriptionTemplate = {
+        id: editingProtocol.id || `tpl-${Date.now()}`,
+        name: editingProtocol.title.trim(),
+        complaints: editingProtocol.chiefComplaints || [],
+        diagnosis: editingProtocol.diagnosis || '',
+        drugs: editingProtocol.drugs || [],
+        tests: editingProtocol.tests || [],
+        advice: advArr,
+        notes: editingProtocol.guidelinesSummary || '',
+      };
+
+      const updatedSpecialties = specialties.map((sp) => {
+        if (sp.id !== templateEditorSpecialtyId) return sp;
+        let updatedTemplates = [...sp.templates];
+        const existingIdx = updatedTemplates.findIndex(t => t.id === newTpl.id);
+        if (existingIdx >= 0) {
+          updatedTemplates[existingIdx] = newTpl;
+        } else {
+          updatedTemplates.push(newTpl);
+        }
+        return { ...sp, templates: updatedTemplates };
+      });
+
+      setSpecialties(updatedSpecialties);
+      saveSpecialties(updatedSpecialties);
+    }
+
     setIsProtocolEditorOpen(false);
   };
 
@@ -1248,10 +1291,6 @@ export default function UserWorkspacePage() {
     const trimmed = line.trim();
     if (!trimmed) return trimmed;
 
-    if (/^(Tab\.|Cap\.|Syp\.|Inj\.|Drop\.|Drops\.|Oint\.|Infusion|Spray|Gel)\s/i.test(trimmed)) {
-      return trimmed;
-    }
-
     const lower = trimmed.toLowerCase();
     let prefix = 'Tab.';
 
@@ -1270,7 +1309,12 @@ export default function UserWorkspacePage() {
     }
 
     let clean = trimmed
-      .replace(/^(tablet|tablets|capsule|capsules|syrup|injection|inj\.|tab\.|cap\.|syp\.|drop\.|drops\.|oint\.)\s+/i, '')
+      .replace(/^(Tab\.|Cap\.|Syp\.|Inj\.|Drop\.|Drops\.|Oint\.|tablet|tablets|capsule|capsules|syrup|injection|inj\.|tab\.|cap\.|syp\.|drop\.|drops\.|oint\.)\s+/i, '')
+      .trim();
+
+    clean = clean
+      .replace(/\b(tablet|tablets|capsule|capsules|syrup|injection|eye drops|ear drops|nasal drops)\b/gi, '')
+      .replace(/\s+/g, ' ')
       .trim();
 
     return `${prefix} ${clean}`;
@@ -4312,9 +4356,9 @@ export default function UserWorkspacePage() {
 
                 <button
                   type="button"
-                  onClick={() => handleOpenNewTemplateEditor(selectedSpecialtyId)}
+                  onClick={() => handleOpenNewProtocolEditorForSpecialty(selectedSpecialtyId)}
                   className="px-2 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[10px] shadow transition flex items-center gap-1 shrink-0"
-                  title="Add new template"
+                  title="Add new template via Clinical Protocol Editor"
                 >
                   <Plus className="h-3 w-3" />
                   <span>+ New</span>
@@ -4349,9 +4393,9 @@ export default function UserWorkspacePage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleOpenEditTemplateEditor(currentSpecialty.id, tpl)}
+                          onClick={() => handleOpenEditProtocolEditorFromTemplate(currentSpecialty.id, tpl)}
                           className="p-1 rounded-lg bg-amber-500/20 text-amber-800 dark:text-amber-300 hover:bg-amber-500/30 text-[9.5px] font-bold"
-                          title="Edit template"
+                          title="Edit template via Clinical Protocol Editor"
                         >
                           ✏️
                         </button>
@@ -4364,7 +4408,7 @@ export default function UserWorkspacePage() {
                   <p className="text-[10px] text-slate-500 font-medium">No templates created under {currentSpecialty?.name || 'this category'} yet.</p>
                   <button
                     type="button"
-                    onClick={() => handleOpenNewTemplateEditor(selectedSpecialtyId)}
+                    onClick={() => handleOpenNewProtocolEditorForSpecialty(selectedSpecialtyId)}
                     className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] shadow inline-flex items-center gap-1"
                   >
                     <Plus className="h-3 w-3" /> Create First Template
@@ -4643,7 +4687,7 @@ export default function UserWorkspacePage() {
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
-                        onClick={() => handleOpenNewTemplateEditor(sp.id)}
+                        onClick={() => handleOpenNewProtocolEditorForSpecialty(sp.id)}
                         className="px-2 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[10px] shadow transition flex items-center gap-1"
                       >
                         <Plus className="h-3 w-3" /> Add Template
@@ -4677,7 +4721,7 @@ export default function UserWorkspacePage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleOpenEditTemplateEditor(sp.id, tpl)}
+                            onClick={() => handleOpenEditProtocolEditorFromTemplate(sp.id, tpl)}
                             className="px-2 py-1 rounded-md bg-amber-500 hover:bg-amber-600 text-slate-950 text-[10px] font-extrabold shadow transition flex items-center gap-0.5"
                             title="Edit Template"
                           >
@@ -6527,7 +6571,7 @@ export default function UserWorkspacePage() {
                                 <p className="font-bold text-xs text-slate-600">No personal templates saved yet.</p>
                                 <button
                                   type="button"
-                                  onClick={() => handleOpenNewTemplateEditor(specialties[0]?.id || 'spec-1')}
+                                  onClick={() => handleOpenNewProtocolEditorForSpecialty(specialties[0]?.id || 'spec-1')}
                                   className="px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow"
                                 >
                                   + Create Custom Template
@@ -6583,7 +6627,7 @@ export default function UserWorkspacePage() {
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => handleOpenEditTemplateEditor(tpl.specialtyId, tpl as any)}
+                                    onClick={() => handleOpenEditProtocolEditorFromTemplate(tpl.specialtyId, tpl as any)}
                                     className="px-2 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shadow transition"
                                     title="Edit Personal Template"
                                   >
