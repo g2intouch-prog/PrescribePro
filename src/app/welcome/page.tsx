@@ -3432,10 +3432,19 @@ export default function UserWorkspacePage() {
             {/* PAD BODY: TWO-COLUMN CANVAS (LEFT PANE = LABS & ADVICE, RIGHT PANE = CLINICAL ASSESSMENT, RX & SPECIFIC ADVICE) */}
             <div className="flex-1 py-1 space-y-1.5 overflow-y-auto">
               
-              {/* EDITABLE NOTICE BANNER */}
-              <div className="text-[8px] bg-amber-100/90 text-amber-900 px-1.5 py-0.5 rounded border border-amber-300 font-bold flex items-center justify-between print:hidden shrink-0">
-                <span>✏️ Editable Canvas: Click any text directly on pad to edit</span>
-                <span className="text-[7.5px] text-amber-800 font-mono">Human Judgment Mode Active</span>
+              {/* HUMAN JUDGMENT MODE ACTIVE BANNER */}
+              <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 rounded-lg p-1.5 text-[8.5px] text-amber-950 dark:text-amber-200 print:hidden shrink-0 space-y-0.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-[9px] text-amber-900 dark:text-amber-300 flex items-center gap-1">
+                    🛡️ HUMAN JUDGMENT MODE ACTIVE
+                  </span>
+                  <span className="text-[7.5px] bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 font-mono px-1.5 py-0.5 rounded font-bold uppercase">
+                    Advisory Decision Support
+                  </span>
+                </div>
+                <p className="text-[8px] text-amber-900 dark:text-amber-300 leading-tight">
+                  ✏️ <strong>Editable Canvas:</strong> Click any text directly on pad to edit. Clinical decision support & drug safety checks are advisory — ultimate prescribing authority remains strictly with the attending physician.
+                </p>
               </div>
 
               {/* VITALS DEMOGRAPHY STRIP */}
@@ -3453,17 +3462,23 @@ export default function UserWorkspacePage() {
                 
                 {/* LEFT PANE: LAB TEST REPORTS & ADDITIONAL ADVICE (4 COLUMNS - PERMANENT RIGHT BORDER) */}
                 <div className="col-span-4 border-r-2 border-slate-300 dark:border-slate-600 pr-1.5 space-y-2 text-[8.5px] h-full min-h-full">
-                  {/* LAB TEST REPORTS & RESULTS */}
-                  <div className={selectedTests.length === 0 && !testResultsText.trim() ? 'print:hidden' : ''}>
-                    <strong className="text-teal-900 block font-bold border-b border-teal-200 pb-0.5 mb-1 uppercase tracking-tighter">
-                      🔬 Lab Tests & Reports:
-                    </strong>
-                    {selectedTests.length > 0 && (
-                      <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5">
+                  {/* LAB TEST ORDERS & REPORTS */}
+                  <div className={`space-y-1 ${selectedTests.length === 0 && !testResultsText.trim() ? 'print:hidden' : ''}`}>
+                    <div className="flex items-center justify-between border-b border-teal-200 pb-0.5 mb-1">
+                      <strong className="text-teal-900 block font-extrabold text-[9px] uppercase tracking-tighter">
+                        🔬 Lab Test Orders & Reports:
+                      </strong>
+                    </div>
+                    {selectedTests.length > 0 ? (
+                      <ul className="list-disc pl-3 text-gray-800 space-y-0.5 font-medium text-[8.5px]">
                         {selectedTests.map((t) => (
                           <li key={t}>{t}</li>
                         ))}
                       </ul>
+                    ) : (
+                      <p className="text-[8px] text-gray-400 italic">
+                        [No Lab Tests selected]
+                      </p>
                     )}
                     <div className={`bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px] ${!testResultsText.trim() ? 'print:hidden' : ''}`}>
                       <div className="flex items-center justify-between">
