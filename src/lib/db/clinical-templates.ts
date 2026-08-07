@@ -253,12 +253,12 @@ export function normalizeDrugItem(drug: DrugItem): DrugItem & { formulation: For
   } else if (name.startsWith('cap') || /\b(cap|cap\.|capsule|capsules|softgel)\b/i.test(full)) {
     formulation = 'cap';
   } else if (
-    /\b(drop|drops|drop\.|drops\.|eyedrop|eardrop|nasaldrop|opthalmic|ophthalmic|otic|eye solution|ear solution|nasal solution|ophthalmic solution|opthalmic solution|ent solution)\b/i.test(full) ||
-    full.includes('eye drop') || full.includes('ear drop') || full.includes('nasal drop')
+    /\b(drop|drops|drop\.|drops\.|eyedrop|eardrop|nasaldrop|nasal spray|spray|opthalmic|ophthalmic|otic|eye solution|ear solution|nasal solution|ophthalmic solution|opthalmic solution|ent solution)\b/i.test(full) ||
+    full.includes('eye drop') || full.includes('ear drop') || full.includes('nasal drop') || full.includes('nasal spray')
   ) {
     formulation = 'drops';
   } else if (
-    /\b(topical solution|skin solution|cutaneous solution|cream|ointment|oint|oint\.|gel|lotion|shampoo|mouthwash|gargle|spray|patch|paste|toothpaste)\b/i.test(full)
+    /\b(topical solution|skin solution|cutaneous solution|cream|ointment|oint|oint\.|gel|lotion|shampoo|mouthwash|gargle|patch|paste|toothpaste)\b/i.test(full)
   ) {
     formulation = 'topical';
   } else if (
