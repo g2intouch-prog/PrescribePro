@@ -3425,284 +3425,262 @@ export default function UserWorkspacePage() {
                 
                 {/* LEFT PANE: LAB TEST REPORTS & ADDITIONAL ADVICE (4 COLUMNS - PERMANENT RIGHT BORDER) */}
                 <div className="col-span-4 border-r-2 border-slate-300 dark:border-slate-600 pr-1.5 space-y-2 text-[8.5px] h-full min-h-full">
-                  {/* LAB TEST REPORTS & RESULTS (ONLY SHOW IF TESTS SELECTED OR RESULTS TYPED) */}
-                  {(selectedTests.length > 0 || testResultsText.trim() !== '') && (
-                    <div>
-                      <strong className="text-teal-900 block font-bold border-b border-teal-200 pb-0.5 mb-1 uppercase tracking-tighter">
-                        🔬 Lab Tests & Reports:
-                      </strong>
-                      {selectedTests.length > 0 && (
-                        <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5">
-                          {selectedTests.map((t) => (
-                            <li key={t}>{t}</li>
-                          ))}
-                        </ul>
-                      )}
-                      {testResultsText.trim() !== '' && (
-                        <div className="bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px]">
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-teal-950 block">Results:</span>
-                            <button
-                              type="button"
-                              onClick={() => setTestResultsText('')}
-                              className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1"
-                              title="Clear test results"
-                            >
-                              ✕ Clear
-                            </button>
-                          </div>
-                          <p
-                            contentEditable
-                            suppressContentEditableWarning
-                            onFocus={handleEditableFocus}
-                            onBlur={(e) => setTestResultsText(e.currentTarget.textContent || '')}
-                            className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-teal-100/50 p-0.5 rounded cursor-text"
-                          >
-                            {testResultsText}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* PROCEDURES (ALL NON-DRUG CARE, MANEUVERS & REHAB - ONLY SHOW IF CHECKED OR TYPED) */}
-                  {(selectedProcedures.length > 0 || selectedAdvice.length > 0 || customProcedureText.trim() !== '') && (
-                    <div>
-                      <div className="flex items-center justify-between border-b border-indigo-200 pb-0.5 mb-1">
-                        <strong className="text-indigo-900 font-bold uppercase tracking-tighter">
-                          🛠️ Procedures & Non-Drug Care:
-                        </strong>
+                  {/* LAB TEST REPORTS & RESULTS */}
+                  <div className={selectedTests.length === 0 && !testResultsText.trim() ? 'print:hidden' : ''}>
+                    <strong className="text-teal-900 block font-bold border-b border-teal-200 pb-0.5 mb-1 uppercase tracking-tighter">
+                      🔬 Lab Tests & Reports:
+                    </strong>
+                    {selectedTests.length > 0 && (
+                      <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5">
+                        {selectedTests.map((t) => (
+                          <li key={t}>{t}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <div className={`bg-teal-50/80 p-1 rounded border border-teal-200 mt-1 font-mono text-[8px] ${!testResultsText.trim() ? 'print:hidden' : ''}`}>
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-teal-950 block">Results:</span>
                         <button
                           type="button"
-                          onClick={() => setCustomProcedureText('')}
+                          onClick={() => setTestResultsText('')}
                           className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1"
-                          title="Clear procedures"
+                          title="Clear test results"
                         >
                           ✕ Clear
                         </button>
                       </div>
-                      {selectedProcedures.length > 0 && (
-                        <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5 font-medium">
-                          {selectedProcedures.map((p) => (
-                            <li key={p}>{p}</li>
-                          ))}
-                        </ul>
-                      )}
-                      {selectedAdvice.length > 0 && (
-                        <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5 font-medium">
-                          {selectedAdvice.map((a) => (
-                            <li key={a}>{a}</li>
-                          ))}
-                        </ul>
-                      )}
-                      {customProcedureText.trim() !== '' && (
-                        <p
-                          contentEditable
-                          suppressContentEditableWarning
-                          onFocus={handleEditableFocus}
-                          onBlur={(e) => setCustomProcedureText(e.currentTarget.textContent || '')}
-                          className="text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-indigo-100/50 p-0.5 rounded cursor-text"
-                        >
-                          {customProcedureText}
-                        </p>
-                      )}
+                      <p
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={handleEditableFocus}
+                        onBlur={(e) => setTestResultsText(e.currentTarget.textContent || '')}
+                        className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-teal-100/50 p-0.5 rounded cursor-text"
+                      >
+                        {testResultsText || 'Click to type test results...'}
+                      </p>
                     </div>
-                  )}
+                  </div>
+
+                  {/* PROCEDURES (ALL NON-DRUG CARE, MANEUVERS & REHAB) */}
+                  <div className={selectedProcedures.length === 0 && selectedAdvice.length === 0 && !customProcedureText.trim() ? 'print:hidden' : ''}>
+                    <div className="flex items-center justify-between border-b border-indigo-200 pb-0.5 mb-1">
+                      <strong className="text-indigo-900 font-bold uppercase tracking-tighter">
+                        🛠️ Procedures & Non-Drug Care:
+                      </strong>
+                      <button
+                        type="button"
+                        onClick={() => setCustomProcedureText('')}
+                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1"
+                        title="Clear procedures"
+                      >
+                        ✕ Clear
+                      </button>
+                    </div>
+                    {selectedProcedures.length > 0 && (
+                      <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5 font-medium">
+                        {selectedProcedures.map((p) => (
+                          <li key={p}>{p}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {selectedAdvice.length > 0 && (
+                      <ul className="list-disc pl-2.5 text-gray-800 space-y-0.5 font-medium">
+                        {selectedAdvice.map((a) => (
+                          <li key={a}>{a}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <p
+                      contentEditable
+                      suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
+                      onBlur={(e) => setCustomProcedureText(e.currentTarget.textContent || '')}
+                      className={`text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-indigo-100/50 p-0.5 rounded cursor-text ${
+                        !customProcedureText.trim() ? 'print:hidden' : ''
+                      }`}
+                    >
+                      {customProcedureText || 'Click to edit procedures (e.g. Valsalva maneuver, Sitz bath, Physio)...'}
+                    </p>
+                  </div>
                 </div>
 
                 {/* RIGHT PANE: CLINICAL ASSESSMENT, RX DRUGS & SPECIFIC ADVICE (8 COLUMNS) */}
                 <div className="col-span-8 pl-1 space-y-1 text-[9px] h-full min-h-full">
-                  {/* 1. CHIEF COMPLAINT (ONLY SHOW IF NON-EMPTY) */}
-                  {chiefComplaints.trim() !== '' && (
-                    <div className="flex items-center gap-1 group">
-                      <strong className="text-gray-900 font-bold shrink-0">C/O (Chief Complaints): </strong>
-                      <span
-                        contentEditable
-                        suppressContentEditableWarning
-                        onFocus={handleEditableFocus}
-                        onBlur={(e) => setChiefComplaints(e.currentTarget.textContent || '')}
-                        className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                      >
-                        {chiefComplaints}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setChiefComplaints('')}
-                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                        title="Clear Chief Complaints"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
+                  {/* 1. CHIEF COMPLAINT */}
+                  <div className={`flex items-center gap-1 group ${!chiefComplaints.trim() ? 'print:hidden' : ''}`}>
+                    <strong className="text-gray-900 font-bold shrink-0">C/O (Chief Complaints): </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
+                      onBlur={(e) => setChiefComplaints(e.currentTarget.textContent || '')}
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                    >
+                      {chiefComplaints || 'Click to edit chief complaints...'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setChiefComplaints('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Chief Complaints"
+                    >
+                      ✕
+                    </button>
+                  </div>
 
-                  {/* 2. SIGNS & SYMPTOMS (ONLY SHOW IF NON-EMPTY) */}
-                  {signsSymptoms.trim() !== '' && (
-                    <div className="flex items-center gap-1 group">
-                      <strong className="text-gray-900 font-bold shrink-0">Signs & Symptoms: </strong>
-                      <span
-                        contentEditable
-                        suppressContentEditableWarning
-                        onFocus={handleEditableFocus}
-                        onBlur={(e) => setSignsSymptoms(e.currentTarget.textContent || '')}
-                        className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                      >
-                        {signsSymptoms}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setSignsSymptoms('')}
-                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                        title="Clear Signs & Symptoms"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
+                  {/* 2. SIGNS & SYMPTOMS */}
+                  <div className={`flex items-center gap-1 group ${!signsSymptoms.trim() ? 'print:hidden' : ''}`}>
+                    <strong className="text-gray-900 font-bold shrink-0">Signs & Symptoms: </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
+                      onBlur={(e) => setSignsSymptoms(e.currentTarget.textContent || '')}
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                    >
+                      {signsSymptoms || 'Click to edit signs & symptoms...'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSignsSymptoms('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Signs & Symptoms"
+                    >
+                      ✕
+                    </button>
+                  </div>
 
-                  {/* 3. CLINICAL HISTORY (ONLY SHOW IF NON-EMPTY) */}
-                  {clinicalHistory.trim() !== '' && (
-                    <div className="flex items-center gap-1 group">
-                      <strong className="text-gray-900 font-bold shrink-0">H/O (Clinical History): </strong>
-                      <span
-                        contentEditable
-                        suppressContentEditableWarning
-                        onFocus={handleEditableFocus}
-                        onBlur={(e) => setClinicalHistory(e.currentTarget.textContent || '')}
-                        className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                      >
-                        {clinicalHistory}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setClinicalHistory('')}
-                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                        title="Clear Clinical History"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
+                  {/* 3. CLINICAL HISTORY */}
+                  <div className={`flex items-center gap-1 group ${!clinicalHistory.trim() ? 'print:hidden' : ''}`}>
+                    <strong className="text-gray-900 font-bold shrink-0">H/O (Clinical History): </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
+                      onBlur={(e) => setClinicalHistory(e.currentTarget.textContent || '')}
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                    >
+                      {clinicalHistory || 'Click to edit clinical history...'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setClinicalHistory('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Clinical History"
+                    >
+                      ✕
+                    </button>
+                  </div>
 
-                  {/* 4. FAMILY HISTORY (ONLY SHOW IF NON-EMPTY) */}
-                  {familyHistory.trim() !== '' && (
-                    <div className="flex items-center gap-1 group">
-                      <strong className="text-gray-900 font-bold shrink-0">Family History: </strong>
-                      <span
-                        contentEditable
-                        suppressContentEditableWarning
-                        onFocus={handleEditableFocus}
-                        onBlur={(e) => setFamilyHistory(e.currentTarget.textContent || '')}
-                        className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                      >
-                        {familyHistory}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setFamilyHistory('')}
-                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                        title="Clear Family History"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
+                  {/* 4. FAMILY HISTORY */}
+                  <div className={`flex items-center gap-1 group ${!familyHistory.trim() ? 'print:hidden' : ''}`}>
+                    <strong className="text-gray-900 font-bold shrink-0">Family History: </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
+                      onBlur={(e) => setFamilyHistory(e.currentTarget.textContent || '')}
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                    >
+                      {familyHistory || 'Click to edit family history...'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFamilyHistory('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Family History"
+                    >
+                      ✕
+                    </button>
+                  </div>
 
-                  {/* 5. DRUG HISTORY (ONLY SHOW IF NON-EMPTY) */}
-                  {drugHistory.trim() !== '' && (
-                    <div className="flex items-center gap-1 group">
-                      <strong className="text-gray-900 font-bold shrink-0">Drug History / Allergies: </strong>
-                      <span
-                        contentEditable
-                        suppressContentEditableWarning
-                        onFocus={handleEditableFocus}
-                        onBlur={(e) => setDrugHistory(e.currentTarget.textContent || '')}
-                        className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                      >
-                        {drugHistory}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setDrugHistory('')}
-                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                        title="Clear Drug History"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
+                  {/* 5. DRUG HISTORY */}
+                  <div className={`flex items-center gap-1 group ${!drugHistory.trim() ? 'print:hidden' : ''}`}>
+                    <strong className="text-gray-900 font-bold shrink-0">Drug History / Allergies: </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
+                      onBlur={(e) => setDrugHistory(e.currentTarget.textContent || '')}
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                    >
+                      {drugHistory || 'Click to edit drug history...'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setDrugHistory('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Drug History"
+                    >
+                      ✕
+                    </button>
+                  </div>
 
-                  {/* 6. CLINICAL & EXAMINATION FINDINGS (ONLY SHOW IF NON-EMPTY) */}
-                  {examinationFindings.trim() !== '' && (
-                    <div className="flex items-center gap-1 group">
-                      <strong className="text-gray-900 font-bold shrink-0">Clinical & Exam Findings: </strong>
-                      <span
-                        contentEditable
-                        suppressContentEditableWarning
-                        onFocus={handleEditableFocus}
-                        onBlur={(e) => setExaminationFindings(e.currentTarget.textContent || '')}
-                        className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                      >
-                        {examinationFindings}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setExaminationFindings('')}
-                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                        title="Clear Exam Findings"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
+                  {/* 6. CLINICAL & EXAMINATION FINDINGS */}
+                  <div className={`flex items-center gap-1 group ${!examinationFindings.trim() ? 'print:hidden' : ''}`}>
+                    <strong className="text-gray-900 font-bold shrink-0">Clinical & Exam Findings: </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
+                      onBlur={(e) => setExaminationFindings(e.currentTarget.textContent || '')}
+                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                    >
+                      {examinationFindings || 'Click to edit exam findings...'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setExaminationFindings('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Exam Findings"
+                    >
+                      ✕
+                    </button>
+                  </div>
 
-                  {/* 7. PROVISIONAL DIAGNOSIS (ONLY SHOW IF NON-EMPTY) */}
-                  {provisionalDiagnosis.trim() !== '' && (
-                    <div className="bg-gray-100/90 p-1 rounded font-bold text-gray-900 flex items-center gap-1 group">
-                      <strong className="shrink-0">Provisional Diagnosis: </strong>
-                      <span
-                        contentEditable
-                        suppressContentEditableWarning
-                        onFocus={handleEditableFocus}
-                        onBlur={(e) => setProvisionalDiagnosis(e.currentTarget.textContent || '')}
-                        className="outline-none hover:bg-yellow-200/70 p-0.5 rounded cursor-text flex-1"
-                      >
-                        {provisionalDiagnosis}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setProvisionalDiagnosis('')}
-                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                        title="Clear Diagnosis"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
+                  {/* 7. PROVISIONAL DIAGNOSIS */}
+                  <div className={`bg-gray-100/90 p-1 rounded font-bold text-gray-900 flex items-center gap-1 group ${!provisionalDiagnosis.trim() ? 'print:hidden' : ''}`}>
+                    <strong className="shrink-0">Provisional Diagnosis: </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
+                      onBlur={(e) => setProvisionalDiagnosis(e.currentTarget.textContent || '')}
+                      className="outline-none hover:bg-yellow-200/70 p-0.5 rounded cursor-text flex-1"
+                    >
+                      {provisionalDiagnosis || 'Click to edit provisional diagnosis...'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setProvisionalDiagnosis('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Diagnosis"
+                    >
+                      ✕
+                    </button>
+                  </div>
 
-                  {/* 8. DIFFERENTIAL DIAGNOSIS (ONLY SHOW IF NON-EMPTY) */}
-                  {differentialDiagnosis.trim() !== '' && (
-                    <div className="text-gray-700 italic text-[8.5px] flex items-center gap-1 group">
-                      <strong className="shrink-0">Differential Diagnosis (D/D): </strong>
-                      <span
-                        contentEditable
-                        suppressContentEditableWarning
-                        onFocus={handleEditableFocus}
-                        onBlur={(e) => setDifferentialDiagnosis(e.currentTarget.textContent || '')}
-                        className="outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
-                      >
-                        {differentialDiagnosis}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setDifferentialDiagnosis('')}
-                        className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
-                        title="Clear Differential Diagnosis"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
+                  {/* 8. DIFFERENTIAL DIAGNOSIS */}
+                  <div className={`text-gray-700 italic text-[8.5px] flex items-center gap-1 group ${!differentialDiagnosis.trim() ? 'print:hidden' : ''}`}>
+                    <strong className="shrink-0">Differential Diagnosis (D/D): </strong>
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      onFocus={handleEditableFocus}
+                      onBlur={(e) => setDifferentialDiagnosis(e.currentTarget.textContent || '')}
+                      className="outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                    >
+                      {differentialDiagnosis || 'Click to edit differential diagnosis...'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setDifferentialDiagnosis('')}
+                      className="text-[8px] text-gray-400 hover:text-red-500 print:hidden font-mono px-1 shrink-0 opacity-0 group-hover:opacity-100 transition"
+                      title="Clear Differential Diagnosis"
+                    >
+                      ✕
+                    </button>
+                  </div>
 
                   {/* LIVE DRUG SAFETY & INTERACTION WARNING BANNER (PRINT-HIDDEN) */}
                   {detectedSafetyWarnings.length > 0 && (
@@ -3827,20 +3805,18 @@ export default function UserWorkspacePage() {
                     )}
                   </div>
 
-                  {/* 10. SPECIFIC ADVICE (ONLY SHOW IF NON-EMPTY) */}
-                  {specificAdviceText.trim() !== '' && (
-                    <div className="bg-amber-50 p-1 rounded border border-amber-200 text-amber-950 mt-1 text-[8.5px]">
-                      <strong className="font-bold text-amber-900 block">Specific Clinical Advice:</strong>
-                      <p
-                        contentEditable
-                        suppressContentEditableWarning
-                        onBlur={(e) => setSpecificAdviceText(e.currentTarget.textContent || '')}
-                        className="whitespace-pre-wrap outline-none hover:bg-amber-100/70 p-0.5 rounded cursor-text"
-                      >
-                        {specificAdviceText}
-                      </p>
-                    </div>
-                  )}
+                  {/* 10. SPECIFIC ADVICE */}
+                  <div className={`bg-amber-50 p-1 rounded border border-amber-200 text-amber-950 mt-1 text-[8.5px] ${!specificAdviceText.trim() ? 'print:hidden' : ''}`}>
+                    <strong className="font-bold text-amber-900 block">Specific Clinical Advice:</strong>
+                    <p
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => setSpecificAdviceText(e.currentTarget.textContent || '')}
+                      className="whitespace-pre-wrap outline-none hover:bg-amber-100/70 p-0.5 rounded cursor-text"
+                    >
+                      {specificAdviceText || 'Click to edit specific clinical advice...'}
+                    </p>
+                  </div>
                 </div>
 
               </div>
