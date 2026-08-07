@@ -1260,15 +1260,18 @@ export default function UserWorkspacePage() {
       const f = formulation.toLowerCase();
       if (f.includes('inj') || f.includes('vial') || f.includes('amp') || f.includes('infusion')) prefix = 'Inj.';
       else if (f.includes('cap') || f.includes('capsule')) prefix = 'Cap.';
-      else if (f.includes('syp') || f.includes('syrup') || f.includes('suspension')) prefix = 'Syp.';
-      else if (f.includes('drop')) prefix = 'Drops.';
+      else if (f.includes('susp') || f.includes('suspension')) prefix = 'Susp.';
+      else if (f.includes('syp') || f.includes('syrup')) prefix = 'Syp.';
+      else if (f.includes('eye')) prefix = 'Drop. (Eye)';
+      else if (f.includes('ear') || f.includes('nasal') || f.includes('ent')) prefix = 'Drop. (ENT)';
+      else if (f.includes('drop')) prefix = 'Drop.';
       else if (f.includes('oint') || f.includes('cream') || f.includes('gel')) prefix = 'Oint.';
       else prefix = 'Tab.';
     }
 
     let cleanBrand = brandName
-      .replace(/^(inj\.|tab\.|cap\.|syp\.|drops\.|oint\.|inj|tab|cap|syp|drops|oint)\s+/i, '')
-      .replace(/\b(tablet|tablets|capsule|capsules|syrup|injection)\b/gi, '')
+      .replace(/^(inj\.|tab\.|cap\.|syp\.|susp\.|drop\.|drops\.|oint\.|inj|tab|cap|syp|susp|drop|drops|oint)\s+/i, '')
+      .replace(/\b(tablet|tablets|capsule|capsules|syrup|suspension|injection)\b/gi, '')
       .trim();
 
     const matchInst = text.match(/\(.*\).*/);
@@ -1298,9 +1301,15 @@ export default function UserWorkspacePage() {
       prefix = 'Inj.';
     } else if (/\b(cap|cap\.|capsule|capsules|softgel)\b/i.test(lower)) {
       prefix = 'Cap.';
-    } else if (/\b(syp|syp\.|syrup|suspension|elixir|liquid|linctus|expectorant)\b/i.test(lower)) {
+    } else if (/\b(susp|susp\.|suspension|oral suspension)\b/i.test(lower)) {
+      prefix = 'Susp.';
+    } else if (/\b(syp|syp\.|syrup|elixir|liquid|linctus|expectorant)\b/i.test(lower)) {
       prefix = 'Syp.';
-    } else if (/\b(drop|drops|drop\.|drops\.|eyedrop|eardrop|nasaldrop)\b/i.test(lower)) {
+    } else if (/\b(eyedrop|eyedrops|eye drop|eye drops|ophthalmic|eye)\b/i.test(lower)) {
+      prefix = 'Drop. (Eye)';
+    } else if (/\b(eardrop|eardrops|ear drop|ear drops|nasaldrop|nasaldrops|nasal drop|nasal drops|otic|ear|nasal)\b/i.test(lower)) {
+      prefix = 'Drop. (ENT)';
+    } else if (/\b(drop|drops|drop\.|drops\.|oral drop|oral drops|pediatric drop|pediatric drops)\b/i.test(lower)) {
       prefix = 'Drop.';
     } else if (/\b(oint|oint\.|ointment|cream|gel|lotion|patch)\b/i.test(lower)) {
       prefix = 'Oint.';
@@ -1309,11 +1318,11 @@ export default function UserWorkspacePage() {
     }
 
     let clean = trimmed
-      .replace(/^(Tab\.|Cap\.|Syp\.|Inj\.|Drop\.|Drops\.|Oint\.|tablet|tablets|capsule|capsules|syrup|injection|inj\.|tab\.|cap\.|syp\.|drop\.|drops\.|oint\.)\s+/i, '')
+      .replace(/^(Tab\.|Cap\.|Syp\.|Susp\.|Inj\.|Drop\.\s*\(Eye\)|Drop\.\s*\(ENT\)|Drop\.|Drops\.|Oint\.|tablet|tablets|capsule|capsules|syrup|suspension|injection|inj\.|tab\.|cap\.|syp\.|susp\.|drop\.|drops\.|oint\.)\s+/i, '')
       .trim();
 
     clean = clean
-      .replace(/\b(tablet|tablets|capsule|capsules|syrup|injection|eye drops|ear drops|nasal drops)\b/gi, '')
+      .replace(/\b(tablet|tablets|capsule|capsules|syrup|suspension|injection|eye drops|ear drops|nasal drops|eyedrops|eardrops|eye drop|ear drop|nasal drop|oral drops|oral drop)\b/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
 
