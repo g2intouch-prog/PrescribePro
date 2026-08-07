@@ -2341,35 +2341,56 @@ export default function UserWorkspacePage() {
   return (
     <div className={`h-screen flex flex-col overflow-hidden transition-colors duration-300 ${containerBg}`}>
       
-      {/* 1. COMPACT TOP BANNER WITH 2-LINE MOBILE RESPONSIVE LAYOUT */}
+      {/* 1. COMPACT TOP BANNER WITH RESPONSIVE LAYOUT */}
       <header className={`py-1.5 px-3 sm:px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between shrink-0 gap-1.5 ${headerBg}`}>
-        {/* LINE 1 ON MOBILE: LOGO, NAME, DAY/NIGHT TOGGLE ICON, AND LOGOUT ICON */}
+        {/* LINE 1 ON MOBILE: LOGO, NAME, DAY/NIGHT TOGGLE, LOGIN ID, CHANGE PASS KEY & LOGOUT ICON */}
         <div className="flex items-center justify-between w-full sm:w-auto gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <img src="/icon.png" alt="PrescribePro Logo" className="h-6 w-6 rounded-lg shadow-md border border-slate-200/50" />
             <h1 className="font-extrabold text-xs tracking-wide text-slate-900 dark:text-white">
               PrescribePro
             </h1>
           </div>
 
-          {/* MOBILE ONLY (LINE 1 RIGHT SIDE): DAY/NIGHT ICON TOGGLE & LOGOUT ICON */}
-          <div className="flex items-center gap-1.5 sm:hidden">
+          {/* MOBILE ONLY (LINE 1 RIGHT SIDE): DAY/NIGHT TOGGLE, LOGIN ID, CHANGE PASS KEY & LOGOUT */}
+          <div className="flex items-center gap-1 sm:hidden">
+            {/* DAY/NIGHT ICON */}
             <button
               type="button"
               onClick={() => setTheme(theme === 'dark' ? 'day' : 'dark')}
-              className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-300 dark:hover:bg-slate-700 transition shadow-sm"
+              className="p-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-300 dark:hover:bg-slate-700 transition shadow-sm"
               title={`Switch to ${theme === 'dark' ? 'Day Light' : 'Night Dark'} Mode`}
             >
-              {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-600" />}
+              {theme === 'dark' ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5 text-indigo-600" />}
             </button>
 
+            {/* LOGIN ID (MOBILE) */}
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[9px] bg-white/80 dark:bg-slate-800/90 border border-white/70 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm max-w-[100px] truncate">
+              <User className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="font-mono font-bold truncate">{email}</span>
+            </div>
+
+            {/* CHANGE PASSWORD KEY (MOBILE) */}
+            <button
+              type="button"
+              onClick={() => {
+                router.push('/change-password');
+                window.location.href = '/change-password';
+              }}
+              className="p-1 rounded-lg bg-white/80 dark:bg-slate-800 hover:bg-white text-slate-600 dark:text-slate-300 transition shadow-sm"
+              title="Change Password"
+            >
+              <KeyRound className="h-3.5 w-3.5" />
+            </button>
+
+            {/* LOG OUT (MOBILE) */}
             <button
               type="button"
               onClick={handleSignOut}
-              className="p-1.5 rounded-lg bg-white/80 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950 text-red-600 dark:text-red-400 transition shadow-sm"
+              className="p-1 rounded-lg bg-white/80 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950 text-red-600 dark:text-red-400 transition shadow-sm"
               title="Sign Out"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
@@ -2455,14 +2476,20 @@ export default function UserWorkspacePage() {
             </button>
           )}
 
-          <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-white/80 dark:bg-slate-800/90 border border-white/70 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm">
+          {/* LOGIN ID (DESKTOP VIEW) */}
+          <div className="hidden sm:flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] bg-white/80 dark:bg-slate-800/90 border border-white/70 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm">
             <User className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
             <span className="font-mono font-bold truncate max-w-[110px]">{email}</span>
           </div>
 
+          {/* CHANGE PASSWORD KEY (DESKTOP VIEW) */}
           <button
-            onClick={() => router.push('/change-password')}
-            className="p-1 rounded-lg bg-white/80 dark:bg-slate-800 hover:bg-white text-slate-600 dark:text-slate-300 transition shadow-sm"
+            type="button"
+            onClick={() => {
+              router.push('/change-password');
+              window.location.href = '/change-password';
+            }}
+            className="hidden sm:flex p-1 rounded-lg bg-white/80 dark:bg-slate-800 hover:bg-white text-slate-600 dark:text-slate-300 transition shadow-sm"
             title="Change Password"
           >
             <KeyRound className="h-3 w-3" />
@@ -2470,6 +2497,7 @@ export default function UserWorkspacePage() {
 
           {/* SIGN OUT BUTTON (DESKTOP VIEW) */}
           <button
+            type="button"
             onClick={handleSignOut}
             className="hidden sm:flex p-1 rounded-lg bg-white/80 dark:bg-slate-800 hover:bg-red-50 text-red-600 transition shadow-sm"
             title="Sign Out"
@@ -5063,33 +5091,36 @@ export default function UserWorkspacePage() {
       {isPharmacopeiaModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-6xl w-full h-[88vh] flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
-            {/* MODAL HEADER - 2 LINES: NAME IN 1ST LINE (DESCRIPTION REMOVED), BUTTONS IN 2ND LINE */}
-            <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900 text-white flex flex-col gap-2 shrink-0">
-              {/* 1ST LINE: NAME / TITLE ONLY */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-600 text-white font-extrabold text-base shadow">
-                    💊
-                  </div>
+            {/* MODAL HEADER - LAPTOP SINGLE LINE WITH DESCRIPTION, MOBILE 2 LINES */}
+            <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900 text-white flex flex-col md:flex-row md:items-center md:justify-between gap-2 shrink-0">
+              {/* TITLE & DESCRIPTION */}
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-600 text-white font-extrabold text-base shadow shrink-0">
+                  💊
+                </div>
+                <div>
                   <h3 className="font-extrabold text-sm sm:text-base text-white">
                     Universal USFDA & IP Generic Drug Pharmacopeia
                   </h3>
+                  <p className="hidden md:block text-xs text-slate-300 font-medium">
+                    100% Pure Generic Preparations • Tick or click to append to Live Prescription Pad ({drugCatalog.length} loaded)
+                  </p>
                 </div>
               </div>
 
-              {/* 2ND LINE: BUTTONS ARRANGED AVOIDING OVERFLOW */}
-              <div className="flex flex-wrap items-center gap-2 justify-end">
+              {/* BUTTONS IN 1 SINGLE ROW */}
+              <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={handleOpenAddDrug}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow flex items-center gap-1 transition shrink-0"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] sm:text-xs shadow flex items-center gap-1 transition shrink-0 whitespace-nowrap"
                 >
                   <span>➕ Add New Drug</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleResetDrugCatalogToDefault}
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition shrink-0"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] sm:text-xs transition shrink-0 whitespace-nowrap"
                   title="Restore default database catalog"
                 >
                   <span>🔄 Reset Catalog</span>
@@ -5099,7 +5130,7 @@ export default function UserWorkspacePage() {
                     setIsPharmacopeiaModalOpen(false);
                     setPharmaCategoryFilter(null);
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition shrink-0"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] sm:text-xs transition shrink-0 whitespace-nowrap"
                 >
                   ✕ Close
                 </button>
@@ -5108,20 +5139,18 @@ export default function UserWorkspacePage() {
 
             {/* MAIN 2-COLUMN SIDEBAR LAYOUT MATCHING CLINICAL PROTOCOLS */}
             <div className="flex-1 flex overflow-hidden min-h-0 bg-white dark:bg-slate-950">
-              {/* LEFT SIDEBAR: ALPHABETICALLY SORTED SPECIALTIES WITH DRUG COUNTS (COLLAPSIBLE TO ICON-ONLY) */}
+              {/* LEFT SIDEBAR: ALPHABETICALLY SORTED SPECIALTIES WITH DRUG COUNTS */}
               <div className={`${
-                isPharmaSidebarCollapsed ? 'w-14 sm:w-16' : 'w-64 md:w-72'
+                isPharmaSidebarCollapsed ? 'w-14 sm:w-16 md:w-72' : 'w-64 md:w-72'
               } shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/90 p-1.5 sm:p-2.5 overflow-y-auto space-y-1 transition-all duration-200`}>
                 <div className="flex items-center justify-between px-1 py-1 border-b border-slate-200/60 dark:border-slate-800/60 mb-1">
-                  {!isPharmaSidebarCollapsed && (
-                    <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                      Specialties (A-Z)
-                    </span>
-                  )}
+                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    Specialties (A-Z)
+                  </span>
                   <button
                     type="button"
                     onClick={() => setIsPharmaSidebarCollapsed(!isPharmaSidebarCollapsed)}
-                    className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition text-xs flex items-center justify-center ml-auto"
+                    className="md:hidden p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition text-xs flex items-center justify-center ml-auto"
                     title={isPharmaSidebarCollapsed ? "Expand specialty list" : "Shrink specialty list to icons"}
                   >
                     {isPharmaSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -5145,31 +5174,29 @@ export default function UserWorkspacePage() {
                         setPharmaCategoryFilter(cat.key === 'all' ? null : cat.key);
                         if (cat.key !== 'all') {
                           setDrugSearchQuery('');
-                          setIsPharmaSidebarCollapsed(true);
+                          if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                            setIsPharmaSidebarCollapsed(true);
+                          }
                         }
                       }}
                       title={`${cat.label} (${catCount} drugs)`}
-                      className={`w-full text-left rounded-xl font-bold transition flex items-center ${
-                        isPharmaSidebarCollapsed
-                          ? 'justify-center p-2 text-base'
-                          : 'px-3 py-2 text-xs justify-between'
-                      } ${
+                      className={`w-full text-left rounded-xl font-bold transition flex items-center justify-between px-3 py-2 text-xs ${
                         isActive
                           ? 'bg-emerald-600 text-white shadow-md'
                           : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-800 hover:text-slate-900 bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800'
                       }`}
                     >
                       <span className="flex items-center gap-2 truncate">
-                        <span className={isPharmaSidebarCollapsed ? 'text-lg' : 'text-sm'}>{cat.icon}</span>
-                        {!isPharmaSidebarCollapsed && <span className="truncate">{cat.label}</span>}
+                        <span className="text-sm shrink-0">{cat.icon}</span>
+                        <span className={`truncate ${isPharmaSidebarCollapsed ? 'hidden md:inline' : 'inline'}`}>{cat.label}</span>
                       </span>
-                      {!isPharmaSidebarCollapsed && (
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold transition ${
-                          isActive ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                        }`}>
-                          {catCount}
-                        </span>
-                      )}
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold transition ${
+                        isPharmaSidebarCollapsed ? 'hidden md:inline-block' : 'inline-block'
+                      } ${
+                        isActive ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}>
+                        {catCount}
+                      </span>
                     </button>
                   );
                 })}
@@ -5229,31 +5256,56 @@ export default function UserWorkspacePage() {
                     </div>
                   </div>
 
-                  {/* FORMULATION PILLS (INJ, TAB, CAP, SYP, DROPS, TOPICAL) */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
+                  {/* FORMULATION SELECTOR: MOBILE DROPDOWN SELECT + DESKTOP PILLS */}
+                  <div className="flex items-center gap-1.5 text-xs w-full sm:w-auto">
                     <span className="text-slate-500 font-bold shrink-0 text-[10px] uppercase tracking-wider">Formulation:</span>
-                    {[
-                      { key: 'all', label: 'All Formulations' },
-                      { key: 'inj', label: '💉 Injectables' },
-                      { key: 'tab', label: '💊 Tablets' },
-                      { key: 'cap', label: '💊 Capsules' },
-                      { key: 'syp', label: '🧪 Syrups' },
-                      { key: 'drops', label: '💧 Drops' },
-                      { key: 'topical', label: '🧴 Topical' },
-                    ].map((item) => (
-                      <button
-                        key={item.key}
-                        type="button"
-                        onClick={() => setDrugFormulationFilter(item.key as any)}
-                        className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition text-[10px] ${
-                          drugFormulationFilter === item.key
-                            ? 'bg-emerald-600 text-white shadow-md'
-                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
+                    
+                    {/* MOBILE DROPDOWN (< SELECT > ON MOBILE VIEW TO PREVENT HORIZONTAL SCROLLING) */}
+                    <select
+                      value={drugFormulationFilter}
+                      onChange={(e) => setDrugFormulationFilter(e.target.value as any)}
+                      className="sm:hidden flex-1 rounded-xl border border-slate-300 dark:border-slate-700 p-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      {[
+                        { key: 'all', label: 'All Formulations' },
+                        { key: 'inj', label: '💉 Injectables' },
+                        { key: 'tab', label: '💊 Tablets' },
+                        { key: 'cap', label: '💊 Capsules' },
+                        { key: 'syp', label: '🧪 Syrups' },
+                        { key: 'drops', label: '💧 Drops' },
+                        { key: 'topical', label: '🧴 Topical' },
+                      ].map((item) => (
+                        <option key={item.key} value={item.key}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* DESKTOP PILL BADGES (HIDDEN ON MOBILE) */}
+                    <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto">
+                      {[
+                        { key: 'all', label: 'All Formulations' },
+                        { key: 'inj', label: '💉 Injectables' },
+                        { key: 'tab', label: '💊 Tablets' },
+                        { key: 'cap', label: '💊 Capsules' },
+                        { key: 'syp', label: '🧪 Syrups' },
+                        { key: 'drops', label: '💧 Drops' },
+                        { key: 'topical', label: '🧴 Topical' },
+                      ].map((item) => (
+                        <button
+                          key={item.key}
+                          type="button"
+                          onClick={() => setDrugFormulationFilter(item.key as any)}
+                          className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition text-[10px] ${
+                            drugFormulationFilter === item.key
+                              ? 'bg-emerald-600 text-white shadow-md'
+                              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -5881,21 +5933,24 @@ export default function UserWorkspacePage() {
       {isProtocolsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-6xl w-full h-[88vh] flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
-            {/* HEADER - 2 LINES: NAME IN 1ST LINE (DESCRIPTION REMOVED), BUTTONS IN 2ND LINE */}
-            <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900 text-white flex flex-col gap-2 shrink-0">
-              {/* 1ST LINE: NAME / TITLE ONLY */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 sm:p-2 rounded-xl bg-indigo-600 text-white font-extrabold text-base shadow">
-                    📜
-                  </div>
+            {/* HEADER - LAPTOP SINGLE LINE WITH DESCRIPTION, MOBILE 2 LINES */}
+            <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-900 text-white flex flex-col md:flex-row md:items-center md:justify-between gap-2 shrink-0">
+              {/* TITLE & DESCRIPTION */}
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 sm:p-2 rounded-xl bg-indigo-600 text-white font-extrabold text-base shadow shrink-0">
+                  📜
+                </div>
+                <div>
                   <h3 className="font-extrabold text-sm sm:text-base text-white">
                     Clinical Practice Protocols & ER Order Sets
                   </h3>
+                  <p className="hidden md:block text-xs text-slate-300 font-medium">
+                    Evidence-based clinical protocols, emergency guidelines, and 1-click prescription order sets
+                  </p>
                 </div>
               </div>
 
-              {/* 2ND LINE: BUTTONS ARRANGED AVOIDING OVERFLOW */}
+              {/* BUTTONS */}
               <div className="flex flex-wrap items-center gap-2 justify-end">
                 <button
                   type="button"
@@ -5919,20 +5974,18 @@ export default function UserWorkspacePage() {
 
             {/* MAIN 2-COLUMN SIDEBAR LAYOUT */}
             <div className="flex-1 flex overflow-hidden min-h-0 bg-white dark:bg-slate-950">
-              {/* LEFT SIDEBAR: ALPHABETICALLY SORTED SPECIALTIES WITH PROTOCOL COUNTS (COLLAPSIBLE TO ICON-ONLY) */}
+              {/* LEFT SIDEBAR: ALPHABETICALLY SORTED SPECIALTIES WITH PROTOCOL COUNTS */}
               <div className={`${
-                isProtocolSidebarCollapsed ? 'w-14 sm:w-16' : 'w-64 md:w-72'
+                isProtocolSidebarCollapsed ? 'w-14 sm:w-16 md:w-72' : 'w-64 md:w-72'
               } shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/90 p-1.5 sm:p-2.5 overflow-y-auto space-y-1 transition-all duration-200`}>
                 <div className="flex items-center justify-between px-1 py-1 border-b border-slate-200/60 dark:border-slate-800/60 mb-1">
-                  {!isProtocolSidebarCollapsed && (
-                    <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                      Specialties (A-Z)
-                    </span>
-                  )}
+                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    Specialties (A-Z)
+                  </span>
                   <button
                     type="button"
                     onClick={() => setIsProtocolSidebarCollapsed(!isProtocolSidebarCollapsed)}
-                    className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition text-xs flex items-center justify-center ml-auto"
+                    className="md:hidden p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition text-xs flex items-center justify-center ml-auto"
                     title={isProtocolSidebarCollapsed ? "Expand specialty list" : "Shrink specialty list to icons"}
                   >
                     {isProtocolSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -5957,30 +6010,28 @@ export default function UserWorkspacePage() {
                       onClick={() => {
                         setProtocolCategoryFilter(cat.key);
                         setSelectedProtocol(null);
-                        setIsProtocolSidebarCollapsed(true);
+                        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                          setIsProtocolSidebarCollapsed(true);
+                        }
                       }}
                       title={`${cat.label} (${catCount} items)`}
-                      className={`w-full text-left rounded-xl font-bold transition flex items-center ${
-                        isProtocolSidebarCollapsed
-                          ? 'justify-center p-2 text-base'
-                          : 'px-3 py-2 text-xs justify-between'
-                      } ${
+                      className={`w-full text-left rounded-xl font-bold transition flex items-center justify-between px-3 py-2 text-xs ${
                         isActive
                           ? 'bg-indigo-600 text-white shadow-md'
                           : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-800 hover:text-slate-900 bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800'
                       }`}
                     >
                       <span className="flex items-center gap-2 truncate">
-                        <span className={isProtocolSidebarCollapsed ? 'text-lg' : 'text-sm'}>{cat.icon}</span>
-                        {!isProtocolSidebarCollapsed && <span className="truncate">{cat.label}</span>}
+                        <span className="text-sm shrink-0">{cat.icon}</span>
+                        <span className={`truncate ${isProtocolSidebarCollapsed ? 'hidden md:inline' : 'inline'}`}>{cat.label}</span>
                       </span>
-                      {!isProtocolSidebarCollapsed && (
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold transition ${
-                          isActive ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                        }`}>
-                          {catCount}
-                        </span>
-                      )}
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold transition ${
+                        isProtocolSidebarCollapsed ? 'hidden md:inline-block' : 'inline-block'
+                      } ${
+                        isActive ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}>
+                        {catCount}
+                      </span>
                     </button>
                   );
                 })}
@@ -6095,11 +6146,11 @@ export default function UserWorkspacePage() {
                     </div>
 
                     {/* DETAIL FOOTER */}
-                    <div className="p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+                    <div className="p-3 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 shrink-0">
                       <button
                         type="button"
                         onClick={() => setSelectedProtocol(null)}
-                        className="px-4 py-1.5 rounded-xl bg-slate-200 text-slate-800 font-bold text-xs hover:bg-slate-300 transition"
+                        className="px-4 py-1.5 rounded-xl bg-slate-200 text-slate-800 font-bold text-xs hover:bg-slate-300 transition text-center"
                       >
                         ← Back to Protocols List
                       </button>
@@ -6121,7 +6172,7 @@ export default function UserWorkspacePage() {
                             setSelectedProtocol(null);
                           }
                         }}
-                        className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition flex items-center gap-1.5"
+                        className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5"
                       >
                         <span>⚡ Apply Order Set to Prescription Pad</span>
                       </button>
@@ -6205,8 +6256,8 @@ export default function UserWorkspacePage() {
                               onClick={() => setSelectedProtocol(tpl)}
                               className="p-3.5 rounded-2xl border border-amber-300/80 bg-amber-50/40 hover:border-amber-500 hover:shadow-md cursor-pointer transition space-y-2 text-xs"
                             >
-                              <div className="flex items-start justify-between gap-3">
-                                <div>
+                              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+                                <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 flex-wrap mb-1">
                                     <h4 className="font-black text-sm text-slate-900 hover:text-indigo-600 transition">{tpl.name}</h4>
                                     <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-extrabold text-[10px] uppercase border border-amber-300">
@@ -6220,11 +6271,11 @@ export default function UserWorkspacePage() {
                                   )}
                                 </div>
 
-                                <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex flex-wrap items-center gap-1.5 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-amber-200/60" onClick={(e) => e.stopPropagation()}>
                                   <button
                                     type="button"
                                     onClick={() => setSelectedProtocol(tpl)}
-                                    className="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs transition"
+                                    className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs transition"
                                   >
                                     📄 Details
                                   </button>
@@ -6240,14 +6291,14 @@ export default function UserWorkspacePage() {
                                       setSaveStatus(`Applied Template: "${tpl.name}"`);
                                       setTimeout(() => setSaveStatus(null), 3500);
                                     }}
-                                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1"
+                                    className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1"
                                   >
                                     <span>⚡ Apply</span>
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => handleOpenEditTemplateEditor(tpl.specialtyId, tpl as any)}
-                                    className="px-2 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shadow transition"
+                                    className="px-2 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shadow transition"
                                     title="Edit Personal Template"
                                   >
                                     ✏️
@@ -6255,7 +6306,7 @@ export default function UserWorkspacePage() {
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteTemplate(tpl.specialtyId, tpl.id)}
-                                    className="px-2 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs transition"
+                                    className="px-2 py-1 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs transition"
                                     title="Delete Personal Template"
                                   >
                                     🗑️
@@ -6290,8 +6341,8 @@ export default function UserWorkspacePage() {
                             onClick={() => setSelectedProtocol(proto)}
                             className="p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-indigo-500 hover:shadow-md cursor-pointer transition space-y-2 text-xs"
                           >
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+                              <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                   <h4 className="font-black text-sm text-slate-900 hover:text-indigo-600 transition">{proto.title}</h4>
                                   <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[10px] uppercase">
@@ -6308,25 +6359,25 @@ export default function UserWorkspacePage() {
                                 </p>
                               </div>
 
-                              <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex flex-wrap items-center gap-1.5 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800" onClick={(e) => e.stopPropagation()}>
                                 <button
                                   type="button"
                                   onClick={() => setSelectedProtocol(proto)}
-                                  className="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs transition"
+                                  className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs transition"
                                 >
                                   📄 Details
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleApplyProtocol(proto)}
-                                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1"
+                                  className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1"
                                 >
                                   <span>⚡ Apply</span>
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleOpenEditProtocolEditor(proto)}
-                                  className="px-2 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shadow transition"
+                                  className="px-2 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shadow transition"
                                   title="Edit Protocol"
                                 >
                                   ✏️
@@ -6334,7 +6385,7 @@ export default function UserWorkspacePage() {
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteProtocol(proto.id)}
-                                  className="px-2 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs transition"
+                                  className="px-2 py-1 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs transition"
                                   title="Delete Protocol"
                                 >
                                   🗑️
