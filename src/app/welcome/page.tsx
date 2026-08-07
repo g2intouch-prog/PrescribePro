@@ -1244,6 +1244,38 @@ export default function UserWorkspacePage() {
     localStorage.setItem('prescribepro_erig_pref', key);
   };
 
+  const formatDrugLineForDisplay = (line: string): string => {
+    const trimmed = line.trim();
+    if (!trimmed) return trimmed;
+
+    if (/^(Tab\.|Cap\.|Syp\.|Inj\.|Drop\.|Drops\.|Oint\.|Infusion|Spray|Gel)\s/i.test(trimmed)) {
+      return trimmed;
+    }
+
+    const lower = trimmed.toLowerCase();
+    let prefix = 'Tab.';
+
+    if (/\b(inj|inj\.|injection|infusion|vial|ampoule|amp|iv|im)\b/i.test(lower)) {
+      prefix = 'Inj.';
+    } else if (/\b(cap|cap\.|capsule|capsules|softgel)\b/i.test(lower)) {
+      prefix = 'Cap.';
+    } else if (/\b(syp|syp\.|syrup|suspension|elixir|liquid|linctus|expectorant)\b/i.test(lower)) {
+      prefix = 'Syp.';
+    } else if (/\b(drop|drops|drop\.|drops\.|eyedrop|eardrop|nasaldrop)\b/i.test(lower)) {
+      prefix = 'Drop.';
+    } else if (/\b(oint|oint\.|ointment|cream|gel|lotion|patch)\b/i.test(lower)) {
+      prefix = 'Oint.';
+    } else if (/\b(tab|tab\.|tablet|tablets|dt|md|dispersible)\b/i.test(lower)) {
+      prefix = 'Tab.';
+    }
+
+    let clean = trimmed
+      .replace(/^(tablet|tablets|capsule|capsules|syrup|injection|inj\.|tab\.|cap\.|syp\.|drop\.|drops\.|oint\.)\s+/i, '')
+      .trim();
+
+    return `${prefix} ${clean}`;
+  };
+
   const handleEditableFocus = (e: React.FocusEvent<HTMLElement>) => {
     const text = e.currentTarget.textContent || '';
     if (text.trim().startsWith('Click to edit')) {
@@ -2019,8 +2051,8 @@ export default function UserWorkspacePage() {
   };
 
   const toggleDrugSelection = (label: string) => {
-    // If label already contains full dose details (e.g. from pediatric calculator or protocol), use label directly
-    const formatted = (label.includes('(') && label.includes(')')) ? label : applyBrandToPrescribedLine(label, label);
+    const baseFormatted = (label.includes('(') && label.includes(')')) ? label : applyBrandToPrescribedLine(label, label);
+    const formatted = formatDrugLineForDisplay(baseFormatted);
     const cleanGeneric = label.split('(')[0].trim().replace(/^(inj\.|tab\.|cap\.|syp\.|drops\.|oint\.|inj|tab|cap|syp|drops|oint)\s+/i, '').toLowerCase();
 
     const existingIndex = selectedDrugs.findIndex((s) => {
@@ -2051,7 +2083,7 @@ export default function UserWorkspacePage() {
   };
 
   const handleAddCustomDrugItem = () => {
-    setSelectedDrugs([...selectedDrugs, 'Tab Custom Generic Medication (1-0-1 after food) x 5 days']);
+    setSelectedDrugs([...selectedDrugs, 'Tab. Custom Generic Medication (1-0-1 after food) x 5 days']);
   };
 
   const handlePrint = (actionType: 'print' | 'pdf' = 'print') => {
@@ -3969,7 +4001,7 @@ export default function UserWorkspacePage() {
                                 onBlur={(e) => handleUpdateDrugItem(i, e.currentTarget.textContent || '')}
                                 className="outline-none hover:bg-blue-200/60 p-0.5 rounded transition cursor-text flex-1"
                               >
-                                {d}
+                                {formatDrugLineForDisplay(d)}
                               </span>
                               <button
                                 type="button"
