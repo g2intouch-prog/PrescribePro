@@ -4044,45 +4044,100 @@ export default function UserWorkspacePage() {
             </div>
 
             {/* TEMPLATE QUICK APPLIER */}
-            <div className="space-y-1.5 shrink-0">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                Quick Load Specialty Template:
-              </label>
-              <select
-                value={selectedSpecialtyId}
-                onChange={(e) => {
-                  const specId = e.target.value;
-                  setSelectedSpecialtyId(specId);
-                  const specName = specialties.find((s) => s.id === specId)?.name || '';
-                  if (specName) {
-                    setDrugSearchQuery(specName.toLowerCase().split(' ')[0]);
-                  }
-                }}
-                className={`w-full rounded-lg px-2 py-1 text-xs font-semibold ${inputBg}`}
-              >
-                {specialties.map((sp) => (
-                  <option key={sp.id} value={sp.id}>
-                    {sp.name} ({sp.templates.length} templates)
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-1.5 shrink-0 bg-slate-50 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                  <span>⚡ Quick-Load Specialty Templates</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsTemplateModalOpen(true)}
+                  className="text-[9px] font-extrabold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+                  title="Manage & Add Custom Specialty Templates"
+                >
+                  <span>⚙️ Manage</span>
+                </button>
+              </div>
 
-              {currentSpecialty && currentSpecialty.templates.length > 0 && (
-                <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={selectedSpecialtyId}
+                  onChange={(e) => {
+                    const specId = e.target.value;
+                    setSelectedSpecialtyId(specId);
+                    const specName = specialties.find((s) => s.id === specId)?.name || '';
+                    if (specName) {
+                      setDrugSearchQuery(specName.toLowerCase().split(' ')[0]);
+                    }
+                  }}
+                  className={`flex-1 rounded-xl px-2.5 py-1.5 text-xs font-extrabold border border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none ${inputBg}`}
+                >
+                  {specialties.map((sp) => (
+                    <option key={sp.id} value={sp.id}>
+                      🏥 {sp.name} ({sp.templates.length} tpls)
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenNewTemplateEditor(selectedSpecialtyId)}
+                  className="px-2 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[10px] shadow transition flex items-center gap-1 shrink-0"
+                  title="Add new template under current specialty"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>+ New</span>
+                </button>
+              </div>
+
+              {currentSpecialty && currentSpecialty.templates.length > 0 ? (
+                <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
                   {currentSpecialty.templates.map((tpl) => (
-                    <button
+                    <div
                       key={tpl.id}
-                      onClick={() => applyTemplate(tpl)}
-                      className={`w-full p-1.5 rounded-lg border text-left text-[10px] font-medium transition flex items-center justify-between ${
+                      className={`w-full p-2 rounded-xl border text-left text-[10px] transition flex items-center justify-between gap-1.5 ${
                         theme === 'day' 
-                          ? 'bg-white hover:bg-blue-50 border-slate-200 text-slate-800' 
-                          : 'bg-gray-950/60 hover:bg-gray-900 border-gray-800 text-gray-200'
+                          ? 'bg-white hover:bg-blue-50/80 border-slate-200 text-slate-900 shadow-sm' 
+                          : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-100'
                       }`}
                     >
-                      <span className="truncate">{tpl.name}</span>
-                      <span className="text-[9px] text-blue-600 font-bold">Apply</span>
-                    </button>
+                      <div className="truncate flex-1">
+                        <span className="font-extrabold truncate block">{tpl.name}</span>
+                        <span className="text-[8.5px] text-slate-500 font-medium truncate block">
+                          {tpl.diagnosis ? `Dx: ${tpl.diagnosis} • ` : ''}{tpl.drugs?.length || 0} Rx • {tpl.tests?.length || 0} Tests
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => applyTemplate(tpl)}
+                          className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[9.5px] font-extrabold shadow transition flex items-center gap-0.5"
+                          title="Apply template to live prescription pad"
+                        >
+                          <span>⚡ Apply</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditTemplateEditor(currentSpecialty.id, tpl)}
+                          className="p-1 rounded-lg bg-amber-500/20 text-amber-800 dark:text-amber-300 hover:bg-amber-500/30 text-[9.5px] font-bold"
+                          title="Edit template"
+                        >
+                          ✏️
+                        </button>
+                      </div>
+                    </div>
                   ))}
+                </div>
+              ) : (
+                <div className="p-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-1 bg-white/50 dark:bg-slate-900/50">
+                  <p className="text-[10px] text-slate-500 font-medium">No templates created under {currentSpecialty?.name || 'this specialty'} yet.</p>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenNewTemplateEditor(selectedSpecialtyId)}
+                    className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] shadow inline-flex items-center gap-1"
+                  >
+                    <Plus className="h-3 w-3" /> Create First Template
+                  </button>
                 </div>
               )}
             </div>

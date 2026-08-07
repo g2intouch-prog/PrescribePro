@@ -260,9 +260,7 @@ export function SplitAuthLayout() {
 
         <div className="space-y-6 relative z-10">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-xl shadow-emerald-500/20">
-              <Layers className="h-6 w-6 text-gray-950 font-bold" />
-            </div>
+            <img src="/icon.png" alt="PrescribePro Logo" className="h-12 w-12 rounded-2xl shadow-xl shadow-emerald-500/20 border border-slate-700/50 object-cover" />
             <div>
               <h1 className="font-extrabold text-2xl tracking-wide bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-transparent">
                 PrescribePro

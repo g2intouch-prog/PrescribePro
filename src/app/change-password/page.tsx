@@ -77,9 +77,7 @@ export default function ChangePasswordPage() {
           </button>
 
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-              <Layers className="h-4 w-4" />
-            </div>
+            <img src="/icon.png" alt="PrescribePro Logo" className="h-8 w-8 rounded-lg shadow-md border border-slate-700/50" />
             <span className="font-bold text-sm text-white">PrescribePro</span>
           </div>
         </div>

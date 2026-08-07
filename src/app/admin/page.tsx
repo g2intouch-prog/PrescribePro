@@ -275,9 +275,7 @@ export default function AdminDashboardPage() {
       {/* Header Navbar */}
       <header className="sticky top-0 z-40 glass-nav px-4 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-            <Layers className="h-5 w-5 text-gray-950 font-bold" />
-          </div>
+          <img src="/icon.png" alt="PrescribePro Logo" className="h-10 w-10 rounded-xl shadow-lg shadow-emerald-500/20 border border-slate-700/50" />
           <div>
             <h1 className="font-bold text-lg leading-tight tracking-wide text-white">
               PrescribePro Admin Dashboard
