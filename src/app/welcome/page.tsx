@@ -2411,26 +2411,25 @@ export default function UserWorkspacePage() {
   const loadHtml2Pdf = async () => {
     if (typeof window === 'undefined') return null;
     if ((window as any).html2pdf) return (window as any).html2pdf;
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-      script.onload = () => resolve((window as any).html2pdf);
-      script.onerror = () => resolve(null);
-      document.body.appendChild(script);
-    });
+    try {
+      const mod = await import('html2pdf.js');
+      const lib = mod.default || mod;
+      (window as any).html2pdf = lib;
+      return lib;
+    } catch (e) {
+      console.error('Failed to import html2pdf.js package:', e);
+      return null;
+    }
   };
 
   const handlePrint = async (actionType: 'print' | 'pdf' = 'print') => {
     autoSavePrescription(actionType);
     const printArea = document.getElementById('printable-prescription-pad') || document.getElementById('isolated-print-area');
-    if (!printArea) {
-      window.print();
-      return;
-    }
 
     if (actionType === 'pdf') {
       try {
-        const clonedPad = printArea.cloneNode(true) as HTMLElement;
+        const targetPad = printArea || document.body;
+        const clonedPad = targetPad.cloneNode(true) as HTMLElement;
         const hiddenEls = clonedPad.querySelectorAll('.print\\:hidden');
         hiddenEls.forEach((el) => el.remove());
         clonedPad.classList.remove('hidden');
@@ -2451,11 +2450,21 @@ export default function UserWorkspacePage() {
           await html2pdf().set(opt).from(clonedPad).save();
           setSaveStatus('PDF downloaded directly!');
           setTimeout(() => setSaveStatus(null), 3000);
-          return;
+        } else {
+          setSaveStatus('Error: PDF generator library not available');
+          setTimeout(() => setSaveStatus(null), 3000);
         }
       } catch (err) {
         console.error('Direct PDF download error:', err);
+        setSaveStatus('Direct PDF export error. Please try again.');
+        setTimeout(() => setSaveStatus(null), 3000);
       }
+      return; // CRITICAL: Always return when actionType === 'pdf', NEVER open print dialogue!
+    }
+
+    if (!printArea) {
+      window.print();
+      return;
     }
 
     const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -2741,7 +2750,18 @@ export default function UserWorkspacePage() {
     const text = encodeURIComponent(
       `*PrescribePro Prescription Summary*\nPatient: ${patientDisplayName}\nRx Medications: ${selectedDrugs.join(', ')}\nDiagnostics: ${selectedTests.join(', ')}\nAdvice: ${selectedAdvice.join(', ')}\n\nView Digital Prescription at: https://prescribepro.vercel.app/`
     );
-    window.location.href = `whatsapp://send?phone=${phone}&text=${text}`;
+    const whatsappUrl = `whatsapp://send?phone=${phone}&text=${text}`;
+
+    // Launch WhatsApp native app using hidden iframe (avoids opening extra browser tabs or page redirects)
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = whatsappUrl;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 2000);
   };
 
   const handleEmailSend = () => {
@@ -3131,6 +3151,7 @@ export default function UserWorkspacePage() {
                         type="text"
                         value={patient.regNo}
                         onChange={(e) => setPatient({ ...patient, regNo: e.target.value })}
+                        placeholder="Reg No"
                         className={`w-full rounded-lg px-2 py-1 text-xs font-mono ${inputBg}`}
                       />
                     </div>
@@ -3140,30 +3161,33 @@ export default function UserWorkspacePage() {
                         type="tel"
                         value={patient.mobile}
                         onChange={(e) => setPatient({ ...patient, mobile: e.target.value })}
+                        placeholder="Mobile No"
                         className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Patient Email (for direct sharing)</label>
-                    <input
-                      type="email"
-                      value={patient.email || ''}
-                      onChange={(e) => setPatient({ ...patient, email: e.target.value })}
-                      placeholder="patient@example.com"
-                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
-                    />
-                  </div>
-
-                  <div>
-                    <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Full Name</label>
-                    <input
-                      type="text"
-                      value={patient.name}
-                      onChange={(e) => setPatient({ ...patient, name: e.target.value })}
-                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Full Name</label>
+                      <input
+                        type="text"
+                        value={patient.name}
+                        onChange={(e) => setPatient({ ...patient, name: e.target.value })}
+                        placeholder="Patient Full Name"
+                        className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Email ID (for sharing)</label>
+                      <input
+                        type="email"
+                        value={patient.email || ''}
+                        onChange={(e) => setPatient({ ...patient, email: e.target.value })}
+                        placeholder="patient@example.com"
+                        className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
