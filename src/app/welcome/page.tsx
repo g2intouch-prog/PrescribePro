@@ -1661,6 +1661,7 @@ export default function UserWorkspacePage() {
     name: '',
     age: '',
     gender: 'Male',
+    relationPrefix: 'S/o',
     careOf: '',
     address: '',
     allergies: '',
@@ -2228,6 +2229,7 @@ export default function UserWorkspacePage() {
       name: '',
       age: '',
       gender: 'Male',
+      relationPrefix: 'S/o',
       careOf: '',
       address: '',
       allergies: '',
@@ -2296,6 +2298,7 @@ export default function UserWorkspacePage() {
         name: found.name,
         age: found.age,
         gender: found.gender,
+        relationPrefix: (found as any).relationPrefix || 'S/o',
         careOf: found.careOf || '',
         address: found.address || '',
         allergies: (found as any).allergies || '',
@@ -3221,14 +3224,30 @@ export default function UserWorkspacePage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>C/O (Guardian)</label>
-                    <input
-                      type="text"
-                      value={patient.careOf}
-                      onChange={(e) => setPatient({ ...patient, careOf: e.target.value })}
-                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
-                    />
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="col-span-1">
+                      <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Relation</label>
+                      <select
+                        value={patient.relationPrefix || 'S/o'}
+                        onChange={(e) => setPatient({ ...patient, relationPrefix: e.target.value })}
+                        className={`w-full rounded-lg px-1.5 py-1 text-xs ${inputBg}`}
+                      >
+                        <option value="S/o">S/o (Son of)</option>
+                        <option value="D/o">D/o (Daughter of)</option>
+                        <option value="W/o">W/o (Wife of)</option>
+                        <option value="C/o">C/o (Care of)</option>
+                      </select>
+                    </div>
+                    <div className="col-span-2">
+                      <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Relative / Guardian Name</label>
+                      <input
+                        type="text"
+                        value={patient.careOf}
+                        onChange={(e) => setPatient({ ...patient, careOf: e.target.value })}
+                        placeholder="Father / Husband / Guardian"
+                        className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -3237,6 +3256,7 @@ export default function UserWorkspacePage() {
                       type="text"
                       value={patient.address}
                       onChange={(e) => setPatient({ ...patient, address: e.target.value })}
+                      placeholder="City, Area, Address details"
                       className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
                     />
                   </div>
@@ -3943,13 +3963,31 @@ export default function UserWorkspacePage() {
                 </div>
               )}
 
-              {/* PATIENT INFO STRIP */}
-              <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 mt-2 grid grid-cols-2 gap-1 text-[9px]">
-                <div><strong>Patient:</strong> {patient.name || 'John Doe'}</div>
-                <div><strong>Reg No:</strong> {patient.regNo}</div>
-                <div><strong>Age/Sex:</strong> {patient.age} Yrs / {patient.gender}</div>
-                <div><strong>Mobile:</strong> {patient.mobile}</div>
-                {patient.email && <div className="col-span-2"><strong>Email:</strong> {patient.email}</div>}
+              {/* PATIENT INFO STRIP - EXACT 3 LINES */}
+              <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 mt-2 text-[9px] space-y-1">
+                {/* LINE 1: REG NO, MOBILE NO, EMAIL ID, DATE */}
+                <div className="flex items-center justify-between gap-1 border-b border-gray-200 pb-0.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span><strong>Reg No:</strong> {patient.regNo || '—'}</span>
+                    <span><strong>Mobile:</strong> {patient.mobile || '—'}</span>
+                    <span><strong>Email:</strong> {patient.email || '—'}</span>
+                  </div>
+                  <div className="shrink-0 font-semibold text-gray-700">
+                    <strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}
+                  </div>
+                </div>
+
+                {/* LINE 2: NAME, AGE, GENDER */}
+                <div className="flex items-center justify-between gap-1 border-b border-gray-200 pb-0.5">
+                  <div><strong>Patient Name:</strong> <span className="font-bold text-gray-900">{patient.name || '—'}</span></div>
+                  <div><strong>Age / Sex:</strong> {patient.age ? `${patient.age} Yrs` : '—'} / {patient.gender || 'Male'}</div>
+                </div>
+
+                {/* LINE 3: S/D/W/C OF, ADDRESS */}
+                <div className="flex items-center justify-between gap-1 flex-wrap text-[8.5px]">
+                  <div><strong>{patient.relationPrefix || 'S/o'}:</strong> {patient.careOf || '—'}</div>
+                  <div><strong>Address:</strong> {patient.address || '—'}</div>
+                </div>
               </div>
             </div>
 
@@ -5827,6 +5865,7 @@ export default function UserWorkspacePage() {
                             name: rec.patientName || '',
                             age: rec.patientAge || '',
                             gender: rec.patientGender || 'Male',
+                            relationPrefix: (rec as any).relationPrefix || 'S/o',
                             careOf: '',
                             address: '',
                             allergies: '',
@@ -7307,12 +7346,31 @@ export default function UserWorkspacePage() {
             <div style={{ height: `${headerMarginMm}mm` }} className="w-full" />
           )}
 
-          {/* PATIENT INFO STRIP */}
-          <div className="bg-slate-100 p-2.5 rounded-lg border border-slate-300 mb-3 grid grid-cols-4 gap-2 text-[11px]">
-            <div><strong>Patient Name:</strong> {patient.name || '—'}</div>
-            <div><strong>Age / Sex:</strong> {patient.age || '—'} Y / {patient.gender || '—'}</div>
-            <div><strong>Mobile:</strong> {patient.mobile || '—'}</div>
-            <div><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</div>
+          {/* PATIENT INFO STRIP - EXACT 3 LINES */}
+          <div className="bg-slate-100 p-2.5 rounded-lg border border-slate-300 mb-3 text-[11px] space-y-1">
+            {/* LINE 1: REG NO, MOBILE NO, EMAIL ID, DATE */}
+            <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span><strong>Reg No:</strong> {patient.regNo || '—'}</span>
+                <span><strong>Mobile:</strong> {patient.mobile || '—'}</span>
+                <span><strong>Email:</strong> {patient.email || '—'}</span>
+              </div>
+              <div className="shrink-0 font-semibold text-slate-700">
+                <strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}
+              </div>
+            </div>
+
+            {/* LINE 2: NAME, AGE, GENDER */}
+            <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1">
+              <div><strong>Patient Name:</strong> <span className="font-bold text-slate-900">{patient.name || '—'}</span></div>
+              <div><strong>Age / Sex:</strong> {patient.age ? `${patient.age} Yrs` : '—'} / {patient.gender || 'Male'}</div>
+            </div>
+
+            {/* LINE 3: S/D/W/C OF, ADDRESS */}
+            <div className="flex items-center justify-between gap-2 flex-wrap text-[10.5px]">
+              <div><strong>{patient.relationPrefix || 'S/o'}:</strong> {patient.careOf || '—'}</div>
+              <div><strong>Address:</strong> {patient.address || '—'}</div>
+            </div>
           </div>
 
           {/* VITALS DEMOGRAPHICS */}

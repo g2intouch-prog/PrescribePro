@@ -109,9 +109,10 @@ body {
     display: flex !important;
     flex-direction: row !important;
     align-items: stretch !important;
+    flex: 1 1 auto !important;
     width: 100% !important;
-    gap: 12px !important;
-    min-height: 250px !important;
+    gap: 14px !important;
+    min-height: 380px !important;
   }
 
   .print-left-pane,
@@ -119,8 +120,10 @@ body {
   #isolated-print-area .print-left-pane {
     width: 32% !important;
     flex-shrink: 0 !important;
-    border-right: 2px solid #cbd5e1 !important;
-    padding-right: 10px !important;
+    height: 100% !important;
+    align-self: stretch !important;
+    border-right: 2px solid #475569 !important;
+    padding-right: 12px !important;
     box-sizing: border-box !important;
   }
 
@@ -129,6 +132,8 @@ body {
   #isolated-print-area .print-right-pane {
     width: 68% !important;
     flex-grow: 1 !important;
+    height: 100% !important;
+    align-self: stretch !important;
     padding-left: 6px !important;
     box-sizing: border-box !important;
   }
