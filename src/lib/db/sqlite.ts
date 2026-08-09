@@ -16,6 +16,10 @@ export interface SavedPrescriptionRecord {
   patientRegNo: string;
   patientName: string;
   patientMobile: string;
+  patientEmail?: string;
+  patientRelationPrefix?: string;
+  patientCareOf?: string;
+  patientAddress?: string;
   patientAge: string;
   patientGender: string;
   actionSource: 'print' | 'pdf' | 'whatsapp' | 'email' | 'manual_save';
@@ -110,6 +114,10 @@ export async function getSqliteDb(): Promise<Database> {
       patient_reg_no TEXT NOT NULL,
       patient_name TEXT NOT NULL,
       patient_mobile TEXT,
+      patient_email TEXT,
+      patient_relation_prefix TEXT,
+      patient_care_of TEXT,
+      patient_address TEXT,
       patient_age TEXT,
       patient_gender TEXT,
       action_source TEXT,
@@ -127,6 +135,11 @@ export async function getSqliteDb(): Promise<Database> {
       page_size TEXT
     );
   `);
+
+  try { dbInstance.run("ALTER TABLE patient_prescriptions ADD COLUMN patient_email TEXT;"); } catch (e) {}
+  try { dbInstance.run("ALTER TABLE patient_prescriptions ADD COLUMN patient_relation_prefix TEXT;"); } catch (e) {}
+  try { dbInstance.run("ALTER TABLE patient_prescriptions ADD COLUMN patient_care_of TEXT;"); } catch (e) {}
+  try { dbInstance.run("ALTER TABLE patient_prescriptions ADD COLUMN patient_address TEXT;"); } catch (e) {}
 
   saveSqliteDb();
   return dbInstance;
@@ -153,16 +166,21 @@ export async function savePrescriptionToSqlite(rec: SavedPrescriptionRecord): Pr
     const db = await getSqliteDb();
     db.run(
       `INSERT OR REPLACE INTO patient_prescriptions (
-        prescription_id, patient_reg_no, patient_name, patient_mobile, patient_age, patient_gender,
+        prescription_id, patient_reg_no, patient_name, patient_mobile, patient_email,
+        patient_relation_prefix, patient_care_of, patient_address, patient_age, patient_gender,
         action_source, created_at, vitals_json, clinical_exam_json, selected_drugs_json,
         selected_tests_json, test_results_text, selected_advice_json, custom_advice_text,
         selected_procedures_json, doctor_profile_json, pad_mode, page_size
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         rec.prescriptionId,
         rec.patientRegNo,
         rec.patientName,
         rec.patientMobile,
+        rec.patientEmail || '',
+        rec.patientRelationPrefix || 'S/o',
+        rec.patientCareOf || '',
+        rec.patientAddress || '',
         rec.patientAge,
         rec.patientGender,
         rec.actionSource,
@@ -218,6 +236,10 @@ export async function getAllPrescriptionsFromSqlite(): Promise<SavedPrescription
           patientRegNo: obj.patient_reg_no,
           patientName: obj.patient_name,
           patientMobile: obj.patient_mobile,
+          patientEmail: obj.patient_email || '',
+          patientRelationPrefix: obj.patient_relation_prefix || 'S/o',
+          patientCareOf: obj.patient_care_of || '',
+          patientAddress: obj.patient_address || '',
           patientAge: obj.patient_age,
           patientGender: obj.patient_gender,
           actionSource: obj.action_source,
@@ -286,6 +308,10 @@ export async function getPatientPrescriptionsFromSqlite(queryKey: string): Promi
           patientRegNo: obj.patient_reg_no,
           patientName: obj.patient_name,
           patientMobile: obj.patient_mobile,
+          patientEmail: obj.patient_email || '',
+          patientRelationPrefix: obj.patient_relation_prefix || 'S/o',
+          patientCareOf: obj.patient_care_of || '',
+          patientAddress: obj.patient_address || '',
           patientAge: obj.patient_age,
           patientGender: obj.patient_gender,
           actionSource: obj.action_source,

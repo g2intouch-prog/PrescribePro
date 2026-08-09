@@ -1847,6 +1847,9 @@ export default function UserWorkspacePage() {
     }
   }, [isHistoryModalOpen]);
 
+  // Active Prescription Session ID (guarantees ONE entry per consultation across print/pdf/whatsapp/email)
+  const [currentPrescriptionId, setCurrentPrescriptionId] = useState<string | null>(null);
+
   // SQLite Prescription History Timeline State
   const [sqliteHistory, setSqliteHistory] = useState<SavedPrescriptionRecord[]>([]);
 
@@ -1864,7 +1867,10 @@ export default function UserWorkspacePage() {
   const autoSavePrescription = async (actionSource: 'print' | 'pdf' | 'whatsapp' | 'email' | 'manual_save') => {
     if (!patient.name || !patient.name.trim()) return;
 
-    const prescriptionId = `RX-${Date.now()}`;
+    const prescriptionId = currentPrescriptionId || `RX-${Date.now()}`;
+    if (!currentPrescriptionId) {
+      setCurrentPrescriptionId(prescriptionId);
+    }
     const nowIso = new Date().toISOString();
 
     const record: SavedPrescriptionRecord = {
@@ -1872,6 +1878,10 @@ export default function UserWorkspacePage() {
       patientRegNo: patient.regNo || `REG-${Date.now().toString().slice(-4)}`,
       patientName: patient.name || 'Patient',
       patientMobile: patient.mobile || '',
+      patientEmail: patient.email || '',
+      patientRelationPrefix: patient.relationPrefix || 'S/o',
+      patientCareOf: patient.careOf || '',
+      patientAddress: patient.address || '',
       patientAge: patient.age || '',
       patientGender: patient.gender || 'Male',
       actionSource,
@@ -1922,6 +1932,20 @@ export default function UserWorkspacePage() {
 
   const handleRestoreSqlitePrescription = (rec: SavedPrescriptionRecord) => {
     try {
+      setCurrentPrescriptionId(rec.prescriptionId);
+      setPatient({
+        regNo: rec.patientRegNo || '',
+        mobile: rec.patientMobile || '',
+        email: rec.patientEmail || '',
+        name: rec.patientName || '',
+        age: rec.patientAge || '',
+        gender: rec.patientGender || 'Male',
+        relationPrefix: rec.patientRelationPrefix || 'S/o',
+        careOf: rec.patientCareOf || '',
+        address: rec.patientAddress || '',
+        allergies: '',
+      });
+
       if (rec.selectedDrugsJson) setSelectedDrugs(JSON.parse(rec.selectedDrugsJson));
       if (rec.selectedTestsJson) setSelectedTests(JSON.parse(rec.selectedTestsJson));
       if (rec.testResultsText) setTestResultsText(rec.testResultsText);
@@ -2222,6 +2246,7 @@ export default function UserWorkspacePage() {
 
   const handleClearForm = () => {
     const nextReg = generateNextPatientRegNo(doctorProfile);
+    setCurrentPrescriptionId(null);
     setPatient({
       regNo: nextReg,
       mobile: '',
@@ -2272,7 +2297,7 @@ export default function UserWorkspacePage() {
     setTimeout(() => setSaveStatus(null), 3000);
   };
 
-  const handleLookupPatient = () => {
+  const handleLookupPatient = async () => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return;
 
@@ -2322,13 +2347,38 @@ export default function UserWorkspacePage() {
 
       setSaveStatus(`Auto-filled record & chronic diseases for ${found.name}`);
       setTimeout(() => setSaveStatus(null), 3000);
-    } else {
-      setSaveStatus(`No record found for "${q}". Enter details for new patient.`);
-      setTimeout(() => setSaveStatus(null), 3000);
+      return;
     }
+
+    // Direct live query across ALL SQLite prescriptions by Reg No, Mobile, or Name
+    try {
+      const sqliteResults = await getPatientPrescriptionsFromSqlite(q);
+      if (sqliteResults && sqliteResults.length > 0) {
+        const latestSqlite = sqliteResults[0];
+        handleRestoreSqlitePrescription(latestSqlite);
+        setSaveStatus(`Found patient history & auto-filled record for ${latestSqlite.patientName}`);
+        setTimeout(() => setSaveStatus(null), 3000);
+        return;
+      }
+    } catch (err) {
+      console.error('Error searching SQLite patient records:', err);
+    }
+
+    setSaveStatus(`No record found for "${q}". Enter details for new patient.`);
+    setTimeout(() => setSaveStatus(null), 3000);
   };
 
   const handleLoadLastRx = () => {
+    // 1. Prioritize restoring the latest SQLite Rx from history
+    if (sqliteHistory && sqliteHistory.length > 0) {
+      const latestRx = sqliteHistory[0];
+      handleRestoreSqlitePrescription(latestRx);
+      setSaveStatus(`Loaded past Rx from ${new Date(latestRx.createdAt).toLocaleDateString('en-GB')} for ${patient.name || 'patient'}!`);
+      setTimeout(() => setSaveStatus(null), 3000);
+      return;
+    }
+
+    // 2. Fallback to preset patient DB
     const q = (patient.mobile || patient.regNo || patient.name).trim().toLowerCase();
     let customDb: PatientRecord[] = [];
     try {
@@ -5891,18 +5941,6 @@ export default function UserWorkspacePage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setPatient({
-                            regNo: rec.patientRegNo || '',
-                            mobile: rec.patientMobile || '',
-                            email: (rec as any).patientEmail || '',
-                            name: rec.patientName || '',
-                            age: rec.patientAge || '',
-                            gender: rec.patientGender || 'Male',
-                            relationPrefix: (rec as any).relationPrefix || 'S/o',
-                            careOf: '',
-                            address: '',
-                            allergies: '',
-                          });
                           handleRestoreSqlitePrescription(rec);
                           setIsHistoryModalOpen(false);
                         }}
