@@ -2397,6 +2397,13 @@ export default function UserWorkspacePage() {
     }
   };
 
+  const handleAddCustomDrugItem = () => {
+    const text = prompt('Enter custom prescription drug line (e.g. Tab. Paracetamol 500mg 1-0-1 for 5 days):');
+    if (text && text.trim()) {
+      setSelectedDrugs([...selectedDrugs, text.trim()]);
+    }
+  };
+
   const handleUpdateDrugItem = (index: number, newText: string) => {
     const updated = [...selectedDrugs];
     updated[index] = newText;
