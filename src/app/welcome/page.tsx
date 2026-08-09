@@ -2436,6 +2436,10 @@ export default function UserWorkspacePage() {
     autoSavePrescription(actionType);
     const printArea = document.getElementById('printable-prescription-pad') || document.getElementById('isolated-print-area');
 
+    const isA5 = pageSize === 'A5';
+    const paperWidth = isA5 ? '148mm' : '210mm';
+    const paperHeight = isA5 ? '210mm' : '297mm';
+
     if (actionType === 'pdf') {
       try {
         const targetPad = printArea || document.body;
@@ -2446,18 +2450,51 @@ export default function UserWorkspacePage() {
 
         const html2pdf = await loadHtml2Pdf();
         if (html2pdf) {
+          // Construct explicit full A4/A5 page wrapper matching print engine exactly
+          const pdfWrapper = document.createElement('div');
+          pdfWrapper.style.width = paperWidth;
+          pdfWrapper.style.height = paperHeight;
+          pdfWrapper.style.minHeight = paperHeight;
+          pdfWrapper.style.maxHeight = paperHeight;
+          pdfWrapper.style.padding = '5mm'; // 5mm outer margin from physical paper boundary
+          pdfWrapper.style.boxSizing = 'border-box';
+          pdfWrapper.style.background = '#ffffff';
+          pdfWrapper.style.color = '#0f172a';
+          pdfWrapper.style.position = 'fixed';
+          pdfWrapper.style.left = '-9999px';
+          pdfWrapper.style.top = '-9999px';
+
+          const innerBox = document.createElement('div');
+          innerBox.className = 'section2-print-container';
+          innerBox.style.width = '100%';
+          innerBox.style.height = '100%';
+          innerBox.style.minHeight = '100%';
+          innerBox.style.boxSizing = 'border-box';
+          innerBox.style.border = '2px solid #1e293b'; // Inset page border 5mm inside physical paper
+          innerBox.style.borderRadius = '6px';
+          innerBox.style.padding = '6mm';
+          innerBox.style.display = 'flex';
+          innerBox.style.flexDirection = 'column';
+          innerBox.style.justifyContent = 'space-between';
+          innerBox.style.background = '#ffffff';
+          innerBox.innerHTML = clonedPad.innerHTML;
+
+          pdfWrapper.appendChild(innerBox);
+          document.body.appendChild(pdfWrapper);
+
           const patientDisplayName = patient.name && patient.name.trim() 
             ? (patient.mobile ? `${patient.name.trim()} (${patient.mobile.trim()})` : patient.name.trim()) 
             : 'Prescription';
           const pdfFilename = `${patientDisplayName}.pdf`;
           const opt = {
-            margin: [4, 4, 4, 4],
+            margin: 0,
             filename: pdfFilename,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
+            html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: isA5 ? 559 : 794 },
             jsPDF: { unit: 'mm', format: pageSize.toLowerCase(), orientation: 'portrait' },
           };
-          await html2pdf().set(opt).from(clonedPad).save();
+          await html2pdf().set(opt).from(pdfWrapper).save();
+          document.body.removeChild(pdfWrapper);
           setSaveStatus('PDF downloaded directly!');
           setTimeout(() => setSaveStatus(null), 3000);
         } else {
@@ -2494,10 +2531,6 @@ export default function UserWorkspacePage() {
       .map((s) => s.outerHTML)
       .join('\n');
 
-    const isA5 = pageSize === 'A5';
-    const paperWidth = isA5 ? '148mm' : '210mm';
-    const paperHeight = isA5 ? '210mm' : '297mm';
-
     const clonedPad = printArea.cloneNode(true) as HTMLElement;
     const hiddenEls = clonedPad.querySelectorAll('.print\\:hidden');
     hiddenEls.forEach((el) => el.remove());
@@ -2520,30 +2553,27 @@ export default function UserWorkspacePage() {
               min-height: ${paperHeight} !important;
               background: white !important;
               color: #0f172a !important;
-              padding: 0 !important;
+              padding: 5mm !important;
               margin: 0 !important;
               font-family: system-ui, -apple-system, sans-serif !important;
               overflow: hidden !important;
               box-sizing: border-box !important;
             }
             .section2-print-container {
-              width: ${paperWidth} !important;
-              height: ${paperHeight} !important;
-              min-height: ${paperHeight} !important;
+              width: 100% !important;
+              height: 100% !important;
+              min-height: 100% !important;
               max-width: none !important;
               aspect-ratio: auto !important;
-              margin: 0 auto !important;
-              padding-top: ${headerMarginMm}mm !important;
-              padding-bottom: ${footerMarginMm}mm !important;
-              padding-left: ${isA5 ? '5mm' : '7mm'} !important;
-              padding-right: ${isA5 ? '5mm' : '7mm'} !important;
+              margin: 0 !important;
+              padding: 6mm !important;
               box-sizing: border-box !important;
               display: flex !important;
               flex-direction: column !important;
               justify-content: space-between !important;
               box-shadow: none !important;
               border: 2px solid #1e293b !important;
-              border-radius: 8px !important;
+              border-radius: 6px !important;
               background: white !important;
               color: #0f172a !important;
               font-size: ${isA5 ? '11.5px' : '13.5px'} !important;
@@ -2555,20 +2585,25 @@ export default function UserWorkspacePage() {
               display: flex !important;
               flex-direction: row !important;
               align-items: stretch !important;
+              flex: 1 1 auto !important;
               width: 100% !important;
-              gap: 12px !important;
-              min-height: 250px !important;
+              gap: 14px !important;
+              min-height: 380px !important;
             }
             .print-left-pane {
               width: 32% !important;
               flex-shrink: 0 !important;
-              border-right: 2px solid #cbd5e1 !important;
-              padding-right: 10px !important;
+              height: 100% !important;
+              align-self: stretch !important;
+              border-right: 2px solid #475569 !important;
+              padding-right: 12px !important;
               box-sizing: border-box !important;
             }
             .print-right-pane {
               width: 68% !important;
               flex-grow: 1 !important;
+              height: 100% !important;
+              align-self: stretch !important;
               padding-left: 6px !important;
               box-sizing: border-box !important;
             }
@@ -3732,67 +3767,93 @@ export default function UserWorkspacePage() {
         }`}>
 
           {/* ULTRA-COMPACT ADAPTIVE TOP CONTROL STRIP (NO HORIZONTAL SCROLL) */}
-          <div className={`px-2 py-1 rounded-xl text-[10px] shrink-0 mb-1.5 border flex flex-wrap items-center justify-between gap-1.5 ${
+          {/* TOP CONTROLS RIBBON: 2-LINE REFACTORED HEADER */}
+          <div className={`p-2 rounded-xl text-[10px] shrink-0 mb-2 border space-y-1.5 ${
             theme === 'day' ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-950 border-gray-800'
           }`}>
-            {/* LEFT SIDE: TITLE + PAPER SIZE + PAD MODE */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <div className={`flex items-center gap-1 font-bold text-xs ${theme === 'day' ? 'text-blue-700' : 'text-emerald-400'}`}>
-                <FileSpreadsheet className="h-3.5 w-3.5" />
-                <span className="font-extrabold text-[11px] whitespace-nowrap">Section 2</span>
+            {/* LINE 1: TITLE (LEFT), LIVE DAY/DATE/TIME BADGE (MIDDLE), SAVE TEMPLATE BUTTON (RIGHT ALIGNED) */}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className={`flex items-center gap-1.5 font-bold text-xs ${theme === 'day' ? 'text-blue-700' : 'text-emerald-400'}`}>
+                <FileSpreadsheet className="h-4 w-4" />
+                <span className="font-extrabold text-[12px]">Section 2: Editable Prescription Preview</span>
               </div>
 
-              {/* PAPER SIZE TOGGLE */}
-              <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700 text-[9.5px]">
-                <button
-                  type="button"
-                  onClick={() => handleSetPageSize('A4')}
-                  className={`px-1.5 py-0.5 rounded text-[9.5px] font-extrabold transition ${
-                    pageSize === 'A4' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                  title="A4 Standard (210mm x 297mm)"
-                >
-                  📄 A4
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSetPageSize('A5')}
-                  className={`px-1.5 py-0.5 rounded text-[9.5px] font-extrabold transition ${
-                    pageSize === 'A5' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                  title="A5 Compact (148mm x 210mm)"
-                >
-                  📃 A5
-                </button>
-              </div>
+              <div className="flex items-center gap-2 ml-auto">
+                {/* BUTTON-LIKE LIVE DAY, DATE & TIME BOX */}
+                <div className={`px-2.5 py-1 rounded-xl border text-[10px] font-mono font-extrabold shadow-sm flex items-center gap-1.5 ${
+                  theme === 'day' 
+                    ? 'bg-white border-slate-300 text-slate-800' 
+                    : 'bg-slate-900 border-slate-700 text-emerald-400'
+                }`}>
+                  <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-emerald-400 shrink-0" />
+                  <span>{new Date().toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                </div>
 
-              {/* PAD MODE TOGGLE */}
-              <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700 text-[9.5px]">
+                {/* SAVE TEMPLATE BUTTON (RIGHT ALIGNED ON LINE 1) */}
                 <button
                   type="button"
-                  onClick={() => setPadMode('digital')}
-                  className={`px-1.5 py-0.5 rounded text-[9.5px] font-bold transition ${
-                    padMode === 'digital' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
+                  onClick={handleSaveCurrentAsTemplate}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-pink-600 text-white text-[10px] font-extrabold shadow-md hover:bg-pink-700 transition shrink-0 active:scale-95"
+                  title="Save Current Prescription as Template"
                 >
-                  Digital
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPadMode('preprinted')}
-                  className={`px-1.5 py-0.5 rounded text-[9.5px] font-bold transition ${
-                    padMode === 'preprinted' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  Pre-printed
+                  <BookmarkPlus className="h-3.5 w-3.5" /> Save Template
                 </button>
               </div>
             </div>
 
-            {/* RIGHT SIDE: MARGIN CONTROLS + SAVE TEMPLATE */}
-            <div className="flex items-center gap-1.5 flex-wrap text-[9.5px]">
-              <div className="flex items-center gap-1 bg-slate-200/60 dark:bg-slate-900 px-1.5 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
-                <span className="text-slate-600 font-extrabold" title="Top Letterhead Page Margin (mm)">Top:</span>
+            {/* LINE 2: PAGE SETUP & MARGIN CONTROLS */}
+            <div className="flex items-center justify-between gap-2 flex-wrap text-[9.5px] pt-1 border-t border-slate-200/80 dark:border-slate-800">
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* PAPER SIZE TOGGLE */}
+                <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => handleSetPageSize('A4')}
+                    className={`px-2 py-0.5 rounded text-[9.5px] font-extrabold transition ${
+                      pageSize === 'A4' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                    title="A4 Standard (210mm x 297mm)"
+                  >
+                    📄 A4
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetPageSize('A5')}
+                    className={`px-2 py-0.5 rounded text-[9.5px] font-extrabold transition ${
+                      pageSize === 'A5' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                    title="A5 Compact (148mm x 210mm)"
+                  >
+                    📃 A5
+                  </button>
+                </div>
+
+                {/* PAD MODE TOGGLE */}
+                <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setPadMode('digital')}
+                    className={`px-2 py-0.5 rounded text-[9.5px] font-bold transition ${
+                      padMode === 'digital' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    Digital Header
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPadMode('preprinted')}
+                    className={`px-2 py-0.5 rounded text-[9.5px] font-bold transition ${
+                      padMode === 'preprinted' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    Pre-printed Paper
+                  </button>
+                </div>
+              </div>
+
+              {/* PAGE MARGIN & FOOTER HEIGHT INPUTS */}
+              <div className="flex items-center gap-1.5 bg-slate-200/60 dark:bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
+                <span className="text-slate-600 dark:text-slate-400 font-extrabold" title="Top Letterhead Page Margin (mm)">Top:</span>
                 <input
                   type="number"
                   min={0}
@@ -3813,7 +3874,7 @@ export default function UserWorkspacePage() {
 
                 <span className="text-slate-400 px-0.5">|</span>
 
-                <span className="text-slate-600 font-extrabold" title="Bottom Letterhead Page Margin (mm)">Btm:</span>
+                <span className="text-slate-600 dark:text-slate-400 font-extrabold" title="Bottom Letterhead Page Margin (mm)">Btm:</span>
                 <input
                   type="number"
                   min={0}
@@ -3834,7 +3895,7 @@ export default function UserWorkspacePage() {
 
                 <span className="text-slate-400 px-0.5">|</span>
 
-                <span className="text-slate-600 font-extrabold" title="Footer Image Banner Height (px)">Footer Ht:</span>
+                <span className="text-slate-600 dark:text-slate-400 font-extrabold" title="Footer Image Banner Height (px)">Footer Ht:</span>
                 <input
                   type="number"
                   min={18}
@@ -3852,15 +3913,6 @@ export default function UserWorkspacePage() {
                 />
                 <span className="text-slate-500 font-mono text-[9px]">px</span>
               </div>
-
-              <button
-                type="button"
-                onClick={handleSaveCurrentAsTemplate}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-pink-600 text-white text-[9.5px] font-extrabold shadow hover:bg-pink-700 transition shrink-0"
-                title="Save Template"
-              >
-                <BookmarkPlus className="h-3 w-3" /> Save Template
-              </button>
             </div>
           </div>
 
@@ -3877,7 +3929,8 @@ export default function UserWorkspacePage() {
           {/* CENTERED LIVE PRESCRIPTION PAD PREVIEW CARD (A4 / A5 DYNAMIC PORTRAIT MODE) */}
           <div
             id="printable-prescription-pad"
-            className={`flex-1 bg-white text-gray-900 rounded-2xl p-3 sm:p-4 shadow-2xl space-y-3 font-sans border-2 border-slate-800 dark:border-slate-600 overflow-y-auto flex flex-col justify-between w-full max-w-full lg:mx-auto transition-all duration-300 ${
+            style={{ borderStyle: 'double' }}
+            className={`flex-1 bg-white text-gray-900 rounded-2xl p-3 sm:p-4 shadow-2xl space-y-3 font-sans border-4 border-emerald-600 overflow-y-auto flex flex-col justify-between w-full max-w-full lg:mx-auto transition-all duration-300 ${
               pageSize === 'A5'
                 ? 'lg:aspect-[148/210] lg:max-w-[440px] text-[10px]'
                 : 'lg:aspect-[210/297] lg:max-w-[560px] text-[11px]'
