@@ -2492,59 +2492,30 @@ export default function UserWorkspacePage() {
 
     if (actionType === 'pdf') {
       try {
-        const targetPad = printArea || document.body;
-        const clonedPad = targetPad.cloneNode(true) as HTMLElement;
-        const hiddenEls = clonedPad.querySelectorAll('.print\\:hidden');
-        hiddenEls.forEach((el) => el.remove());
-        clonedPad.classList.remove('hidden');
+        const targetPad = printArea || document.getElementById('printable-prescription-pad');
+        if (!targetPad) throw new Error('Prescription pad element not found');
 
         const html2pdf = await loadHtml2Pdf();
         if (html2pdf) {
-          // Construct explicit full A4/A5 page wrapper matching print engine exactly
-          const pdfWrapper = document.createElement('div');
-          pdfWrapper.style.width = paperWidth;
-          pdfWrapper.style.height = paperHeight;
-          pdfWrapper.style.minHeight = paperHeight;
-          pdfWrapper.style.maxHeight = paperHeight;
-          pdfWrapper.style.padding = '5mm'; // 5mm outer margin from physical paper boundary
-          pdfWrapper.style.boxSizing = 'border-box';
-          pdfWrapper.style.background = '#ffffff';
-          pdfWrapper.style.color = '#0f172a';
-          pdfWrapper.style.position = 'fixed';
-          pdfWrapper.style.left = '-9999px';
-          pdfWrapper.style.top = '-9999px';
-
-          const innerBox = document.createElement('div');
-          innerBox.className = 'section2-print-container';
-          innerBox.style.width = '100%';
-          innerBox.style.height = '100%';
-          innerBox.style.minHeight = '100%';
-          innerBox.style.boxSizing = 'border-box';
-          innerBox.style.border = '2px solid #1e293b'; // Inset page border 5mm inside physical paper
-          innerBox.style.borderRadius = '6px';
-          innerBox.style.padding = '6mm';
-          innerBox.style.display = 'flex';
-          innerBox.style.flexDirection = 'column';
-          innerBox.style.justifyContent = 'space-between';
-          innerBox.style.background = '#ffffff';
-          innerBox.innerHTML = clonedPad.innerHTML;
-
-          pdfWrapper.appendChild(innerBox);
-          document.body.appendChild(pdfWrapper);
-
           const patientDisplayName = patient.name && patient.name.trim() 
             ? (patient.mobile ? `${patient.name.trim()} (${patient.mobile.trim()})` : patient.name.trim()) 
             : 'Prescription';
           const pdfFilename = `${patientDisplayName}.pdf`;
           const opt = {
-            margin: 0,
+            margin: [3, 3, 3, 3],
             filename: pdfFilename,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: isA5 ? 559 : 794 },
+            html2canvas: { 
+              scale: 2, 
+              useCORS: true, 
+              logging: false,
+              backgroundColor: '#ffffff',
+              scrollX: 0,
+              scrollY: 0,
+            },
             jsPDF: { unit: 'mm', format: pageSize.toLowerCase(), orientation: 'portrait' },
           };
-          await html2pdf().set(opt).from(pdfWrapper).save();
-          document.body.removeChild(pdfWrapper);
+          await html2pdf().set(opt).from(targetPad).save();
           setSaveStatus('PDF downloaded directly!');
           setTimeout(() => setSaveStatus(null), 3000);
         } else {
