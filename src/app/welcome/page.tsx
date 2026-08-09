@@ -3892,26 +3892,6 @@ export default function UserWorkspacePage() {
                   title="Bottom Letterhead Page Margin (in mm)"
                 />
                 <span className="text-slate-500 font-mono text-[9px]">mm</span>
-
-                <span className="text-slate-400 px-0.5">|</span>
-
-                <span className="text-slate-600 dark:text-slate-400 font-extrabold" title="Footer Image Banner Height (px)">Footer Ht:</span>
-                <input
-                  type="number"
-                  min={18}
-                  max={120}
-                  value={footerImgHeight}
-                  onChange={(e) => {
-                    const val = Math.min(120, Math.max(18, parseInt(e.target.value) || 45));
-                    setFooterImgHeight(val);
-                    localStorage.setItem('prescribepro_footer_img_height', String(val));
-                  }}
-                  className={`w-10 sm:w-11 px-1 py-0.5 rounded border text-center font-mono font-black text-purple-600 text-xs ${
-                    theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-purple-400'
-                  }`}
-                  title="Footer Banner Height (in pixels)"
-                />
-                <span className="text-slate-500 font-mono text-[9px]">px</span>
               </div>
             </div>
           </div>
