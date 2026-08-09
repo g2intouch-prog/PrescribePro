@@ -103,24 +103,34 @@ body {
   }
 
   /* 2-COLUMN SIDE-BY-SIDE FLEX PRINT ENGINE */
+  .print-grid,
+  #printable-prescription-pad .print-grid,
   #isolated-print-area .print-grid {
     display: flex !important;
     flex-direction: row !important;
-    align-items: flex-start !important;
+    align-items: stretch !important;
     width: 100% !important;
     gap: 12px !important;
+    min-height: 250px !important;
   }
 
+  .print-left-pane,
+  #printable-prescription-pad .print-left-pane,
   #isolated-print-area .print-left-pane {
     width: 32% !important;
     flex-shrink: 0 !important;
-    border-right: 1px dashed #cbd5e1 !important;
+    border-right: 2px solid #cbd5e1 !important;
     padding-right: 10px !important;
+    box-sizing: border-box !important;
   }
 
+  .print-right-pane,
+  #printable-prescription-pad .print-right-pane,
   #isolated-print-area .print-right-pane {
     width: 68% !important;
     flex-grow: 1 !important;
     padding-left: 6px !important;
+    box-sizing: border-box !important;
   }
 }
+

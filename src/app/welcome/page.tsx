@@ -1657,6 +1657,7 @@ export default function UserWorkspacePage() {
   const [patient, setPatient] = useState({
     regNo: '',
     mobile: '',
+    email: '',
     name: '',
     age: '',
     gender: 'Male',
@@ -1743,6 +1744,9 @@ export default function UserWorkspacePage() {
   const [headerMarginMm, setHeaderMarginMm] = useState<number>(35);
   const [footerMarginMm, setFooterMarginMm] = useState<number>(10);
   const [footerImgHeight, setFooterImgHeight] = useState<number>(45);
+  const [headerImgHeight, setHeaderImgHeight] = useState<number>(65);
+  const [headerImgFit, setHeaderImgFit] = useState<'fill' | 'cover' | 'contain'>('fill');
+  const [footerImgFit, setFooterImgFit] = useState<'fill' | 'cover' | 'contain'>('fill');
 
   // Active Left Sub-Tab
   const [activeLeftTab, setActiveLeftTab] = useState<'patient' | 'vitals' | 'clinical' | 'procedures' | 'tests' | 'advice'>('patient');
@@ -2003,6 +2007,18 @@ export default function UserWorkspacePage() {
       if (savedFooterImgHeight) {
         setFooterImgHeight(Number(savedFooterImgHeight) || 45);
       }
+      const savedHeaderImgHeight = localStorage.getItem('prescribepro_header_img_height');
+      if (savedHeaderImgHeight) {
+        setHeaderImgHeight(Number(savedHeaderImgHeight) || 65);
+      }
+      const savedHeaderImgFit = localStorage.getItem('prescribepro_header_img_fit');
+      if (savedHeaderImgFit) {
+        setHeaderImgFit(savedHeaderImgFit as any);
+      }
+      const savedFooterImgFit = localStorage.getItem('prescribepro_footer_img_fit');
+      if (savedFooterImgFit) {
+        setFooterImgFit(savedFooterImgFit as any);
+      }
 
       const specs = getSpecialties();
       setSpecialties(specs);
@@ -2108,6 +2124,14 @@ export default function UserWorkspacePage() {
     });
   };
 
+  const handleAdjustHeaderHeight = (delta: number) => {
+    setHeaderImgHeight((prev) => {
+      const next = Math.min(160, Math.max(20, prev + delta));
+      localStorage.setItem('prescribepro_header_img_height', String(next));
+      return next;
+    });
+  };
+
   const handleAddCustomTest = (e: React.FormEvent) => {
     e.preventDefault();
     const testName = newCustomTestInput.trim();
@@ -2200,6 +2224,7 @@ export default function UserWorkspacePage() {
     setPatient({
       regNo: nextReg,
       mobile: '',
+      email: '',
       name: '',
       age: '',
       gender: 'Male',
@@ -2267,6 +2292,7 @@ export default function UserWorkspacePage() {
       setPatient({
         regNo: found.regNo,
         mobile: found.mobile,
+        email: (found as any).email || '',
         name: found.name,
         age: found.age,
         gender: found.gender,
@@ -2382,16 +2408,54 @@ export default function UserWorkspacePage() {
     setSelectedDrugs(updated);
   };
 
-  const handleAddCustomDrugItem = () => {
-    setSelectedDrugs([...selectedDrugs, 'Tab. Custom Generic Medication (1-0-1 after food) x 5 days']);
+  const loadHtml2Pdf = async () => {
+    if (typeof window === 'undefined') return null;
+    if ((window as any).html2pdf) return (window as any).html2pdf;
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.onload = () => resolve((window as any).html2pdf);
+      script.onerror = () => resolve(null);
+      document.body.appendChild(script);
+    });
   };
 
-  const handlePrint = (actionType: 'print' | 'pdf' = 'print') => {
+  const handlePrint = async (actionType: 'print' | 'pdf' = 'print') => {
     autoSavePrescription(actionType);
-    const printArea = document.getElementById('printable-prescription-pad');
+    const printArea = document.getElementById('printable-prescription-pad') || document.getElementById('isolated-print-area');
     if (!printArea) {
       window.print();
       return;
+    }
+
+    if (actionType === 'pdf') {
+      try {
+        const clonedPad = printArea.cloneNode(true) as HTMLElement;
+        const hiddenEls = clonedPad.querySelectorAll('.print\\:hidden');
+        hiddenEls.forEach((el) => el.remove());
+        clonedPad.classList.remove('hidden');
+
+        const html2pdf = await loadHtml2Pdf();
+        if (html2pdf) {
+          const patientDisplayName = patient.name && patient.name.trim() 
+            ? (patient.mobile ? `${patient.name.trim()} (${patient.mobile.trim()})` : patient.name.trim()) 
+            : 'Prescription';
+          const pdfFilename = `${patientDisplayName}.pdf`;
+          const opt = {
+            margin: [4, 4, 4, 4],
+            filename: pdfFilename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: pageSize.toLowerCase(), orientation: 'portrait' },
+          };
+          await html2pdf().set(opt).from(clonedPad).save();
+          setSaveStatus('PDF downloaded directly!');
+          setTimeout(() => setSaveStatus(null), 3000);
+          return;
+        }
+      } catch (err) {
+        console.error('Direct PDF download error:', err);
+      }
     }
 
     const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -2415,18 +2479,19 @@ export default function UserWorkspacePage() {
     const paperWidth = isA5 ? '148mm' : '210mm';
     const paperHeight = isA5 ? '210mm' : '297mm';
 
-    // Clone Section 2 live canvas DOM node
     const clonedPad = printArea.cloneNode(true) as HTMLElement;
-    
-    // Remove UI interactive action buttons from cloned document
     const hiddenEls = clonedPad.querySelectorAll('.print\\:hidden');
     hiddenEls.forEach((el) => el.remove());
+
+    const patientDisplayName = patient.name && patient.name.trim() 
+      ? (patient.mobile ? `${patient.name.trim()} (${patient.mobile.trim()})` : patient.name.trim()) 
+      : 'Patient';
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Prescription Pad (${pageSize}) - ${patient.name || 'Patient'}</title>
+          <title>${patientDisplayName}.pdf</title>
           ${styles}
           <style>
             @page { size: ${pageSize} portrait; margin: 0; }
@@ -2467,6 +2532,27 @@ export default function UserWorkspacePage() {
             .section2-print-container * {
               visibility: visible !important;
             }
+            .print-grid {
+              display: flex !important;
+              flex-direction: row !important;
+              align-items: stretch !important;
+              width: 100% !important;
+              gap: 12px !important;
+              min-height: 250px !important;
+            }
+            .print-left-pane {
+              width: 32% !important;
+              flex-shrink: 0 !important;
+              border-right: 2px solid #cbd5e1 !important;
+              padding-right: 10px !important;
+              box-sizing: border-box !important;
+            }
+            .print-right-pane {
+              width: 68% !important;
+              flex-grow: 1 !important;
+              padding-left: 6px !important;
+              box-sizing: border-box !important;
+            }
             [contenteditable] { outline: none !important; }
           </style>
         </head>
@@ -2489,11 +2575,10 @@ export default function UserWorkspacePage() {
   const calcBmi = () => {
     const h = parseFloat(vitals.height) / 100;
     const w = parseFloat(vitals.weight);
-    if (h > 0 && w > 0) return (w / (h * h)).toFixed(1);
-    return '--';
+    if (!h || !w) return '—';
+    return (w / (h * h)).toFixed(1);
   };
 
-  // Apply Template
   const applyTemplate = (tpl: PrescriptionTemplate) => {
     if (tpl.complaints) {
       const ccStr = Array.isArray(tpl.complaints) ? tpl.complaints.join(', ') : tpl.complaints;
@@ -2648,20 +2733,26 @@ export default function UserWorkspacePage() {
 
   const handleWhatsAppSend = () => {
     autoSavePrescription('whatsapp');
-    const phone = patient.mobile.replace(/[^0-9]/g, '') || '919876543210';
+    let phone = patient.mobile.replace(/[^0-9]/g, '');
+    if (phone.length === 10) {
+      phone = '91' + phone;
+    }
+    const patientDisplayName = patient.name ? (patient.mobile ? `${patient.name} (${patient.mobile})` : patient.name) : 'Patient';
     const text = encodeURIComponent(
-      `*PrescribePro Prescription Summary*\nPatient: ${patient.name} (${patient.regNo})\nRx Medications: ${selectedDrugs.join(', ')}\nDiagnostics: ${selectedTests.join(', ')}\nAdvice: ${selectedAdvice.join(', ')}\n\nView Digital Prescription at: https://prescribepro.vercel.app/`
+      `*PrescribePro Prescription Summary*\nPatient: ${patientDisplayName}\nRx Medications: ${selectedDrugs.join(', ')}\nDiagnostics: ${selectedTests.join(', ')}\nAdvice: ${selectedAdvice.join(', ')}\n\nView Digital Prescription at: https://prescribepro.vercel.app/`
     );
-    window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+    window.location.href = `whatsapp://send?phone=${phone}&text=${text}`;
   };
 
   const handleEmailSend = () => {
     autoSavePrescription('email');
-    const subject = encodeURIComponent(`Prescription Summary - ${patient.name} (${patient.regNo})`);
+    const receiverEmail = patient.email ? patient.email.trim() : '';
+    const patientDisplayName = patient.name ? (patient.mobile ? `${patient.name} (${patient.mobile})` : patient.name) : 'Patient';
+    const subject = encodeURIComponent(`Prescription Summary - ${patientDisplayName}`);
     const body = encodeURIComponent(
-      `PrescribePro Prescription Summary\n\nPatient Name: ${patient.name}\nReg No: ${patient.regNo}\nVitals: Ht ${vitals.height}cm, Wt ${vitals.weight}kg, BP ${vitals.bp}\n\nRx Medications:\n${selectedDrugs.join('\n')}\n\nRecommended Tests:\n${selectedTests.join('\n')}\n\nTest Results:\n${testResultsText}\n\nAdvice:\n${selectedAdvice.join('\n')}\n${customAdviceText}`
+      `PrescribePro Prescription Summary\n\nPatient: ${patientDisplayName}\nReg No: ${patient.regNo || 'N/A'}\nVitals: Ht ${vitals.height || '—'}cm, Wt ${vitals.weight || '—'}kg, BP ${vitals.bp || '—'}\n\nRx Medications:\n${selectedDrugs.length > 0 ? selectedDrugs.join('\n') : 'None'}\n\nRecommended Tests:\n${selectedTests.length > 0 ? selectedTests.join('\n') : 'None'}\n\nTest Results:\n${testResultsText || 'None'}\n\nAdvice:\n${selectedAdvice.join('\n')}\n${customAdviceText}`
     );
-    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+    window.location.href = `mailto:${receiverEmail}?subject=${subject}&body=${body}`;
   };
 
   if (loading) {
@@ -3052,6 +3143,17 @@ export default function UserWorkspacePage() {
                         className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className={`text-[10px] block mb-0.5 ${theme === 'day' ? 'text-slate-600 font-medium' : 'text-gray-400'}`}>Patient Email (for direct sharing)</label>
+                    <input
+                      type="email"
+                      value={patient.email || ''}
+                      onChange={(e) => setPatient({ ...patient, email: e.target.value })}
+                      placeholder="patient@example.com"
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                    />
                   </div>
 
                   <div>
@@ -3736,18 +3838,54 @@ export default function UserWorkspacePage() {
               {padMode === 'digital' ? (
                 headerImg ? (
                   <div className="relative border-b border-gray-200 pb-1 mb-2">
-                    <img src={headerImg} alt="Clinic Header" className="w-full h-12 object-contain" />
-                    <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition rounded flex items-center justify-center gap-2 print:hidden">
-                      <label className="px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-lg cursor-pointer shadow hover:bg-emerald-500">
-                        🖼️ Change Header Logo
+                    <img
+                      src={headerImg}
+                      alt="Clinic Header"
+                      style={{ height: `${headerImgHeight}px` }}
+                      className={`w-full max-h-[140px] transition-all duration-150 ${
+                        headerImgFit === 'fill' ? 'object-fill' : headerImgFit === 'cover' ? 'object-cover' : 'object-contain'
+                      }`}
+                    />
+                    <div className="absolute inset-0 bg-slate-900/75 opacity-0 group-hover:opacity-100 transition rounded flex items-center justify-center gap-1.5 print:hidden p-1">
+                      <button
+                        type="button"
+                        onClick={() => handleAdjustHeaderHeight(-5)}
+                        className="px-2 py-0.5 bg-slate-700 text-white text-[9px] font-bold rounded hover:bg-slate-600"
+                        title="Decrease Header Height"
+                      >
+                        - Ht
+                      </button>
+                      <span className="text-[9px] text-emerald-300 font-mono font-bold">{headerImgHeight}px</span>
+                      <button
+                        type="button"
+                        onClick={() => handleAdjustHeaderHeight(5)}
+                        className="px-2 py-0.5 bg-slate-700 text-white text-[9px] font-bold rounded hover:bg-slate-600"
+                        title="Increase Header Height"
+                      >
+                        + Ht
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextFit = headerImgFit === 'fill' ? 'cover' : headerImgFit === 'cover' ? 'contain' : 'fill';
+                          setHeaderImgFit(nextFit);
+                          localStorage.setItem('prescribepro_header_img_fit', nextFit);
+                        }}
+                        className="px-2 py-0.5 bg-purple-600 text-white text-[9px] font-bold rounded hover:bg-purple-500 capitalize"
+                        title="Toggle Fit: Stretch (Fill), Cover, Contain"
+                      >
+                        Fit: {headerImgFit}
+                      </button>
+                      <label className="px-2 py-0.5 bg-emerald-600 text-white text-[9px] font-bold rounded cursor-pointer hover:bg-emerald-500">
+                        🖼️ Change
                         <input type="file" accept="image/*" onChange={handleHeaderImageUpload} className="hidden" />
                       </label>
                       <button
                         type="button"
                         onClick={handleRemoveHeaderImage}
-                        className="px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded-lg shadow hover:bg-red-500"
+                        className="px-2 py-0.5 bg-red-600 text-white text-[9px] font-bold rounded hover:bg-red-500"
                       >
-                        ✕ Remove
+                        ✕
                       </button>
                     </div>
                   </div>
@@ -3780,6 +3918,7 @@ export default function UserWorkspacePage() {
                 <div><strong>Reg No:</strong> {patient.regNo}</div>
                 <div><strong>Age/Sex:</strong> {patient.age} Yrs / {patient.gender}</div>
                 <div><strong>Mobile:</strong> {patient.mobile}</div>
+                {patient.email && <div className="col-span-2"><strong>Email:</strong> {patient.email}</div>}
               </div>
             </div>
 
@@ -4392,7 +4531,9 @@ export default function UserWorkspacePage() {
                         src={footerImg}
                         alt="Clinic Footer Banner"
                         style={{ height: `${footerImgHeight}px` }}
-                        className="w-full object-contain object-left max-h-[120px] transition-all duration-150"
+                        className={`w-full max-h-[120px] transition-all duration-150 ${
+                          footerImgFit === 'fill' ? 'object-fill' : footerImgFit === 'cover' ? 'object-cover' : 'object-contain'
+                        }`}
                       />
                       <div className="absolute inset-0 bg-slate-900/75 opacity-0 group-hover:opacity-100 transition rounded-lg flex items-center justify-center gap-1.5 print:hidden p-1">
                         <button
@@ -4411,6 +4552,18 @@ export default function UserWorkspacePage() {
                           title="Increase Banner Height"
                         >
                           + Ht
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextFit = footerImgFit === 'fill' ? 'cover' : footerImgFit === 'cover' ? 'contain' : 'fill';
+                            setFooterImgFit(nextFit);
+                            localStorage.setItem('prescribepro_footer_img_fit', nextFit);
+                          }}
+                          className="px-2 py-0.5 bg-purple-600 text-white text-[9px] font-bold rounded hover:bg-purple-500 capitalize"
+                          title="Toggle Fit: Stretch (Fill), Cover, Contain"
+                        >
+                          Fit: {footerImgFit}
                         </button>
                         <label className="px-2 py-0.5 bg-emerald-600 text-white text-[9px] font-bold rounded cursor-pointer hover:bg-emerald-500">
                           🖼️ Change
@@ -5639,6 +5792,7 @@ export default function UserWorkspacePage() {
                           setPatient({
                             regNo: rec.patientRegNo || '',
                             mobile: rec.patientMobile || '',
+                            email: (rec as any).patientEmail || '',
                             name: rec.patientName || '',
                             age: rec.patientAge || '',
                             gender: rec.patientGender || 'Male',
@@ -7098,7 +7252,14 @@ export default function UserWorkspacePage() {
           {/* DIGITAL CLINIC HEADER */}
           {padMode === 'digital' && (
             headerImg ? (
-              <img src={headerImg} alt="Clinic Header" className="w-full h-16 object-contain mb-3" />
+              <img
+                src={headerImg}
+                alt="Clinic Header"
+                style={{ height: `${headerImgHeight}px` }}
+                className={`w-full mb-3 ${
+                  headerImgFit === 'fill' ? 'object-fill' : headerImgFit === 'cover' ? 'object-cover' : 'object-contain'
+                }`}
+              />
             ) : (
               <div className="border-b-2 border-slate-900 pb-3 mb-3 text-center">
                 <h1 className="text-xl font-extrabold text-slate-900 tracking-tight uppercase">
@@ -7119,7 +7280,7 @@ export default function UserWorkspacePage() {
           <div className="bg-slate-100 p-2.5 rounded-lg border border-slate-300 mb-3 grid grid-cols-4 gap-2 text-[11px]">
             <div><strong>Patient Name:</strong> {patient.name || '—'}</div>
             <div><strong>Age / Sex:</strong> {patient.age || '—'} Y / {patient.gender || '—'}</div>
-            <div><strong>Weight / Height:</strong> {vitals.weight ? `${vitals.weight} kg` : '—'} / {vitals.height ? `${vitals.height} cm` : '—'}</div>
+            <div><strong>Mobile:</strong> {patient.mobile || '—'}</div>
             <div><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</div>
           </div>
 
@@ -7133,9 +7294,9 @@ export default function UserWorkspacePage() {
           </div>
 
           {/* 2-COLUMN SIDE-BY-SIDE FLEX PRINT ENGINE */}
-          <div className="print-grid w-full">
+          <div className="print-grid w-full flex flex-row items-stretch gap-4 min-h-[250px]">
             {/* LEFT COLUMN: LABS & PROCEDURES */}
-            <div className="print-left-pane">
+            <div className="print-left-pane w-[32%] shrink-0 border-r-2 border-slate-300 pr-3 flex flex-col justify-start">
               {selectedTests.length > 0 && (
                 <div className="mb-4">
                   <h4 className="font-bold text-slate-900 text-xs border-b pb-1 mb-1 uppercase tracking-wider">🔬 Diagnostic Tests & Labs</h4>
@@ -7223,7 +7384,9 @@ export default function UserWorkspacePage() {
                     src={footerImg}
                     alt="Clinic Footer Banner"
                     style={{ height: `${footerImgHeight}px` }}
-                    className="w-full object-contain object-left max-h-[120px]"
+                    className={`w-full max-h-[120px] ${
+                      footerImgFit === 'fill' ? 'object-fill' : footerImgFit === 'cover' ? 'object-cover' : 'object-contain'
+                    }`}
                   />
                 </div>
                 <div className="text-right text-slate-900 space-y-0.5 shrink-0">
