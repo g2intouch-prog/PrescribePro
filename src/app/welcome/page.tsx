@@ -2591,7 +2591,7 @@ export default function UserWorkspacePage() {
               max-height: ${paperHeight} !important;
               background: white !important;
               color: #0f172a !important;
-              padding: 3mm !important;
+              padding: 0 !important;
               margin: 0 !important;
               font-family: system-ui, -apple-system, sans-serif !important;
               overflow: hidden !important;
@@ -2599,7 +2599,7 @@ export default function UserWorkspacePage() {
             }
             .section2-print-container {
               width: 100% !important;
-              height: calc(100% - 2mm) !important;
+              height: 100% !important;
               max-height: 100% !important;
               max-width: none !important;
               aspect-ratio: auto !important;
@@ -2616,6 +2616,8 @@ export default function UserWorkspacePage() {
               color: #0f172a !important;
               font-size: ${isA5 ? '11px' : '12.5px'} !important;
               overflow: hidden !important;
+              break-after: avoid !important;
+              page-break-after: avoid !important;
             }
             .section2-print-container * {
               visibility: visible !important;
@@ -3888,15 +3890,15 @@ export default function UserWorkspacePage() {
               </div>
             </div>
 
-            {/* LINE 2: PAGE SETUP & MARGIN CONTROLS */}
-            <div className="flex items-center justify-between gap-2 flex-wrap text-[9.5px] pt-1 border-t border-slate-200/80 dark:border-slate-800">
-              <div className="flex items-center gap-2 flex-wrap">
+            {/* LINE 2: ALL PAGE SETUP & MARGIN CONTROLS CONSOLIDATED IN 1 STREAMLINED LINE */}
+            <div className="flex items-center justify-between gap-1.5 flex-wrap text-[9px] pt-1 border-t border-slate-200/80 dark:border-slate-800">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 {/* PAPER SIZE TOGGLE */}
-                <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
+                <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700 shrink-0">
                   <button
                     type="button"
                     onClick={() => handleSetPageSize('A4')}
-                    className={`px-2 py-0.5 rounded text-[9.5px] font-extrabold transition ${
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold transition ${
                       pageSize === 'A4' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                     }`}
                     title="A4 Standard (210mm x 297mm)"
@@ -3906,7 +3908,7 @@ export default function UserWorkspacePage() {
                   <button
                     type="button"
                     onClick={() => handleSetPageSize('A5')}
-                    className={`px-2 py-0.5 rounded text-[9.5px] font-extrabold transition ${
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold transition ${
                       pageSize === 'A5' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                     }`}
                     title="A5 Compact (148mm x 210mm)"
@@ -3916,11 +3918,11 @@ export default function UserWorkspacePage() {
                 </div>
 
                 {/* PAD MODE TOGGLE */}
-                <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
+                <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300 dark:border-slate-700 shrink-0">
                   <button
                     type="button"
                     onClick={() => setPadMode('digital')}
-                    className={`px-2 py-0.5 rounded text-[9.5px] font-bold transition ${
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition ${
                       padMode === 'digital' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                     }`}
                   >
@@ -3929,7 +3931,7 @@ export default function UserWorkspacePage() {
                   <button
                     type="button"
                     onClick={() => setPadMode('preprinted')}
-                    className={`px-2 py-0.5 rounded text-[9.5px] font-bold transition ${
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition ${
                       padMode === 'preprinted' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                     }`}
                   >
@@ -3937,7 +3939,7 @@ export default function UserWorkspacePage() {
                   </button>
                 </div>
 
-                {/* PATIENT DEMOGRAPHICS CHECKBOX (SIDE BY SIDE WITH SECOND TOGGLE) */}
+                {/* PATIENT DEMOGRAPHICS CHECKBOX */}
                 <label
                   className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[8.5px] font-extrabold cursor-pointer transition select-none bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white whitespace-nowrap shrink-0"
                   title="Uncheck to hide Patient Demographics Header (Name, Age, Sex, Reg No, Date) if registration details are pre-printed"
@@ -3959,8 +3961,8 @@ export default function UserWorkspacePage() {
               </div>
 
               {/* PAGE MARGIN & FOOTER HEIGHT INPUTS */}
-              <div className="flex items-center gap-1.5 bg-slate-200/60 dark:bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700">
-                <span className="text-slate-600 dark:text-slate-400 font-extrabold" title="Top Letterhead Page Margin (mm)">Top:</span>
+              <div className="flex items-center gap-1 bg-slate-200/60 dark:bg-slate-900 px-1.5 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 shrink-0 ml-auto">
+                <span className="text-slate-600 dark:text-slate-400 font-extrabold text-[8.5px]" title="Top Letterhead Page Margin (mm)">Top:</span>
                 <input
                   type="number"
                   min={0}
@@ -3972,16 +3974,16 @@ export default function UserWorkspacePage() {
                     const p = getAdminPresets();
                     saveAdminPresets({ ...p, headerMarginMm: val });
                   }}
-                  className={`w-10 sm:w-11 px-1 py-0.5 rounded border text-center font-mono font-black text-blue-600 text-xs ${
+                  className={`w-9 px-1 py-0.2 rounded border text-center font-mono font-black text-blue-600 text-[10px] ${
                     theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-emerald-400'
                   }`}
                   title="Top Letterhead Page Margin (in mm)"
                 />
-                <span className="text-slate-500 font-mono text-[9px]">mm</span>
+                <span className="text-slate-500 font-mono text-[8.5px]">mm</span>
 
                 <span className="text-slate-400 px-0.5">|</span>
 
-                <span className="text-slate-600 dark:text-slate-400 font-extrabold" title="Bottom Letterhead Page Margin (mm)">Btm:</span>
+                <span className="text-slate-600 dark:text-slate-400 font-extrabold text-[8.5px]" title="Bottom Letterhead Page Margin (mm)">Btm:</span>
                 <input
                   type="number"
                   min={0}
@@ -3993,12 +3995,12 @@ export default function UserWorkspacePage() {
                     const p = getAdminPresets();
                     saveAdminPresets({ ...p, footerMarginMm: val });
                   }}
-                  className={`w-10 sm:w-11 px-1 py-0.5 rounded border text-center font-mono font-black text-pink-600 text-xs ${
+                  className={`w-9 px-1 py-0.2 rounded border text-center font-mono font-black text-pink-600 text-[10px] ${
                     theme === 'day' ? 'bg-white border-slate-300' : 'bg-gray-900 border-gray-700 text-pink-400'
                   }`}
                   title="Bottom Letterhead Page Margin (in mm)"
                 />
-                <span className="text-slate-500 font-mono text-[9px]">mm</span>
+                <span className="text-slate-500 font-mono text-[8.5px]">mm</span>
               </div>
             </div>
           </div>
