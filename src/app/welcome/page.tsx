@@ -2566,24 +2566,24 @@ export default function UserWorkspacePage() {
             @page { size: ${pageSize} portrait; margin: 0; }
             html, body {
               width: ${paperWidth} !important;
-              height: auto !important;
-              min-height: ${paperHeight} !important;
+              height: ${paperHeight} !important;
+              max-height: ${paperHeight} !important;
               background: white !important;
               color: #0f172a !important;
-              padding: 5mm !important;
+              padding: 3mm !important;
               margin: 0 !important;
               font-family: system-ui, -apple-system, sans-serif !important;
-              overflow: visible !important;
+              overflow: hidden !important;
               box-sizing: border-box !important;
             }
             .section2-print-container {
               width: 100% !important;
-              height: auto !important;
-              min-height: 100% !important;
+              height: calc(100% - 2mm) !important;
+              max-height: 100% !important;
               max-width: none !important;
               aspect-ratio: auto !important;
               margin: 0 !important;
-              padding: 6mm !important;
+              padding: 4mm !important;
               box-sizing: border-box !important;
               display: flex !important;
               flex-direction: column !important;
@@ -2593,8 +2593,8 @@ export default function UserWorkspacePage() {
               border-radius: 6px !important;
               background: white !important;
               color: #0f172a !important;
-              font-size: ${isA5 ? '11.5px' : '13.5px'} !important;
-              overflow: visible !important;
+              font-size: ${isA5 ? '11px' : '12.5px'} !important;
+              overflow: hidden !important;
             }
             .section2-print-container * {
               visibility: visible !important;
@@ -2612,7 +2612,7 @@ export default function UserWorkspacePage() {
               flex: 1 1 auto !important;
               width: 100% !important;
               gap: 14px !important;
-              min-height: 380px !important;
+              min-height: 0 !important;
             }
             .print-left-pane {
               width: 32% !important;
@@ -3918,7 +3918,7 @@ export default function UserWorkspacePage() {
 
                 {/* PATIENT DEMOGRAPHICS CHECKBOX (SIDE BY SIDE WITH SECOND TOGGLE) */}
                 <label
-                  className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[9.5px] font-extrabold cursor-pointer transition select-none bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[8.5px] font-extrabold cursor-pointer transition select-none bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white whitespace-nowrap shrink-0"
                   title="Uncheck to hide Patient Demographics Header (Name, Age, Sex, Reg No, Date) if registration details are pre-printed"
                 >
                   <input
@@ -3931,9 +3931,9 @@ export default function UserWorkspacePage() {
                       const p = getAdminPresets();
                       saveAdminPresets({ ...p, showDemographics: nextVal });
                     }}
-                    className="h-3.5 w-3.5 text-emerald-600 rounded cursor-pointer accent-emerald-600"
+                    className="h-3 w-3 text-emerald-600 rounded cursor-pointer accent-emerald-600 shrink-0"
                   />
-                  <span>Print Demographics (Name/Age/Sex)</span>
+                  <span className="whitespace-nowrap">Print Demographics</span>
                 </label>
               </div>
 

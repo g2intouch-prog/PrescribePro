@@ -40,15 +40,15 @@ body {
 
   html, body {
     width: 100% !important;
-    height: auto !important;
-    min-height: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
     margin: 0 !important;
-    padding: 5mm !important;
+    padding: 3mm !important;
     background: #ffffff !important;
     color: #0f172a !important;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
 
   /* HIDE INTERACTIVE APP UI ELEMENTS IN PRINT MODE (LEAVING SECTION 2 PREVIEW VISIBLE) */
@@ -61,15 +61,15 @@ body {
     padding: 0 !important;
     margin: 0 !important;
     background: transparent !important;
-    overflow: visible !important;
-    height: auto !important;
+    overflow: hidden !important;
+    height: 100% !important;
   }
 
   section.hidden {
     display: block !important;
   }
 
-  /* SHOW SECTION 2 LIVE PRESCRIPTION PAD IN PRINT MODE WITH BORDER 5MM INSET */
+  /* SHOW SECTION 2 LIVE PRESCRIPTION PAD IN PRINT MODE WITH BORDER 3MM INSET */
   #printable-prescription-pad,
   #isolated-print-area > div {
     display: flex !important;
@@ -77,19 +77,19 @@ body {
     justify-content: space-between !important;
     visibility: visible !important;
     width: 100% !important;
-    height: auto !important;
-    min-height: calc(100vh - 10mm) !important;
+    height: calc(100% - 2mm) !important;
+    max-height: 100% !important;
     max-width: none !important;
     aspect-ratio: auto !important;
     margin: 0 !important;
-    padding: 6mm !important;
+    padding: 4mm !important;
     box-shadow: none !important;
     border: 4px double #16a34a !important;
     border-radius: 6px !important;
     background: #ffffff !important;
     color: #0f172a !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
 
   #printable-prescription-pad * {
@@ -118,7 +118,7 @@ body {
     flex: 1 1 auto !important;
     width: 100% !important;
     gap: 14px !important;
-    min-height: 380px !important;
+    min-height: 0 !important;
   }
 
   .print-left-pane,
