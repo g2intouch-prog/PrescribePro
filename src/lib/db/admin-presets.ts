@@ -4,6 +4,7 @@ export interface AdminPresets {
   footerImage: string;
   headerMarginMm?: number;
   footerMarginMm?: number;
+  showDemographics?: boolean;
   diagnosticTests: string[];
   additionalAdviceList: string[];
 }
@@ -175,6 +176,7 @@ const DEFAULT_PRESETS: AdminPresets = {
   footerImage: '',
   headerMarginMm: 35,
   footerMarginMm: 20,
+  showDemographics: true,
   diagnosticTests: COMPREHENSIVE_LAB_TESTS,
   additionalAdviceList: [
     'Cold Sponging for High Fever',

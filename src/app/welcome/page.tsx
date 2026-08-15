@@ -1739,6 +1739,7 @@ export default function UserWorkspacePage() {
 
   // Pad Config & Millimeter Spacing Calibration
   const [padMode, setPadMode] = useState<'digital' | 'preprinted'>('digital');
+  const [showDemographics, setShowDemographics] = useState<boolean>(true);
   const [pageSize, setPageSize] = useState<'A4' | 'A5'>('A4');
   const [headerImg, setHeaderImg] = useState<string>('');
   const [footerImg, setFooterImg] = useState<string>('');
@@ -2022,6 +2023,12 @@ export default function UserWorkspacePage() {
       const loadedPresets = getAdminPresets();
       setPresets(loadedPresets);
       setPadMode(loadedPresets.padType || 'digital');
+      const savedShowDemog = localStorage.getItem('prescribepro_show_demographics');
+      if (savedShowDemog !== null) {
+        setShowDemographics(savedShowDemog === 'true');
+      } else {
+        setShowDemographics(loadedPresets.showDemographics ?? true);
+      }
       const savedHeaderImg = localStorage.getItem('prescribepro_header_img');
       setHeaderImg(savedHeaderImg || loadedPresets.headerImage || '');
       const savedFooterImg = localStorage.getItem('prescribepro_footer_img');
@@ -2537,17 +2544,6 @@ export default function UserWorkspacePage() {
 
     const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    if (isMobile) {
-      window.print();
-      return;
-    }
-
-    const printWindow = window.open('', '_blank', 'width=900,height=1000');
-    if (!printWindow) {
-      window.print();
-      return;
-    }
-
     const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
       .map((s) => s.outerHTML)
       .join('\n');
@@ -2560,7 +2556,7 @@ export default function UserWorkspacePage() {
       ? (patient.mobile ? `${patient.name.trim()} (${patient.mobile.trim()})` : patient.name.trim()) 
       : 'Patient';
 
-    printWindow.document.write(`
+    const printHtmlContent = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -2570,19 +2566,19 @@ export default function UserWorkspacePage() {
             @page { size: ${pageSize} portrait; margin: 0; }
             html, body {
               width: ${paperWidth} !important;
-              height: ${paperHeight} !important;
+              height: auto !important;
               min-height: ${paperHeight} !important;
               background: white !important;
               color: #0f172a !important;
               padding: 5mm !important;
               margin: 0 !important;
               font-family: system-ui, -apple-system, sans-serif !important;
-              overflow: hidden !important;
+              overflow: visible !important;
               box-sizing: border-box !important;
             }
             .section2-print-container {
               width: 100% !important;
-              height: 100% !important;
+              height: auto !important;
               min-height: 100% !important;
               max-width: none !important;
               aspect-ratio: auto !important;
@@ -2598,9 +2594,16 @@ export default function UserWorkspacePage() {
               background: white !important;
               color: #0f172a !important;
               font-size: ${isA5 ? '11.5px' : '13.5px'} !important;
+              overflow: visible !important;
             }
             .section2-print-container * {
               visibility: visible !important;
+            }
+            .section2-print-container li,
+            .section2-print-container p,
+            .section2-print-container .group {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
             }
             .print-grid {
               display: flex !important;
@@ -2637,8 +2640,50 @@ export default function UserWorkspacePage() {
           </div>
         </body>
       </html>
-    `);
+    `;
 
+    const triggerIframePrint = () => {
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      iframe.style.visibility = 'hidden';
+      document.body.appendChild(iframe);
+
+      const frameDoc = iframe.contentWindow?.document || iframe.contentDocument;
+      if (frameDoc) {
+        frameDoc.open();
+        frameDoc.write(printHtmlContent);
+        frameDoc.close();
+        setTimeout(() => {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 1000);
+        }, 500);
+      } else {
+        window.print();
+      }
+    };
+
+    if (isMobile) {
+      triggerIframePrint();
+      return;
+    }
+
+    const printWindow = window.open('', '_blank', 'width=900,height=1000');
+    if (!printWindow) {
+      triggerIframePrint();
+      return;
+    }
+
+    printWindow.document.write(printHtmlContent);
     printWindow.document.close();
     printWindow.focus();
     setTimeout(() => {
@@ -3506,89 +3551,89 @@ export default function UserWorkspacePage() {
                 <div className="space-y-2 text-xs overflow-y-auto max-h-[380px] pr-1">
                   <div>
                     <label className="block mb-0.5 font-bold text-slate-700">1. Chief Complaints (C/O)</label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={chiefComplaints}
                       onChange={(e) => setChiefComplaints(e.target.value)}
                       placeholder="e.g. Fever x 3 days, Dry Cough, Bodyache"
-                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                      className={`w-full rounded-lg px-2 py-1 text-xs resize-y ${inputBg}`}
                     />
                   </div>
 
                   <div>
                     <label className="block mb-0.5 font-bold text-slate-700">2. Signs & Symptoms</label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={signsSymptoms}
                       onChange={(e) => setSignsSymptoms(e.target.value)}
                       placeholder="e.g. Pharyngeal erythema, Low-grade fever, Fatigue"
-                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                      className={`w-full rounded-lg px-2 py-1 text-xs resize-y ${inputBg}`}
                     />
                   </div>
 
                   <div>
                     <label className="block mb-0.5 font-bold text-slate-700">3. Clinical History (H/O)</label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={clinicalHistory}
                       onChange={(e) => setClinicalHistory(e.target.value)}
                       placeholder="e.g. No prior hospitalizations or major surgeries."
-                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                      className={`w-full rounded-lg px-2 py-1 text-xs resize-y ${inputBg}`}
                     />
                   </div>
 
                   <div>
                     <label className="block mb-0.5 font-bold text-slate-700">4. Family History</label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={familyHistory}
                       onChange={(e) => setFamilyHistory(e.target.value)}
                       placeholder="e.g. Father: HTN | Mother: Type 2 Diabetes"
-                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                      className={`w-full rounded-lg px-2 py-1 text-xs resize-y ${inputBg}`}
                     />
                   </div>
 
                   <div>
                     <label className="block mb-0.5 font-bold text-slate-700">5. Drug History / Allergies</label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={drugHistory}
                       onChange={(e) => setDrugHistory(e.target.value)}
                       placeholder="e.g. Tab PCM 500mg taken yesterday. NKDA."
-                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                      className={`w-full rounded-lg px-2 py-1 text-xs resize-y ${inputBg}`}
                     />
                   </div>
 
                   <div>
                     <label className="block mb-0.5 font-bold text-slate-700">6. Clinical & Exam Findings</label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={examinationFindings}
                       onChange={(e) => setExaminationFindings(e.target.value)}
                       placeholder="e.g. Chest: Clear bilateral breath sounds. Abdomen: Soft"
-                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                      className={`w-full rounded-lg px-2 py-1 text-xs resize-y ${inputBg}`}
                     />
                   </div>
 
                   <div>
                     <label className="block mb-0.5 font-bold text-slate-700">7. Provisional Diagnosis</label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={provisionalDiagnosis}
                       onChange={(e) => setProvisionalDiagnosis(e.target.value)}
                       placeholder="e.g. Acute Upper Respiratory Tract Infection (URTI)"
-                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                      className={`w-full rounded-lg px-2 py-1 text-xs resize-y ${inputBg}`}
                     />
                   </div>
 
                   <div>
                     <label className="block mb-0.5 font-bold text-slate-700">8. Differential Diagnosis (D/D)</label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={differentialDiagnosis}
                       onChange={(e) => setDifferentialDiagnosis(e.target.value)}
                       placeholder="e.g. 1. Viral Bronchitis  2. Influenza A"
-                      className={`w-full rounded-lg px-2 py-1 text-xs ${inputBg}`}
+                      className={`w-full rounded-lg px-2 py-1 text-xs resize-y ${inputBg}`}
                     />
                   </div>
 
@@ -3747,12 +3792,12 @@ export default function UserWorkspacePage() {
                       );
                     })}
                   </div>
-                  <input
-                    type="text"
+                  <textarea
+                    rows={2}
                     value={customAdviceText}
                     onChange={(e) => setCustomAdviceText(e.target.value)}
                     placeholder="Custom advice..."
-                    className={`w-full rounded-xl px-2.5 py-1.5 text-xs ${inputBg}`}
+                    className={`w-full rounded-xl px-2.5 py-1.5 text-xs resize-y ${inputBg}`}
                   />
                 </div>
               )}
@@ -3870,6 +3915,26 @@ export default function UserWorkspacePage() {
                     Pre-printed Paper
                   </button>
                 </div>
+
+                {/* PATIENT DEMOGRAPHICS CHECKBOX (SIDE BY SIDE WITH SECOND TOGGLE) */}
+                <label
+                  className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[9.5px] font-extrabold cursor-pointer transition select-none bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  title="Uncheck to hide Patient Demographics Header (Name, Age, Sex, Reg No, Date) if registration details are pre-printed"
+                >
+                  <input
+                    type="checkbox"
+                    checked={showDemographics}
+                    onChange={(e) => {
+                      const nextVal = e.target.checked;
+                      setShowDemographics(nextVal);
+                      localStorage.setItem('prescribepro_show_demographics', String(nextVal));
+                      const p = getAdminPresets();
+                      saveAdminPresets({ ...p, showDemographics: nextVal });
+                    }}
+                    className="h-3.5 w-3.5 text-emerald-600 rounded cursor-pointer accent-emerald-600"
+                  />
+                  <span>Print Demographics (Name/Age/Sex)</span>
+                </label>
               </div>
 
               {/* PAGE MARGIN & FOOTER HEIGHT INPUTS */}
@@ -4017,32 +4082,38 @@ export default function UserWorkspacePage() {
                 </div>
               )}
 
-              {/* PATIENT INFO STRIP - EXACT 3 LINES */}
-              <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 mt-2 text-[9px] space-y-1">
-                {/* LINE 1: REG NO, MOBILE NO, EMAIL ID, DATE */}
-                <div className="flex items-center justify-between gap-1 border-b border-gray-200 pb-0.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span><strong>Reg No:</strong> {patient.regNo || '—'}</span>
-                    <span><strong>Mobile:</strong> {patient.mobile || '—'}</span>
-                    <span><strong>Email:</strong> {patient.email || '—'}</span>
+              {/* PATIENT INFO STRIP - EXACT 3 LINES (TOGGLEABLE FOR PRE-PRINTED REGISTRATION PAPER) */}
+              {showDemographics ? (
+                <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 mt-2 text-[9px] space-y-1">
+                  {/* LINE 1: REG NO, MOBILE NO, EMAIL ID, DATE */}
+                  <div className="flex items-center justify-between gap-1 border-b border-gray-200 pb-0.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span><strong>Reg No:</strong> {patient.regNo || '—'}</span>
+                      <span><strong>Mobile:</strong> {patient.mobile || '—'}</span>
+                      <span><strong>Email:</strong> {patient.email || '—'}</span>
+                    </div>
+                    <div className="shrink-0 font-semibold text-gray-700">
+                      <strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}
+                    </div>
                   </div>
-                  <div className="shrink-0 font-semibold text-gray-700">
-                    <strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}
+
+                  {/* LINE 2: NAME, AGE, GENDER */}
+                  <div className="flex items-center justify-between gap-1 border-b border-gray-200 pb-0.5">
+                    <div><strong>Patient Name:</strong> <span className="font-bold text-gray-900">{patient.name || '—'}</span></div>
+                    <div><strong>Age / Sex:</strong> {patient.age ? `${patient.age} Yrs` : '—'} / {patient.gender || 'Male'}</div>
+                  </div>
+
+                  {/* LINE 3: S/D/W/C OF, ADDRESS */}
+                  <div className="flex items-center justify-between gap-1 flex-wrap text-[8.5px]">
+                    <div><strong>{patient.relationPrefix || 'S/o'}:</strong> {patient.careOf || '—'}</div>
+                    <div><strong>Address:</strong> {patient.address || '—'}</div>
                   </div>
                 </div>
-
-                {/* LINE 2: NAME, AGE, GENDER */}
-                <div className="flex items-center justify-between gap-1 border-b border-gray-200 pb-0.5">
-                  <div><strong>Patient Name:</strong> <span className="font-bold text-gray-900">{patient.name || '—'}</span></div>
-                  <div><strong>Age / Sex:</strong> {patient.age ? `${patient.age} Yrs` : '—'} / {patient.gender || 'Male'}</div>
+              ) : (
+                <div className="border border-dashed border-slate-300 p-1.5 rounded-lg mt-2 text-center text-[8.5px] text-slate-400 italic font-mono print:hidden">
+                  [Patient Demographics Header Hidden — Pre-printed Registration Sheet Mode]
                 </div>
-
-                {/* LINE 3: S/D/W/C OF, ADDRESS */}
-                <div className="flex items-center justify-between gap-1 flex-wrap text-[8.5px]">
-                  <div><strong>{patient.relationPrefix || 'S/o'}:</strong> {patient.careOf || '—'}</div>
-                  <div><strong>Address:</strong> {patient.address || '—'}</div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* PAD BODY: TWO-COLUMN CANVAS (LEFT PANE = LABS & ADVICE, RIGHT PANE = CLINICAL ASSESSMENT, RX & SPECIFIC ADVICE) */}
@@ -4106,20 +4177,20 @@ export default function UserWorkspacePage() {
                       contentEditable
                       suppressContentEditableWarning
                       onFocus={(e) => {
-                        if (e.currentTarget.textContent?.startsWith('Click to')) {
-                          e.currentTarget.textContent = '';
+                        if (e.currentTarget.innerText?.startsWith('Click to')) {
+                          e.currentTarget.innerText = '';
                         }
                       }}
                       onBlur={(e) => {
-                        const val = e.currentTarget.textContent?.trim() || '';
+                        const val = e.currentTarget.innerText?.trim() || '';
                         if (!val || val.startsWith('Click to')) {
                           setCustomLabTestsText('');
-                          e.currentTarget.textContent = 'Click to edit or add custom lab test orders (e.g. CBC, LFT, Lipid Profile, Chest X-Ray)...';
+                          e.currentTarget.innerText = 'Click to edit or add custom lab test orders (e.g. CBC, LFT, Lipid Profile, Chest X-Ray)...';
                         } else {
                           setCustomLabTestsText(val);
                         }
                       }}
-                      className={`text-gray-800 font-medium text-[8.5px] outline-none hover:bg-teal-100/50 p-0.5 rounded cursor-text ${
+                      className={`whitespace-pre-wrap text-gray-800 font-medium text-[8.5px] outline-none hover:bg-teal-100/50 p-0.5 rounded cursor-text ${
                         !customLabTestsText.trim() && selectedTests.length > 0 ? 'print:hidden' : ''
                       }`}
                     >
@@ -4141,15 +4212,15 @@ export default function UserWorkspacePage() {
                         contentEditable
                         suppressContentEditableWarning
                         onFocus={(e) => {
-                          if (e.currentTarget.textContent?.startsWith('Click to')) {
-                            e.currentTarget.textContent = '';
+                          if (e.currentTarget.innerText?.startsWith('Click to')) {
+                            e.currentTarget.innerText = '';
                           }
                         }}
                         onBlur={(e) => {
-                          const val = e.currentTarget.textContent?.trim() || '';
+                          const val = e.currentTarget.innerText?.trim() || '';
                           if (!val || val.startsWith('Click to')) {
                             setTestResultsText('');
-                            e.currentTarget.textContent = 'Click to type test results...';
+                            e.currentTarget.innerText = 'Click to type test results...';
                           } else {
                             setTestResultsText(val);
                           }
@@ -4194,20 +4265,20 @@ export default function UserWorkspacePage() {
                       contentEditable
                       suppressContentEditableWarning
                       onFocus={(e) => {
-                        if (e.currentTarget.textContent?.startsWith('Click to')) {
-                          e.currentTarget.textContent = '';
+                        if (e.currentTarget.innerText?.startsWith('Click to')) {
+                          e.currentTarget.innerText = '';
                         }
                       }}
                       onBlur={(e) => {
-                        const val = e.currentTarget.textContent?.trim() || '';
+                        const val = e.currentTarget.innerText?.trim() || '';
                         if (!val || val.startsWith('Click to')) {
                           setCustomProcedureText('');
-                          e.currentTarget.textContent = 'Click to edit procedures (e.g. Valsalva maneuver, Sitz bath, Physio)...';
+                          e.currentTarget.innerText = 'Click to edit procedures (e.g. Valsalva maneuver, Sitz bath, Physio)...';
                         } else {
                           setCustomProcedureText(val);
                         }
                       }}
-                      className={`text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-indigo-100/50 p-0.5 rounded cursor-text ${
+                      className={`whitespace-pre-wrap text-gray-700 italic mt-0.5 text-[8px] outline-none hover:bg-indigo-100/50 p-0.5 rounded cursor-text ${
                         !customProcedureText.trim() ? 'print:hidden' : ''
                       }`}
                     >
@@ -4225,20 +4296,20 @@ export default function UserWorkspacePage() {
                       contentEditable
                       suppressContentEditableWarning
                       onFocus={(e) => {
-                        if (e.currentTarget.textContent?.startsWith('Click to')) {
-                          e.currentTarget.textContent = '';
+                        if (e.currentTarget.innerText?.startsWith('Click to')) {
+                          e.currentTarget.innerText = '';
                         }
                       }}
                       onBlur={(e) => {
-                        const val = e.currentTarget.textContent?.trim() || '';
+                        const val = e.currentTarget.innerText?.trim() || '';
                         if (!val || val.startsWith('Click to')) {
                           setChiefComplaints('');
-                          e.currentTarget.textContent = 'Click to edit chief complaints...';
+                          e.currentTarget.innerText = 'Click to edit chief complaints...';
                         } else {
                           setChiefComplaints(val);
                         }
                       }}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {chiefComplaints || 'Click to edit chief complaints...'}
                     </span>
@@ -4259,20 +4330,20 @@ export default function UserWorkspacePage() {
                       contentEditable
                       suppressContentEditableWarning
                       onFocus={(e) => {
-                        if (e.currentTarget.textContent?.startsWith('Click to')) {
-                          e.currentTarget.textContent = '';
+                        if (e.currentTarget.innerText?.startsWith('Click to')) {
+                          e.currentTarget.innerText = '';
                         }
                       }}
                       onBlur={(e) => {
-                        const val = e.currentTarget.textContent?.trim() || '';
+                        const val = e.currentTarget.innerText?.trim() || '';
                         if (!val || val.startsWith('Click to')) {
                           setSignsSymptoms('');
-                          e.currentTarget.textContent = 'Click to edit signs & symptoms...';
+                          e.currentTarget.innerText = 'Click to edit signs & symptoms...';
                         } else {
                           setSignsSymptoms(val);
                         }
                       }}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {signsSymptoms || 'Click to edit signs & symptoms...'}
                     </span>
@@ -4293,20 +4364,20 @@ export default function UserWorkspacePage() {
                       contentEditable
                       suppressContentEditableWarning
                       onFocus={(e) => {
-                        if (e.currentTarget.textContent?.startsWith('Click to')) {
-                          e.currentTarget.textContent = '';
+                        if (e.currentTarget.innerText?.startsWith('Click to')) {
+                          e.currentTarget.innerText = '';
                         }
                       }}
                       onBlur={(e) => {
-                        const val = e.currentTarget.textContent?.trim() || '';
+                        const val = e.currentTarget.innerText?.trim() || '';
                         if (!val || val.startsWith('Click to')) {
                           setClinicalHistory('');
-                          e.currentTarget.textContent = 'Click to edit clinical history...';
+                          e.currentTarget.innerText = 'Click to edit clinical history...';
                         } else {
                           setClinicalHistory(val);
                         }
                       }}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {clinicalHistory || 'Click to edit clinical history...'}
                     </span>
@@ -4327,20 +4398,20 @@ export default function UserWorkspacePage() {
                       contentEditable
                       suppressContentEditableWarning
                       onFocus={(e) => {
-                        if (e.currentTarget.textContent?.startsWith('Click to')) {
-                          e.currentTarget.textContent = '';
+                        if (e.currentTarget.innerText?.startsWith('Click to')) {
+                          e.currentTarget.innerText = '';
                         }
                       }}
                       onBlur={(e) => {
-                        const val = e.currentTarget.textContent?.trim() || '';
+                        const val = e.currentTarget.innerText?.trim() || '';
                         if (!val || val.startsWith('Click to')) {
                           setFamilyHistory('');
-                          e.currentTarget.textContent = 'Click to edit family history...';
+                          e.currentTarget.innerText = 'Click to edit family history...';
                         } else {
                           setFamilyHistory(val);
                         }
                       }}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {familyHistory || 'Click to edit family history...'}
                     </span>
@@ -4361,20 +4432,20 @@ export default function UserWorkspacePage() {
                       contentEditable
                       suppressContentEditableWarning
                       onFocus={(e) => {
-                        if (e.currentTarget.textContent?.startsWith('Click to')) {
-                          e.currentTarget.textContent = '';
+                        if (e.currentTarget.innerText?.startsWith('Click to')) {
+                          e.currentTarget.innerText = '';
                         }
                       }}
                       onBlur={(e) => {
-                        const val = e.currentTarget.textContent?.trim() || '';
+                        const val = e.currentTarget.innerText?.trim() || '';
                         if (!val || val.startsWith('Click to')) {
                           setDrugHistory('');
-                          e.currentTarget.textContent = 'Click to edit drug history...';
+                          e.currentTarget.innerText = 'Click to edit drug history...';
                         } else {
                           setDrugHistory(val);
                         }
                       }}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {drugHistory || 'Click to edit drug history...'}
                     </span>
@@ -4395,20 +4466,20 @@ export default function UserWorkspacePage() {
                       contentEditable
                       suppressContentEditableWarning
                       onFocus={(e) => {
-                        if (e.currentTarget.textContent?.startsWith('Click to')) {
-                          e.currentTarget.textContent = '';
+                        if (e.currentTarget.innerText?.startsWith('Click to')) {
+                          e.currentTarget.innerText = '';
                         }
                       }}
                       onBlur={(e) => {
-                        const val = e.currentTarget.textContent?.trim() || '';
+                        const val = e.currentTarget.innerText?.trim() || '';
                         if (!val || val.startsWith('Click to')) {
                           setExaminationFindings('');
-                          e.currentTarget.textContent = 'Click to edit exam findings...';
+                          e.currentTarget.innerText = 'Click to edit exam findings...';
                         } else {
                           setExaminationFindings(val);
                         }
                       }}
-                      className="text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      className="whitespace-pre-wrap text-gray-800 outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {examinationFindings || 'Click to edit exam findings...'}
                     </span>
@@ -4429,20 +4500,20 @@ export default function UserWorkspacePage() {
                       contentEditable
                       suppressContentEditableWarning
                       onFocus={(e) => {
-                        if (e.currentTarget.textContent?.startsWith('Click to')) {
-                          e.currentTarget.textContent = '';
+                        if (e.currentTarget.innerText?.startsWith('Click to')) {
+                          e.currentTarget.innerText = '';
                         }
                       }}
                       onBlur={(e) => {
-                        const val = e.currentTarget.textContent?.trim() || '';
+                        const val = e.currentTarget.innerText?.trim() || '';
                         if (!val || val.startsWith('Click to')) {
                           setProvisionalDiagnosis('');
-                          e.currentTarget.textContent = 'Click to edit provisional diagnosis...';
+                          e.currentTarget.innerText = 'Click to edit provisional diagnosis...';
                         } else {
                           setProvisionalDiagnosis(val);
                         }
                       }}
-                      className="outline-none hover:bg-yellow-200/70 p-0.5 rounded cursor-text flex-1"
+                      className="whitespace-pre-wrap outline-none hover:bg-yellow-200/70 p-0.5 rounded cursor-text flex-1"
                     >
                       {provisionalDiagnosis || 'Click to edit provisional diagnosis...'}
                     </span>
@@ -4463,20 +4534,20 @@ export default function UserWorkspacePage() {
                       contentEditable
                       suppressContentEditableWarning
                       onFocus={(e) => {
-                        if (e.currentTarget.textContent?.startsWith('Click to')) {
-                          e.currentTarget.textContent = '';
+                        if (e.currentTarget.innerText?.startsWith('Click to')) {
+                          e.currentTarget.innerText = '';
                         }
                       }}
                       onBlur={(e) => {
-                        const val = e.currentTarget.textContent?.trim() || '';
+                        const val = e.currentTarget.innerText?.trim() || '';
                         if (!val || val.startsWith('Click to')) {
                           setDifferentialDiagnosis('');
-                          e.currentTarget.textContent = 'Click to edit differential diagnosis...';
+                          e.currentTarget.innerText = 'Click to edit differential diagnosis...';
                         } else {
                           setDifferentialDiagnosis(val);
                         }
                       }}
-                      className="outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
+                      className="whitespace-pre-wrap outline-none hover:bg-yellow-100/60 p-0.5 rounded cursor-text flex-1"
                     >
                       {differentialDiagnosis || 'Click to edit differential diagnosis...'}
                     </span>
@@ -4620,15 +4691,15 @@ export default function UserWorkspacePage() {
                       contentEditable
                       suppressContentEditableWarning
                       onFocus={(e) => {
-                        if (e.currentTarget.textContent?.startsWith('Click to')) {
-                          e.currentTarget.textContent = '';
+                        if (e.currentTarget.innerText?.startsWith('Click to')) {
+                          e.currentTarget.innerText = '';
                         }
                       }}
                       onBlur={(e) => {
-                        const val = e.currentTarget.textContent?.trim() || '';
+                        const val = e.currentTarget.innerText?.trim() || '';
                         if (!val || val.startsWith('Click to')) {
                           setSpecificAdviceText('');
-                          e.currentTarget.textContent = 'Click to edit specific clinical advice...';
+                          e.currentTarget.innerText = 'Click to edit specific clinical advice...';
                         } else {
                           setSpecificAdviceText(val);
                         }
