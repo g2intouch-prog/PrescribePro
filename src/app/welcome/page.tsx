@@ -2508,6 +2508,20 @@ export default function UserWorkspacePage() {
             ? (patient.mobile ? `${patient.name.trim()} (${patient.mobile.trim()})` : patient.name.trim()) 
             : 'Prescription';
           const pdfFilename = `${patientDisplayName}.pdf`;
+
+          // Clone targetPad and strip all print:hidden elements (empty fields, placeholders, buttons)
+          const clonedPad = targetPad.cloneNode(true) as HTMLElement;
+          const hiddenEls = clonedPad.querySelectorAll('.print\\:hidden');
+          hiddenEls.forEach((el) => el.remove());
+
+          const pdfWrapper = document.createElement('div');
+          pdfWrapper.style.position = 'absolute';
+          pdfWrapper.style.left = '-9999px';
+          pdfWrapper.style.top = '-9999px';
+          pdfWrapper.style.width = isA5 ? '560px' : '794px';
+          pdfWrapper.appendChild(clonedPad);
+          document.body.appendChild(pdfWrapper);
+
           const opt = {
             margin: [3, 3, 3, 3],
             filename: pdfFilename,
@@ -2522,9 +2536,16 @@ export default function UserWorkspacePage() {
             },
             jsPDF: { unit: 'mm', format: pageSize.toLowerCase(), orientation: 'portrait' },
           };
-          await html2pdf().set(opt).from(targetPad).save();
-          setSaveStatus('PDF downloaded directly!');
-          setTimeout(() => setSaveStatus(null), 3000);
+
+          try {
+            await html2pdf().set(opt).from(clonedPad).save();
+            setSaveStatus('PDF downloaded directly!');
+            setTimeout(() => setSaveStatus(null), 3000);
+          } finally {
+            if (document.body.contains(pdfWrapper)) {
+              document.body.removeChild(pdfWrapper);
+            }
+          }
         } else {
           setSaveStatus('Error: PDF generator library not available');
           setTimeout(() => setSaveStatus(null), 3000);
